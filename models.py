@@ -17,7 +17,7 @@ class Models :
         self.case_bth = ['DeepConv']
         # Default arguments for convolution
         self.reduced = reduced
-        self.red_idx = red_idx
+        self.red_idx = red_index
         # Load the data according to the model
         if model in self.case_fea : self.loader = Load().load_fea()
         elif model in self.case_raw : self.loader = Load().load_raw()
