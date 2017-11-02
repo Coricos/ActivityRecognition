@@ -145,7 +145,9 @@ class Models :
 
         # Launch the learning process
         if self.model == 'XGBoost' : self.xgboost(n_iter=n_iter, verbose=verbose)
-        elif self.model == 'RandomForest' : self.rarndom_forest(n_iter=n_iter, verbose=verbose)
+        elif self.model == 'RandomForest' : self.random_forest(n_iter=n_iter, verbose=verbose)
         elif self.model == 'Conv1D' : self.conv1D(max_epochs=max_epochs, verbose=verbose)
         # Print the performance
         self.performance()
+        # Return object
+        return self
