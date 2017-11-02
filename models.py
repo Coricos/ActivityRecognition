@@ -9,7 +9,7 @@ class Models :
     # Initialization
     def __init__(self, model, max_jobs=multiprocessing.cpu_count()-1, reduced=False, red_index=[6, 7]) :
 
-        self.model = model
+        self.name = model
         self.njobs = max_jobs
         # Differentiate cases
         self.case_fea = ['XGBoost', 'RandomForest']
@@ -133,20 +133,36 @@ class Models :
     def performance(self) :
 
         # Compute the probabilities
-        if self.model in self.case_raw : pbs = self.model.predict(reformat_vectors(self.loader.X_va, reduced=self.reduced, red_index=self.red_idx))
-        elif self.model in self.case_bth : pass
-        else : pbs = self.model.predict_proba(self.loader.X_va)
+        if self.name in self.case_raw : pbs = self.model.predict(reformat_vectors(self.loader.X_va, reduced=self.reduced, red_index=self.red_idx))
+        elif self.name in self.case_bth : pass
+        elif self.name in self.case_fea : pbs = self.model.predict_proba(self.loader.X_va)
         # Performance on the testing subset 
         print('\n|-> Main scores on test subset :')
         score_verbose(self.loader.y_va, [np.argmax(ele) for ele in pbs])
+
+    # To launch it from everywhere
+    def save_model(self) :
+
+        if self.name in self.case_fea : 
+            joblib.dump(self.model, 'clf_{}.h5'.format(self.name))
+        elif self.name in self.case_raw + self.case_bth : 
+            self.model.save('clf_{}.h5'.format(self.name))
+
+    # Lazy function if necessary
+    def load_model(self) :
+
+        if self.name in self.case_fea : 
+            self.model = joblib.load('clf_{}.h5'.format(self.name))
+        elif self.name in self.case_raw + self.case_bth : 
+            self.model = load_model('clf_{}.h5'.format(self.name))
 
     # Defines a launcher
     def learn(self, n_iter=50, max_epochs=100, verbose=0) :
 
         # Launch the learning process
-        if self.model == 'XGBoost' : self.xgboost(n_iter=n_iter, verbose=verbose)
-        elif self.model == 'RandomForest' : self.random_forest(n_iter=n_iter, verbose=verbose)
-        elif self.model == 'Conv1D' : self.conv1D(max_epochs=max_epochs, verbose=verbose)
+        if self.name == 'XGBoost' : self.xgboost(n_iter=n_iter, verbose=verbose)
+        elif self.name == 'RandomForest' : self.random_forest(n_iter=n_iter, verbose=verbose)
+        elif self.name == 'Conv1D' : self.conv1D(max_epochs=max_epochs, verbose=verbose)
         # Print the performance
         self.performance()
         # Return object
