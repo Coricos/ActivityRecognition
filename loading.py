@@ -81,4 +81,5 @@ class Loader :
         self.valid = fast_concatenate([X_va, l_va, i_va], axis=1)
         # Memory efficiency
         del X_va, l_va, i_va
-
+        # Return object
+        return self
