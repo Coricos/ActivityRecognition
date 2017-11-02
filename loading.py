@@ -123,7 +123,7 @@ class Loader :
         # Where to gather the new arrays
         X_tr, y_tr, X_va, y_va = [], [], [], []
         # Deals with the training set
-        for ids in self.usr_train :
+        for ids in tqdm.tqdm(self.usr_train) :
             for exp in np.unique(self.description.query('User == {}'.format(ids))['Experience']) :
                 cut = self.description.query('Experience == {} & User == {}'.format(exp, ids))
                 for val in cut[['Label', 'Begin', 'End']].values :
@@ -134,7 +134,7 @@ class Loader :
                     del tmp, sig
                 del cut
         # Deals with the validation set
-        for ids in self.usr_valid :
+        for ids in tqdm.tqdm(self.usr_valid) :
             for exp in np.unique(self.description.query('User == {}'.format(ids))['Experience']) :
                 cut = self.description.query('Experience == {} & User == {}'.format(exp, ids))
                 for val in cut[['Label', 'Begin', 'End']].values :
