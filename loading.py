@@ -10,8 +10,8 @@ class Loader :
     def __init__(self) :
 
         # Root paths
-        self.raw_path = './Raw_Data/'
-        self.fea_path = './Fea_Data/'
+        self.raw_path = './Raw_Data'
+        self.fea_path = './Fea_Data'
         # Represents the 30% of validation subset
         self.usr_valid = [2, 4, 10, 12, 13, 18, 20, 24]
         # Represents the other 70%
@@ -28,10 +28,10 @@ class Loader :
         # Extracts iteratively
         for fle in tqdm.tqdm(remove_doublon(['_'.join(fle.split('_')[1:]) for fle in os.listdir(self.raw_path)])) :
             # Load the accelerometer data
-            acc = pd.read_csv('.{}acc_{}'.format(self.raw_path, fle), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
+            acc = pd.read_csv('{}/acc_{}'.format(self.raw_path, fle), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
             acc.columns = ['Acc_x', 'Acc_y', 'Acc_z']
             # Load the gyrometer data
-            gyr = pd.read_csv('.{}gyro_{}'.format(self.raw_path, fle), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
+            gyr = pd.read_csv('{}/gyro_{}'.format(self.raw_path, fle), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
             gyr.columns = ['Gyr_x', 'Gyr_y', 'Gyr_z']
             # Load the metadata
             exp = pd.DataFrame(np.asarray([int(fle.split('exp')[1][:2]) for i in range(len(acc))]), columns=['Experience'])
@@ -66,17 +66,17 @@ class Loader :
             return pd.DataFrame(np.asarray(res).astype(int), columns=[column])
 
         # Training set
-        X_tr = pd.read_csv('.{}X_train.txt'.format(self.fea_path), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
-        l_tr = read_text_file('.{}y_train.txt'.format(self.fea_path), 'Labels')
-        i_tr = read_text_file('.{}subject_id_train.txt'.format(self.fea_path), 'Subjects')
+        X_tr = pd.read_csv('{}/X_train.txt'.format(self.fea_path), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
+        l_tr = read_text_file('{}/y_train.txt'.format(self.fea_path), 'Labels')
+        i_tr = read_text_file('{}/subject_id_train.txt'.format(self.fea_path), 'Subjects')
         # Save as attribute
         self.train = fast_concatenate([X_tr, l_tr, i_tr], axis=1)
         # Memory efficiency
         del X_tr, l_tr, i_tr
         # Validation set
-        X_va = pd.read_csv('.{}X_train.txt'.format(self.fea_path), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
-        l_va = read_text_file('.{}y_train.txt'.format(self.fea_path), 'Labels')
-        i_va = read_text_file('.{}subject_id_train.txt'.format(self.fea_path), 'Subjects')
+        X_va = pd.read_csv('{}/X_train.txt'.format(self.fea_path), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
+        l_va = read_text_file('{}/y_train.txt'.format(self.fea_path), 'Labels')
+        i_va = read_text_file('{}/subject_id_train.txt'.format(self.fea_path), 'Subjects')
         # Save as attribute
         self.valid = fast_concatenate([X_va, l_va, i_va], axis=1)
         # Memory efficiency
