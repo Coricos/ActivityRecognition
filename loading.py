@@ -128,8 +128,8 @@ class Loader :
                 cut = self.description.query('Experience == {} & User == {}'.format(exp, ids))
                 for val in cut[['Label', 'Begin', 'End']].values :
                     tmp = self.raw_signals.query('Experience == {} & User == {}'.format(exp, ids))
-                    sig = slice_signal(remove_columns(tmp, ['Experience', 'User']))
-                    y_tr += list(np.full(len(sig), cut[0]))
+                    sig = slice_signal(remove_columns(tmp[val[1]:val[2]], ['Experience', 'User']))
+                    y_tr += list(np.full(len(sig), val[0]))
                     X_tr += sig
                     del tmp, sig
                 del cut
@@ -139,8 +139,8 @@ class Loader :
                 cut = self.description.query('Experience == {} & User == {}'.format(exp, ids))
                 for val in cut[['Label', 'Begin', 'End']].values :
                     tmp = self.raw_signals.query('Experience == {} & User == {}'.format(exp, ids))
-                    sig = slice_signal(remove_columns(tmp, ['Experience', 'User']))
-                    y_va += list(np.full(len(sig), cut[0]))
+                    sig = slice_signal(remove_columns(tmp[val[1]:val[2]], ['Experience', 'User']))
+                    y_va += list(np.full(len(sig), val[0]))
                     X_va += sig
                     del tmp, sig
                 del cut
