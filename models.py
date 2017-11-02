@@ -164,7 +164,7 @@ class Models :
 
             return mod
 
-        inp1 = Input(shape=(bth.train.shape[1],))
+        inp1 = Input(shape=(self.loader.train.shape[1],))
         mod1 = Dense(1000)(inp1)
         mod1 = BatchNormalization()(mod1)
         mod1 = Activation('tanh')(mod1)
