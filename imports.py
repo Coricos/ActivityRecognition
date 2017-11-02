@@ -12,6 +12,7 @@ import os, tqdm, h5py, pickle, multiprocessing, sys
 import tensorflow, xgboost
 
 from functools import partial
+from scipy.stats import randint
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.pipeline import Pipeline
