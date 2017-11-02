@@ -210,6 +210,19 @@ class Models :
         print('\n|-> Main scores on test subset :')
         score_verbose(self.loader.y_va, [np.argmax(ele) for ele in pbs])
 
+    # Display the importances when the trees are trained
+    def plot_importances(self, n_features=20) :
+
+        imp = self.model.feature_importances_
+        idx = np.argsort(imp)[::-1]
+        imp = imp[idx][:n_features]
+        plt.figure(figsize=(18,10))
+        plt.title('Feature Importances - {}'.format(title))
+        plt.barh(range(len(imp)), imp, color="lightblue", align="center")
+        plt.yticks(range(len(imp)), self.loader.train.columns[idx][:len(imp)])
+        plt.ylim([-1, len(imp)])
+        plt.show()
+
     # To launch it from everywhere
     def save_model(self) :
 
