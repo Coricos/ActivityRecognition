@@ -19,9 +19,9 @@ class Models :
         self.reduced = reduced
         self.red_idx = red_index
         # Load the data according to the model
-        if model in self.case_fea : self.loader = Load().load_fea()
-        elif model in self.case_raw : self.loader = Load().load_raw()
-        elif model in self.case_bth : self.loader = Load().load_bth()
+        if model in self.case_fea : self.loader = Loader().load_fea()
+        elif model in self.case_raw : self.loader = Loader().load_raw()
+        elif model in self.case_bth : self.loader = Loader().load_bth()
 
     # Launch the random searched XGBoost model
     def xgboost(self, n_iter=50, verbose=0) :
@@ -141,3 +141,11 @@ class Models :
         score_verbose(self.loader.y_va, [np.argmax(ele) for ele in pbs])
 
     # Defines a launcher
+    def learn(self, n_iter=50, max_epochs=100, verbose=0) :
+
+        # Launch the learning process
+        if self.model == 'XGBoost' : self.xgboost(n_iter=n_iter, verbose=verbose)
+        elif self.model == 'RandomForest' : self.rarndom_forest(n_iter=n_iter, verbose=verbose)
+        elif self.model == 'Conv1D' : self.conv1D(max_epochs=max_epochs, verbose=verbose)
+        # Print the performance
+        self.performance()
