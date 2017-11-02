@@ -27,6 +27,16 @@ def read_text_file(path, column) :
 
     return pd.DataFrame(np.asarray(res).astype(int), columns=[column])
 
+# Defines the number of possible sliced windows
+def windows(size, time_window, overlap) :
+
+    cnt, srt = 0, 0
+    while srt <= size - time_window :
+        cnt += 1
+        srt += int(overlap * time_window)
+
+    return cnt  
+
 # Reformat data according to a problematic
 def reformat_vectors(vec, reduced=False, red_index=[6,7]) :
 
