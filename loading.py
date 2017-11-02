@@ -124,7 +124,7 @@ class Loader :
         X_tr, y_tr, X_va, y_va = [], [], [], []
         # Deals with the training set
         for ids in self.usr_train :
-            for exp in np.unique(self.description.query('User' == {}.format(ids))['Experience']) :
+            for exp in np.unique(self.description.query('User == {}'.format(ids))['Experience']) :
                 cut = self.description.query('Experience == {} & User == {}'.format(exp, ids))
                 for val in cut[['Label', 'Begin', 'End']].values :
                     tmp = self.raw_signals.query('Experience == {} & User == {}'.format(exp, ids))
@@ -135,7 +135,7 @@ class Loader :
                 del cut
         # Deals with the validation set
         for ids in self.usr_valid :
-            for exp in np.unique(self.description.query('User' == {}.format(ids))['Experience']) :
+            for exp in np.unique(self.description.query('User == {}'.format(ids))['Experience']) :
                 cut = self.description.query('Experience == {} & User == {}'.format(exp, ids))
                 for val in cut[['Label', 'Begin', 'End']].values :
                     tmp = self.raw_signals.query('Experience == {} & User == {}'.format(exp, ids))
