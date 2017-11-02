@@ -14,7 +14,7 @@ class Models :
         # Differentiate cases
         self.case_fea = ['XGBoost', 'RandomForest']
         self.case_raw = ['Conv1D']
-        self.case_bth = ['DeepConv']
+        self.case_bth = ['DeepConv1D', 'DeepConv2D']
         # Default arguments for convolution
         self.reduced = reduced
         self.red_idx = red_index
@@ -73,7 +73,7 @@ class Models :
         self.model = clf.best_estimator_
 
     # Launch the multi-channels 1D-convolution model
-    def conv1D(self, max_epochs=100, verbose=0) :
+    def conv_1D(self, max_epochs=100, verbose=0) :
 
         # Truncate the learning to a maximum of cpus
         from keras import backend as K
@@ -121,9 +121,79 @@ class Models :
         # Compile and launch the model
         model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
         early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=7, verbose=0, mode='auto')
-        for ele in list(np.unique(y_tr)) :
-            print('  ~ Class {} with Ratio Of {} ...'.format(int(ele), round(float(len(np.where(y_tr == ele)[0])) / float(len(y_tr)), 2)))
+        if verbose > 0 :
+            for ele in list(np.unique(y_tr)) :
+                print('  ~ Class {} with Ratio Of {} ...'.format(int(ele), round(float(len(np.where(y_tr == ele)[0])) / float(len(y_tr)), 2)))
         model.fit(X_tr, np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, verbose=verbose, validation_split=0.2, shuffle=True)
+        # Save as attribute
+        self.model = model
+        # Memory efficiency
+        del X_tr, y_tr, inp, early, model
+
+    # Previous model enhanced with features in neural network
+    def deep_conv_1D(self, size_merge=200, max_epochs=100, verbose=0) :
+
+        # Truncate the learning to a maximum of cpus
+        from keras import backend as K
+        K.set_image_dim_ordering('th')
+        S = tensorflow.Session(config=tensorflow.ConfigProto(intra_op_parallelism_threads=self.njobs))
+        K.set_session(S)
+        # Prepares the data
+        X_tr, y_tr = shuffle(self.loader.X_tr, self.loader.y_tr)
+        X_tr = reformat_vectors(X_tr, reduced=self.reduced, red_index=self.red_idx)
+        # Build inputs for convolution
+        inp = [Input(shape=X_tr[0][0].shape) for num in range(len(X_tr))]
+
+        # Build convolution model
+        def conv_input(inp, size_merge) :
+
+            mod = Conv1D(200, 50)(inp)
+            mod = BatchNormalization(axis=1, momentum=0.9, center=True, scale=True)(mod)
+            mod = Activation('relu')(mod)
+            mod = MaxPooling1D(pool_size=2)(mod)
+            mod = Dropout(0.5)(mod)
+            mod = Conv1D(50, 25)(mod)
+            mod = BatchNormalization(axis=1, momentum=0.9, center=True, scale=True)(mod)
+            mod = Activation('relu')(mod)
+            mod = GaussianDropout(0.75)(mod)
+            mod = GlobalAveragePooling1D()(mod)
+            mod = BatchNormalization()(mod)
+            mod = Activation('tanh')(mod)
+            mod = Dropout(0.5)(mod)
+            mod = Dense(size_merge, activation='tanh')(mod)
+
+            return mod
+
+        inp1 = Input(shape=(bth.train.shape[1],))
+        mod1 = Dense(1000)(inp1)
+        mod1 = BatchNormalization()(mod1)
+        mod1 = Activation('tanh')(mod1)
+        mod1 = GaussianDropout(0.75)(mod1)
+        mod1 = Dense(output, activation='tanh')(mod1)
+
+        mod = merge([conv_input(inp, output) for inp in inputs] + [mod1])
+        mod = BatchNormalization()(mod)
+        mod = Activation('tanh')(mod)
+        mod = Dropout(0.5)(mod)
+        mod = Dense(1000)(mod)
+        mod = BatchNormalization()(mod)
+        mod = Activation('tanh')(mod)
+        mod = Dropout(0.5)(mod)
+        mod = Dense(200)(mod)
+        mod = BatchNormalization()(mod)
+        mod = Activation('tanh')(mod)
+        mod = GaussianDropout(0.75)(mod)
+        mod = Dense(len(np.unique(y_tr)), activation='softmax')(mod)
+
+        # Final build of model
+        model = Model(inputs=inp+[inp1], outputs=mod)
+        # Compile and launch the model
+        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+        early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=7, verbose=0, mode='auto')
+        if verbose > 0 :
+            for ele in list(np.unique(y_tr)) :
+                print('  ~ Class {} with Ratio Of {} ...'.format(int(ele), round(float(len(np.where(y_tr == ele)[0])) / float(len(y_tr)), 2)))
+        model.fit(X_tr + [list(self.loader.train.values)], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, verbose=verbose, validation_split=0.2, shuffle=True)
         # Save as attribute
         self.model = model
         # Memory efficiency
@@ -162,7 +232,8 @@ class Models :
         # Launch the learning process
         if self.name == 'XGBoost' : self.xgboost(n_iter=n_iter, verbose=verbose)
         elif self.name == 'RandomForest' : self.random_forest(n_iter=n_iter, verbose=verbose)
-        elif self.name == 'Conv1D' : self.conv1D(max_epochs=max_epochs, verbose=verbose)
+        elif self.name == 'Conv1D' : self.conv_1D(max_epochs=max_epochs, verbose=verbose)
+        elif self.name == 'DeepConv1D' : self.deep_conv_1D(max_epochs=max_epochs, verbose=verbose)
         # Print the performance
         self.performance()
         # Return object
