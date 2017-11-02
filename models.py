@@ -169,9 +169,9 @@ class Models :
         mod1 = BatchNormalization()(mod1)
         mod1 = Activation('tanh')(mod1)
         mod1 = GaussianDropout(0.75)(mod1)
-        mod1 = Dense(output, activation='tanh')(mod1)
+        mod1 = Dense(size_merge, activation='tanh')(mod1)
 
-        mod = merge([conv_input(inp, output) for inp in inputs] + [mod1])
+        mod = merge([conv_input(inp, size_merge) for inp in inputs] + [mod1])
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
         mod = Dropout(0.5)(mod)
