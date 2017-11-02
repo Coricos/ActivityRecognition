@@ -14,6 +14,7 @@ import tensorflow, xgboost
 from functools import partial
 from scipy.stats import randint
 
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.pipeline import Pipeline
 from sklearn.externals import joblib
@@ -28,7 +29,7 @@ from keras.utils import np_utils
 from keras.models import Sequential, Model, load_model
 from keras.layers import Convolution2D, MaxPooling2D, merge, Activation, Dropout, Flatten, Dense
 from keras.layers import Conv1D, Input, MaxPooling1D, GlobalAveragePooling1D, LSTM, Bidirectional
-from keras.layers import TimeDistributed, BatchNormalization, GlobalAveragePooling2D
+from keras.layers import TimeDistributed, BatchNormalization, GlobalAveragePooling2D, GaussianDropout
 from keras.layers.core import Dense, Dropout, Activation
 from keras.optimizers import SGD
 from keras.callbacks import EarlyStopping, ModelCheckpoint
