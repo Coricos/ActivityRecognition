@@ -29,13 +29,13 @@ class Loader :
         # Load the features names
         with open('./Fea_Data/features.txt') as raw : lab = raw.readlines()
         for ind in range(len(lab)) : lab[ind] = lab[ind].replace('\n','').replace(' ','')
+        # Defines the scaler
+        sca = StandardScaler(with_std=False)
         # Training set
         X_tr = pd.read_csv('{}/X_train.txt'.format(self.fea_path), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
         X_tr.columns = lab
         l_tr = read_text_file('{}/y_train.txt'.format(self.fea_path), 'Labels')
         i_tr = read_text_file('{}/subject_id_train.txt'.format(self.fea_path), 'Subjects')
-        # Save as attribute
-        self.train = fast_concatenate([X_tr, l_tr, i_tr], axis=1)
         # Memory efficiency
         del X_tr, l_tr, i_tr, raw
         # Validation set
@@ -43,10 +43,16 @@ class Loader :
         X_va.columns = lab
         l_va = read_text_file('{}/y_test.txt'.format(self.fea_path), 'Labels')
         i_va = read_text_file('{}/subject_id_test.txt'.format(self.fea_path), 'Subjects')
+        # Fit and rescaler
+        sca.fit(fast_concatenate([X_tr, X_va], axis=0))
+        X_tr = pd.DataFrame(sca.transform(X_tr), columns=X_tr.columns, index=X_tr.index)
+        X_va = pd.DataFrame(sca.transform(X_va), columns=X_va.columns, index=X_va.index)
         # Save as attribute
+        self.train = fast_concatenate([X_tr, l_tr, i_tr], axis=1)
         self.valid = fast_concatenate([X_va, l_va, i_va], axis=1)
+        print('! Data has been preprocessed ...')
         # Memory efficiency
-        del X_va, l_va, i_va, lab
+        del X_va, l_va, i_va, lab, sca
         # Return object
         return self
 
@@ -187,6 +193,7 @@ class Loader :
         # Save a attributes the preprocessed versions
         self.X_tr = process(self.X_tr, sca)
         self.X_va = process(self.X_va, sca)
+        print('! Data has been preprocessed ...')
         # Memory efficiency
         del img, sca
         # Return object
