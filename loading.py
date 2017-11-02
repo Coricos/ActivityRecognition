@@ -64,19 +64,21 @@ class Loader :
         raw = []
         # Extracts iteratively
         for fle in tqdm.tqdm(remove_doublon(['_'.join(fle.split('_')[1:]) for fle in os.listdir(self.raw_path)])) :
-            # Load the accelerometer data
-            acc = pd.read_csv('{}/acc_{}'.format(self.raw_path, fle), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
-            acc.columns = ['Acc_x', 'Acc_y', 'Acc_z']
-            # Load the gyrometer data
-            gyr = pd.read_csv('{}/gyro_{}'.format(self.raw_path, fle), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
-            gyr.columns = ['Gyr_x', 'Gyr_y', 'Gyr_z']
-            # Load the metadata
-            exp = pd.DataFrame(np.asarray([int(fle.split('exp')[1][:2]) for i in range(len(acc))]), columns=['Experience'])
-            usr = pd.DataFrame(np.asarray([int(fle.split('user')[1][:2]) for i in range(len(acc))]), columns=['User'])
-            # Build the dataframe
-            raw.append(fast_concatenate([exp, usr, acc, gyr], axis=1))
-            # Memory efficiency
-            del acc, gyr, exp, usr
+            try : 
+                # Load the accelerometer data
+                acc = pd.read_csv('{}/acc_{}'.format(self.raw_path, fle), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
+                acc.columns = ['Acc_x', 'Acc_y', 'Acc_z']
+                # Load the gyrometer data
+                gyr = pd.read_csv('{}/gyro_{}'.format(self.raw_path, fle), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
+                gyr.columns = ['Gyr_x', 'Gyr_y', 'Gyr_z']
+                # Load the metadata
+                exp = pd.DataFrame(np.asarray([int(fle.split('exp')[1][:2]) for i in range(len(acc))]), columns=['Experience'])
+                usr = pd.DataFrame(np.asarray([int(fle.split('user')[1][:2]) for i in range(len(acc))]), columns=['User'])
+                # Build the dataframe
+                raw.append(fast_concatenate([exp, usr, acc, gyr], axis=1))
+                # Memory efficiency
+                del acc, gyr, exp, usr
+            except : pass
         # Concatenate every obtained dataframe
         raw = fast_concatenate(raw, axis=0)
         # Build the norms (referential independance)
