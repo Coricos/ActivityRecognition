@@ -65,21 +65,26 @@ class Loader :
 
             return pd.DataFrame(np.asarray(res).astype(int), columns=[column])
 
+        # Load the features names
+        with open('./Fea_Data/features.txt') as raw : lab = raw.readlines()
+        for ind in range(len(lab)) : lab[ind] = lab[ind].replace('\n','').replace(' ','')
         # Training set
         X_tr = pd.read_csv('{}/X_train.txt'.format(self.fea_path), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
+        X_tr.columns = lab
         l_tr = read_text_file('{}/y_train.txt'.format(self.fea_path), 'Labels')
         i_tr = read_text_file('{}/subject_id_train.txt'.format(self.fea_path), 'Subjects')
         # Save as attribute
         self.train = fast_concatenate([X_tr, l_tr, i_tr], axis=1)
         # Memory efficiency
-        del X_tr, l_tr, i_tr
+        del X_tr, l_tr, i_tr, raw
         # Validation set
         X_va = pd.read_csv('{}/X_train.txt'.format(self.fea_path), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
+        X_va.columns = lab
         l_va = read_text_file('{}/y_train.txt'.format(self.fea_path), 'Labels')
         i_va = read_text_file('{}/subject_id_train.txt'.format(self.fea_path), 'Subjects')
         # Save as attribute
         self.valid = fast_concatenate([X_va, l_va, i_va], axis=1)
         # Memory efficiency
-        del X_va, l_va, i_va
+        del X_va, l_va, i_va, lab
         # Return object
         return self
