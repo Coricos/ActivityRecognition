@@ -46,10 +46,10 @@ class Loader :
         # Memory efficiency
         del X_tr, l_tr, i_tr, raw
         # Validation set
-        X_va = pd.read_csv('{}/X_train.txt'.format(self.fea_path), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
+        X_va = pd.read_csv('{}/X_test.txt'.format(self.fea_path), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
         X_va.columns = lab
-        l_va = read_text_file('{}/y_train.txt'.format(self.fea_path), 'Labels')
-        i_va = read_text_file('{}/subject_id_train.txt'.format(self.fea_path), 'Subjects')
+        l_va = read_text_file('{}/y_test.txt'.format(self.fea_path), 'Labels')
+        i_va = read_text_file('{}/subject_id_test.txt'.format(self.fea_path), 'Subjects')
         # Save as attribute
         self.valid = fast_concatenate([X_va, l_va, i_va], axis=1)
         # Memory efficiency
@@ -198,7 +198,7 @@ class Loader :
         return self
 
     # Defines a loading instance caring about both features and raw signals
-    def load_both(self) :
+    def load_bth(self) :
 
         # Load signals
         self = self.load_fea()
