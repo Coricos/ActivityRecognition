@@ -20,40 +20,6 @@ class Loader :
         self.time_window = 128
         self.overlap_rto = 0.5
 
-    # Loads the raw signals as dataframe
-    def load_signals(self) :
-
-        # Where to gather the constructed dataframes
-        raw = []
-        # Extracts iteratively
-        for fle in tqdm.tqdm(remove_doublon(['_'.join(fle.split('_')[1:]) for fle in os.listdir(self.raw_path)])) :
-            # Load the accelerometer data
-            acc = pd.read_csv('{}/acc_{}'.format(self.raw_path, fle), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
-            acc.columns = ['Acc_x', 'Acc_y', 'Acc_z']
-            # Load the gyrometer data
-            gyr = pd.read_csv('{}/gyro_{}'.format(self.raw_path, fle), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
-            gyr.columns = ['Gyr_x', 'Gyr_y', 'Gyr_z']
-            # Load the metadata
-            exp = pd.DataFrame(np.asarray([int(fle.split('exp')[1][:2]) for i in range(len(acc))]), columns=['Experience'])
-            usr = pd.DataFrame(np.asarray([int(fle.split('user')[1][:2]) for i in range(len(acc))]), columns=['User'])
-            # Build the dataframe
-            raw.append(fast_concatenate([exp, usr, acc, gyr], axis=1))
-            # Memory efficiency
-            del acc, gyr, exp, usr
-        # Concatenate every obtained dataframe
-        raw = fast_concatenate(raw, axis=0)
-        # Build the norms (referential independance)
-        raw['Normed_A'] = np.sqrt(np.square(raw['Acc_x'].values) + np.square(raw['Acc_y']) + np.square(raw['Acc_z']))
-        raw['Normed_G'] = np.sqrt(np.square(raw['Acc_x'].values) + np.square(raw['Acc_y']) + np.square(raw['Acc_z']))
-        # Build the labels
-        lab = pd.read_csv('./labels.txt', sep='\n', delimiter=' ', header=None)
-        lab.columns = ['Experience', 'User', 'Label', 'Begin', 'End']
-        # Save as attributes
-        self.raw_signals = raw
-        self.description = lab
-        # Memory efficiency
-        del raw, lab
-
     # Load the features relative to the signals
     def load_fea(self) :
 
@@ -88,3 +54,37 @@ class Loader :
         del X_va, l_va, i_va, lab
         # Return object
         return self
+
+    # Loads the raw signals as dataframe
+    def load_signals(self) :
+
+        # Where to gather the constructed dataframes
+        raw = []
+        # Extracts iteratively
+        for fle in tqdm.tqdm(remove_doublon(['_'.join(fle.split('_')[1:]) for fle in os.listdir(self.raw_path)])) :
+            # Load the accelerometer data
+            acc = pd.read_csv('{}/acc_{}'.format(self.raw_path, fle), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
+            acc.columns = ['Acc_x', 'Acc_y', 'Acc_z']
+            # Load the gyrometer data
+            gyr = pd.read_csv('{}/gyro_{}'.format(self.raw_path, fle), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
+            gyr.columns = ['Gyr_x', 'Gyr_y', 'Gyr_z']
+            # Load the metadata
+            exp = pd.DataFrame(np.asarray([int(fle.split('exp')[1][:2]) for i in range(len(acc))]), columns=['Experience'])
+            usr = pd.DataFrame(np.asarray([int(fle.split('user')[1][:2]) for i in range(len(acc))]), columns=['User'])
+            # Build the dataframe
+            raw.append(fast_concatenate([exp, usr, acc, gyr], axis=1))
+            # Memory efficiency
+            del acc, gyr, exp, usr
+        # Concatenate every obtained dataframe
+        raw = fast_concatenate(raw, axis=0)
+        # Build the norms (referential independance)
+        raw['Normed_A'] = np.sqrt(np.square(raw['Acc_x'].values) + np.square(raw['Acc_y']) + np.square(raw['Acc_z']))
+        raw['Normed_G'] = np.sqrt(np.square(raw['Acc_x'].values) + np.square(raw['Acc_y']) + np.square(raw['Acc_z']))
+        # Build the labels
+        lab = pd.read_csv('./labels.txt', sep='\n', delimiter=' ', header=None)
+        lab.columns = ['Experience', 'User', 'Label', 'Begin', 'End']
+        # Save as attributes
+        self.raw_signals = raw
+        self.description = lab
+        # Memory efficiency
+        del raw, lab
