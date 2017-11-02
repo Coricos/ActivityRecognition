@@ -48,7 +48,6 @@ class Loader :
         # Save as attribute
         self.train = fast_concatenate([X_tr, l_tr, i_tr], axis=1)
         self.valid = fast_concatenate([X_va, l_va, i_va], axis=1)
-        print('! Data has been preprocessed ...')
         # Memory efficiency
         del X_va, l_va, i_va, lab, sca, X_tr, l_tr, i_tr, raw
         # Return object
@@ -191,7 +190,6 @@ class Loader :
         # Save a attributes the preprocessed versions
         self.X_tr = process(self.X_tr, sca)
         self.X_va = process(self.X_va, sca)
-        print('! Data has been preprocessed ...')
         # Memory efficiency
         del img, sca
         # Return object
