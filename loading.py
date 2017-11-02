@@ -85,6 +85,8 @@ class Loader :
         self.description = lab
         # Memory efficiency
         del raw, lab
+        # Return object
+        return self
 
     # Slice the signal accordingly to the time_window and overlap
     def sliding_extraction(self, both) :
