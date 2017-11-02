@@ -4,7 +4,7 @@
 from loading import *
 
 # Build the models as initialized
-class Model :
+class Models :
 
     # Initialization
     def __init__(self, model, max_jobs=multiprocessing.cpu_count()-1, reduced=False, red_index=[6, 7]) :
@@ -139,3 +139,5 @@ class Model :
         # Performance on the testing subset 
         print('\n|-> Main scores on test subset :')
         score_verbose(self.loader.y_va, [np.argmax(ele) for ele in pbs])
+
+    # Defines a launcher
