@@ -17,7 +17,7 @@ class Loader :
         # Represents the 30% of validation subset
         self.usr_valid = [2, 4, 10, 12, 13, 18, 20, 24]
         # Represents the other 70%
-        self.usr_train = [ele for ele in range(1, 30) if ele not in self.usr_valid]
+        self.usr_train = [ele for ele in range(1, 31) if ele not in self.usr_valid]
         # Defines conditions relative to the experiment
         self.time_window = 128
         self.overlap_rto = 0.5
