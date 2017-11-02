@@ -36,8 +36,6 @@ class Loader :
         X_tr.columns = lab
         l_tr = read_text_file('{}/y_train.txt'.format(self.fea_path), 'Labels')
         i_tr = read_text_file('{}/subject_id_train.txt'.format(self.fea_path), 'Subjects')
-        # Memory efficiency
-        del X_tr, l_tr, i_tr, raw
         # Validation set
         X_va = pd.read_csv('{}/X_test.txt'.format(self.fea_path), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
         X_va.columns = lab
@@ -52,7 +50,7 @@ class Loader :
         self.valid = fast_concatenate([X_va, l_va, i_va], axis=1)
         print('! Data has been preprocessed ...')
         # Memory efficiency
-        del X_va, l_va, i_va, lab, sca
+        del X_va, l_va, i_va, lab, sca, X_tr, l_tr, i_tr, raw
         # Return object
         return self
 
