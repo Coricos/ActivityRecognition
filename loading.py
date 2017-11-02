@@ -186,8 +186,8 @@ class Loader :
         img = np.asarray([img[:, sig, :] for sig in range(img.shape[1])])
         img = img.reshape(img.shape[0], img.shape[1]*img.shape[2])
         for idx in range(img.shape[0]) : 
-            if idx in [6, 7] : lst[idx].fit(np.log(img[idx, :]).reshape(-1, 1))
-            else : lst[idx].fit(img[idx, :].reshape(-1, 1))
+            if idx in [6, 7] : sca[idx].fit(np.log(img[idx, :]).reshape(-1, 1))
+            else : sca[idx].fit(img[idx, :].reshape(-1, 1))
         # Save a attributes the preprocessed versions
         self.X_tr = process(self.X_tr, sca)
         self.X_va = process(self.X_va, sca)
