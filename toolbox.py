@@ -19,6 +19,14 @@ def sample_weight(lab) :
 
     return res
 
+# Read labels and users for features
+def read_text_file(path, column) :
+
+    with open('{}'.format(path), 'r') as raw : res = raw.readlines()
+    for ind in range(len(res)) : res[ind] = res[ind].replace('\n', '')
+
+    return pd.DataFrame(np.asarray(res).astype(int), columns=[column])
+
 # Reformat data according to a problematic
 def reformat_vectors(vec, reduced=False, red_index=[6,7]) :
 

@@ -15,7 +15,8 @@ class Loader :
         self.raw_path = './Raw_Data'
         self.fea_path = './Fea_Data'
         # Represents the 30% of validation subset
-        self.usr_valid = [2, 4, 10, 12, 13, 18, 20, 24]
+        self.usr_train = np.unique(read_text_file('{}/subject_id_train.txt'.format(self.fea_path), 'Subjects').values)
+        self.usr_valid = np.unique(read_text_file('{}/subject_id_test.txt'.format(self.fea_path), 'Subjects').values)
         # Represents the other 70%
         self.usr_train = [ele for ele in range(1, 31) if ele not in self.usr_valid]
         # Defines conditions relative to the experiment
@@ -24,14 +25,6 @@ class Loader :
 
     # Load the features relative to the signals
     def load_fea(self) :
-
-        # Read labels and users for features
-        def read_text_file(path, column) :
-
-            with open('{}'.format(path), 'r') as raw : res = raw.readlines()
-            for ind in range(len(res)) : res[ind] = res[ind].replace('\n', '')
-
-            return pd.DataFrame(np.asarray(res).astype(int), columns=[column])
 
         # Load the features names
         with open('./Fea_Data/features.txt') as raw : lab = raw.readlines()
@@ -129,7 +122,7 @@ class Loader :
                 cut = self.description.query('Experience == {} & User == {}'.format(exp, ids))
                 for val in cut[['Label', 'Begin', 'End']].values :
                     tmp = self.raw_signals.query('Experience == {} & User == {}'.format(exp, ids))
-                    sig = slice_signal(remove_columns(tmp[val[1]:val[2]], ['Experience', 'User']), both)
+                    sig = slice_signal(remove_columns(tmp[val[1]:val[2]+1], ['Experience', 'User']), both)
                     y_tr += list(np.full(len(sig), val[0]))
                     X_tr += sig
                     del tmp, sig
@@ -140,7 +133,7 @@ class Loader :
                 cut = self.description.query('Experience == {} & User == {}'.format(exp, ids))
                 for val in cut[['Label', 'Begin', 'End']].values :
                     tmp = self.raw_signals.query('Experience == {} & User == {}'.format(exp, ids))
-                    sig = slice_signal(remove_columns(tmp[val[1]:val[2]], ['Experience', 'User']), both)
+                    sig = slice_signal(remove_columns(tmp[val[1]:val[2]+1], ['Experience', 'User']), both)
                     y_va += list(np.full(len(sig), val[0]))
                     X_va += sig
                     del tmp, sig
