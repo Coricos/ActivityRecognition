@@ -32,11 +32,17 @@ class Model :
         prm = {'learning_rate': [0.0001, 0.001, 0.01, 0.1, 0.5, 1.0, 2.5, 5.0], 'max_depth': randint(10, 30),
                'n_estimators': randint(250, 350),'gamma': [1.0, 0.1, 0.01, 0.001, 0.0001, 0.00001]}
         # Launching the fine-tuning
-        clf = RandomizedSearchCV(clf, verbose=verbose, cv=5, param_distributions=prm, n_iter=n_iter, scoring='accuracy')
+        clf = RandomizedSearchCV(clf, verbose=verbose, cv=5, param_distributions=prm, n_iter=n_iter, 
+                                 scoring=['accuracy', 'neg_log_loss', 'f1_weighted'], refit='accuracy')
         # Log
         print('|-> Learning on {} vectors through cross-validation ...'.format(X_tr.shape[0]))
         # Launch the model
         clf.fit(X_tr, y_tr, sample_weight=sample_weight(y_tr))
+        # Log results
+        msg = '  ~ '
+        for key in clf.best_params_ : msg += '{} -> {} ; '.format(key, clf.best_params_[key])
+        print('  ~ Best estimator build ...')
+        print(msg)
         # Save the best estimator as attribute
         self.model = clf.best_estimator_
 
@@ -46,13 +52,20 @@ class Model :
         # Prepares the data
         X_tr, y_tr = shuffle(remove_columns(self.loader.train, ['Subject', 'Labels']).values, self.loader.train['Labels'].values.ravel().astype(int) - 1)
         # Defines the model
-        cl0 = RandomForestClassifier(bootstrap=True, n_jobs=self.njobs, criterion='entropy')
-        pr0 = {'n_estimators': randint(150, 250), 'max_depth': randint(10, 30), 'max_features': ['sqrt', None]}
+        clf = RandomForestClassifier(bootstrap=True, n_jobs=self.njobs, criterion='entropy')
+        prm = {'n_estimators': randint(150, 250), 'max_depth': randint(10, 30), 'max_features': ['sqrt', None]}
         # Launching the fine-tuning
-        clf = RandomizedSearchCV(clf, verbose=verbose, cv=5, param_distributions=prm, n_iter=n_iter, scoring='accuracy')
+        clf = RandomizedSearchCV(clf, verbose=verbose, cv=5, param_distributions=prm, n_iter=n_iter, 
+                                 scoring=['accuracy', 'neg_log_loss', 'f1_weighted'], refit='accuracy')
         # Log
         print('|-> Learning on {} vectors through cross-validation ...'.format(X_tr.shape[0]))
         # Launch the model
         clf.fit(X_tr, y_tr, sample_weight=sample_weight(y_tr))
         # Save the best estimator as attribute
         self.model = clf.best_estimator_
+
+    # Launch the multi-channels 1D-convolution model
+    def conv1D(self) :
+
+        # Prepares the data
+    
