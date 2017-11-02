@@ -94,10 +94,10 @@ class Loader :
         del raw, lab
 
     # Slice the signal accordingly to the time_window and overlap
-    def sliding_extraction(self) :
+    def sliding_extraction(self, both) :
 
         # Local function for slicing
-        def slice_signal(sig) :
+        def slice_signal(sig, both) :
 
             if len(sig) < self.time_window : return []
             else :
@@ -108,8 +108,9 @@ class Loader :
                     tme.append((srt, srt + self.time_window))
                     srt += int(self.overlap_rto * self.time_window)
                 # Take care of the last slice
-                try : tme.append((top - self.time_window, top))
-                except : pass
+                if not both : 
+                    try : tme.append((top - self.time_window, top))
+                    except : pass
                 # Launch multiprocessing
                 pol = multiprocessing.Pool(processes=min(len(tme), self.njobs))
                 mvs = pol.map(partial(extract, data=sig), tme)
@@ -128,7 +129,7 @@ class Loader :
                 cut = self.description.query('Experience == {} & User == {}'.format(exp, ids))
                 for val in cut[['Label', 'Begin', 'End']].values :
                     tmp = self.raw_signals.query('Experience == {} & User == {}'.format(exp, ids))
-                    sig = slice_signal(remove_columns(tmp[val[1]:val[2]], ['Experience', 'User']))
+                    sig = slice_signal(remove_columns(tmp[val[1]:val[2]], ['Experience', 'User']), both)
                     y_tr += list(np.full(len(sig), val[0]))
                     X_tr += sig
                     del tmp, sig
@@ -139,7 +140,7 @@ class Loader :
                 cut = self.description.query('Experience == {} & User == {}'.format(exp, ids))
                 for val in cut[['Label', 'Begin', 'End']].values :
                     tmp = self.raw_signals.query('Experience == {} & User == {}'.format(exp, ids))
-                    sig = slice_signal(remove_columns(tmp[val[1]:val[2]], ['Experience', 'User']))
+                    sig = slice_signal(remove_columns(tmp[val[1]:val[2]], ['Experience', 'User']), both)
                     y_va += list(np.full(len(sig), val[0]))
                     X_va += sig
                     del tmp, sig
@@ -153,11 +154,11 @@ class Loader :
         del X_tr, X_va, y_tr, y_va, self.raw_signals, self.description
 
     # Preprocess the raw signals
-    def load_raw(self) :
+    def load_raw(self, both=False) :
 
         # Prepares the data
         self.load_signals()
-        self.sliding_extraction()
+        self.sliding_extraction(both)
 
         # Local function for processing
         def process(img, scalers) :
@@ -193,5 +194,14 @@ class Loader :
         self.X_va = process(self.X_va, sca)
         # Memory efficiency
         del img, sca
+        # Return object
+        return self
+
+    # Defines a loading instance caring about both features and raw signals
+    def load_both(self) :
+
+        # Load signals
+        self = self.load_fea()
+        self = self.load_raw(both=True)
         # Return object
         return self
