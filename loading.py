@@ -60,7 +60,7 @@ class Loader :
         # Read labels and users for features
         def read_text_file(path, column) :
 
-            with open('{}/{}'.format(self.fea_path, path), 'r') as raw : res = raw.readlines()
+            with open('{}'.format(path), 'r') as raw : res = raw.readlines()
             for ind in range(len(res)) : res[ind] = res[ind].replace('\n', '')
 
             return pd.DataFrame(np.asarray(res).astype(int), columns=[column])
