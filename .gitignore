@@ -1,2 +1,5 @@
-./Raw_Data/
-./Fea_Data/
+Raw_Data/
+Fea_Data/
+*.pyc
+activity_labels.txt
+.ipynb_checkpoints/
