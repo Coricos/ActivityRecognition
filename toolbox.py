@@ -36,6 +36,33 @@ def remove_doublon(l) :
 
     return new
 
+# Time efficient function for columns extraction
+def extract_columns(dtf, col) :
+    
+    # Index to extract
+    idx = [ind for ind, ele in enumerate(dtf.columns) if ele in col]
+    # Extract DataFrame
+    val = dtf.values[:, idx]
+    dtf = pd.DataFrame(val, index=dtf.index, columns=col)
+    # Memory efficiency
+    del idx, val
+    
+    return dtf  
+
+# Time efficient function for columns deletion
+def remove_columns(dtf, col) :
+    
+    # Defines the indexes to remove
+    tmp = [ind for ind, ele in enumerate(dtf.columns) if ele in col]
+    idx = [ind for ind in xrange(len(dtf.columns)) if ind not in tmp]
+    # Extract DataFrame
+    val = dtf.values[:, idx]
+    dtf = pd.DataFrame(val, index=dtf.index, columns=np.asarray(dtf.columns)[idx])
+    # Memory efficiency
+    del idx, val
+    
+    return dtf 
+
 # Time efficient clearing in dataframes
 def fast_clear(dtf) :
 
