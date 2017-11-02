@@ -85,7 +85,7 @@ class Loader :
         raw['Normed_A'] = np.sqrt(np.square(raw['Acc_x'].values) + np.square(raw['Acc_y']) + np.square(raw['Acc_z']))
         raw['Normed_G'] = np.sqrt(np.square(raw['Acc_x'].values) + np.square(raw['Acc_y']) + np.square(raw['Acc_z']))
         # Build the labels
-        lab = pd.read_csv('./labels.txt', sep='\n', delimiter=' ', header=None)
+        lab = pd.read_csv('{}/labels.txt'.format(self.raw_path), sep='\n', delimiter=' ', header=None)
         lab.columns = ['Experience', 'User', 'Label', 'Begin', 'End']
         # Save as attributes
         self.raw_signals = raw
