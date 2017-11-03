@@ -7,7 +7,7 @@ from loading import *
 class Models :
 
     # Initialization
-    def __init__(self, model, max_jobs=multiprocessing.cpu_count()-1, reduced=False, red_index=[6, 7]) :
+    def __init__(self, model, init=False, max_jobs=multiprocessing.cpu_count()-1, reduced=False, red_index=[6, 7]) :
 
         self.name = model
         self.njobs = max_jobs
@@ -19,9 +19,15 @@ class Models :
         self.reduced = reduced
         self.red_idx = red_index
         # Load the data according to the model
-        if model in self.case_fea : self.loader = Loader().load_fea()
-        elif model in self.case_raw : self.loader = Loader().load_raw()
-        elif model in self.case_bth : self.loader = Loader().load_bth()
+        if model in self.case_fea :
+            if init : self.loader = Loader().load_fea()
+            else : with open('./Loaders/loader_fea.pickle', 'rb') as raw : self.loader = pickle.load(raw)
+        elif model in self.case_raw : 
+            if init : self.loader = Loader().load_raw()
+            else : with open('./Loaders/loader_raw.pickle', 'rb') as raw : self.loader = pickle.load(raw)
+        elif model in self.case_bth : 
+            if init : self.loader = Loader().load_bth()
+            else : with open('./Loaders/loader_bth.pickle', 'rb') as raw : self.loader = pickle.load(raw)
 
     # Launch the random searched XGBoost model
     def xgboost(self, n_iter=50, verbose=0) :
@@ -239,17 +245,17 @@ class Models :
     def save_model(self) :
 
         if self.name in self.case_fea : 
-            joblib.dump(self.model, 'clf_{}.h5'.format(self.name))
+            joblib.dump(self.model, './Classifiers/clf_{}.h5'.format(self.name))
         elif self.name in self.case_raw + self.case_bth : 
-            self.model.save('clf_{}.h5'.format(self.name))
+            self.model.save('./Classifiers/clf_{}.h5'.format(self.name))
 
     # Lazy function if necessary
     def load_model(self) :
 
         if self.name in self.case_fea : 
-            self.model = joblib.load('clf_{}.h5'.format(self.name))
+            self.model = joblib.load('./Classifiers/clf_{}.h5'.format(self.name))
         elif self.name in self.case_raw + self.case_bth : 
-            self.model = load_model('clf_{}.h5'.format(self.name))
+            self.model = load_model('./Classifiers/clf_{}.h5'.format(self.name))
 
         # Return the model
         return self
