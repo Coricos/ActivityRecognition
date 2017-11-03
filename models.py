@@ -150,7 +150,7 @@ class Models :
         K.set_session(S)
         # Prepares the data
         X_tr, y_tr = shuffle(self.loader.X_tr, self.loader.y_tr)
-        X_tr = reformat_vectors(X_tr, reduced=self.reduced, red_index=self.red_idx)
+        X_tr = reformat_vectors(X_tr, self.name, reduced=self.reduced, red_index=self.red_idx)
         # Build model
         model = Sequential()
         # Convolutionnal layers
