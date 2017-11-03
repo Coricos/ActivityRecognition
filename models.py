@@ -30,8 +30,8 @@ class Models :
         X_tr, y_tr = shuffle(remove_columns(self.loader.train, ['Subjects', 'Labels']).values, self.loader.train['Labels'].values.ravel().astype(int) - 1)
         # Defines the model
         clf = xgboost.XGBClassifier(nthread=self.njobs)
-        prm = {'learning_rate': [0.0001, 0.001, 0.01, 0.1, 0.5, 1.0, 2.5, 5.0], 'max_depth': randint(10, 30),
-               'n_estimators': randint(250, 350),'gamma': [1.0, 0.1, 0.01, 0.001, 0.0001, 0.00001]}
+        prm = {'learning_rate': [0.01, 0.1, 0.25, 0.5, 0.75, 1.0], 'max_depth': randint(10, 30),
+               'n_estimators': randint(250, 300),'gamma': [0.01, 0.001, 0.0001]}
         # Launching the fine-tuning
         clf = RandomizedSearchCV(clf, verbose=verbose, cv=5, param_distributions=prm, n_iter=n_iter, 
                                  scoring=['accuracy', 'neg_log_loss', 'f1_weighted'], refit='accuracy')
