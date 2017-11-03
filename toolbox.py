@@ -116,17 +116,17 @@ def extract(couple_index, data) :
 # Function aiming at displaying scores
 def score_verbose(y_true, y_pred) :
 
+    dtf = []
     # Compute the mean scores
-    acc = accuracy_score(y_true, y_pred, sample_weight=sample_weight(y_true))
-    f1s = f1_score(y_true, y_pred, average='weighted', sample_weight=sample_weight(y_true))
-    rec = recall_score(y_true, y_pred, average='weighted', sample_weight=sample_weight(y_true))
-    pre = precision_score(y_true, y_pred, average='weighted', sample_weight=sample_weight(y_true))
-    print('    Accuracy {} - F1_Score {} - Recall {} - Precision {}'.format(round(acc, 3), round(f1s, 3), round(rec, 3), round(pre, 3)))
+    acc = accuracy_score(y_true, y_pred)
+    f1s = f1_score(y_true, y_pred, average='weighted')
+    rec = recall_score(y_true, y_pred, average='weighted')
+    pre = precision_score(y_true, y_pred, average='weighted')
+    dtf.append([acc, rec, pre, f1s])
     # Relative results to each class
     lab = np.unique(list(np.unique(y_true)) + list(np.unique(y_pred)))
     y_t = preprocessing.label_binarize(y_true, np.unique(lab), pos_label=1)
     y_p = preprocessing.label_binarize(y_pred, np.unique(lab), pos_label=1)
-    dtf = []
     for ind in range(len(lab)) :
         # Common binary costs
         pre = precision_score(y_t[:,ind], y_p[:,ind], sample_weight=sample_weight(y_t[:,ind]))
@@ -137,4 +137,4 @@ def score_verbose(y_true, y_pred) :
     # Memory efficiency
     del acc, f1s, rec, pre, lab, y_t, y_p
     # Return dataframe for score per class
-    print(pd.DataFrame(np.asarray(dtf).transpose(), index=['Acc', 'Rec', 'Pre', 'F1S'], columns=['Class_{}'.format(k) for k in range(len(np.unique(y_pred)))]))
+    print(pd.DataFrame(np.asarray(dtf).transpose(), index=['Acc', 'Rec', 'Pre', 'F1S'], columns=['Main'] + ['Class_{}'.format(k) for k in range(len(np.unique(y_pred)))]))
