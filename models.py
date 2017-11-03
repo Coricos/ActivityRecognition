@@ -130,9 +130,6 @@ class Models :
         # Compile and launch the model
         model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
         early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
-        if verbose > 0 :
-            for ele in list(np.unique(y_tr)) :
-                print('  ~ Class {} with Ratio Of {} ...'.format(int(ele), round(float(len(np.where(y_tr == ele)[0])) / float(len(y_tr)), 2)))
         model.fit(X_tr, np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
                   verbose=verbose, validation_split=0.2, shuffle=True, callbacks=[early])
         # Save as attribute
@@ -188,15 +185,12 @@ class Models :
         model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
         # Create the callbacks
         early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
-        if verbose > 0 :
-            for ele in list(np.unique(y_tr)) :
-                print('  ~ Class {} with Ratio Of {} ...'.format(int(ele), round(float(len(np.where(y_tr == ele)[0])) / float(len(y_tr)), 2)))
         model.fit(X_tr, np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
                   verbose=verbose, validation_split=0.2, shuffle=True, callbacks=[early])
         # Save as attribute
         self.model = model
         # Memory efficiency
-        del X_tr, y_tr, inp, early, model
+        del X_tr, y_tr, early, model
 
     # Previous model enhanced with features in neural network
     def deep_conv_1D(self, size_merge=100, max_epochs=100, verbose=0) :
@@ -258,9 +252,6 @@ class Models :
         # Compile and launch the model
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
-        if verbose > 0 :
-            for ele in list(np.unique(y_tr)) :
-                print('  ~ Class {} with Ratio Of {} ...'.format(int(ele), round(float(len(np.where(y_tr == ele)[0])) / float(len(y_tr)), 2)))
         model.fit(X_tr + [self.loader.train.values], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
                   verbose=verbose, validation_split=0.2, shuffle=True, callbacks=[early])
         # Save as attribute
