@@ -211,8 +211,8 @@ class Models :
             del pbs
         elif self.name in self.case_bth :
             X_va = reformat_vectors(self.loader.X_va, reduced=self.reduced, red_index=self.red_idx)
-            X_va = X_va + list(self.loader.valid.values)
-            pbs = self.model.predict()
+            X_va = X_va + [self.loader.valid.values]
+            pbs = self.model.predict(X_va)
             dtf = score_verbose(self.loader.y_va, [np.argmax(ele) for ele in pbs])
             del X_va, pbs
         elif self.name in self.case_fea : 
