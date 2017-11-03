@@ -194,7 +194,7 @@ class Models :
         if verbose > 0 :
             for ele in list(np.unique(y_tr)) :
                 print('  ~ Class {} with Ratio Of {} ...'.format(int(ele), round(float(len(np.where(y_tr == ele)[0])) / float(len(y_tr)), 2)))
-        model.fit(X_tr + [list(self.loader.train.values)], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
+        model.fit(X_tr + [self.loader.train.values], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
                   verbose=verbose, validation_split=0.2, shuffle=True, callbacks=[early])
         # Save as attribute
         self.model = model
