@@ -14,6 +14,7 @@ import tensorflow, xgboost
 from functools import partial
 from scipy.stats import randint
 
+from sklearn import preprocessing
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.pipeline import Pipeline
@@ -21,7 +22,7 @@ from sklearn.externals import joblib
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.metrics import roc_curve, auc, f1_score, recall_score, precision_score, accuracy_score
-from sklearn.metrics import confusion_matrix, mean_squared_error
+from sklearn.metrics import confusion_matrix, mean_squared_error, roc_auc_score
 from sklearn.utils import shuffle
 from sklearn.neural_network import MLPClassifier
 
