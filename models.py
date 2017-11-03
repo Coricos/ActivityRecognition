@@ -264,11 +264,11 @@ class Models :
 
         # Compute the probabilities
         if self.name in self.case_raw :
-            pbs = self.model.predict(reformat_vectors(self.loader.X_va, reduced=self.reduced, red_index=self.red_idx))
+            pbs = self.model.predict(reformat_vectors(self.loader.X_va, self.name, reduced=self.reduced, red_index=self.red_idx))
             dtf = score_verbose(self.loader.y_va, [np.argmax(ele) for ele in pbs])
             del pbs
         elif self.name in self.case_bth :
-            X_va = reformat_vectors(self.loader.X_va, reduced=self.reduced, red_index=self.red_idx)
+            X_va = reformat_vectors(self.loader.X_va, self.name, reduced=self.reduced, red_index=self.red_idx)
             X_va = X_va + [self.loader.valid.values]
             pbs = self.model.predict(X_va)
             dtf = score_verbose(self.loader.y_va, [np.argmax(ele) for ele in pbs])
