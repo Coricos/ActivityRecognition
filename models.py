@@ -142,7 +142,7 @@ class Models :
         X_tr, y_tr = shuffle(self.loader.X_tr, self.loader.y_tr)
         X_tr = reformat_vectors(X_tr, reduced=self.reduced, red_index=self.red_idx)
         # Build inputs for convolution
-        inp = [Input(shape=X_tr[0][0].shape) for num in range(len(X_tr))]
+        inputs = [Input(shape=X_tr[0][0].shape) for num in range(len(X_tr))]
 
         # Build convolution model
         def conv_input(inp, size_merge) :
@@ -186,7 +186,7 @@ class Models :
         mod = Dense(len(np.unique(y_tr)), activation='softmax')(mod)
 
         # Final build of model
-        model = Model(inputs=inp+[inp1], outputs=mod)
+        model = Model(inputs=inputs+[inp1], outputs=mod)
         # Compile and launch the model
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=7, verbose=0, mode='auto')
