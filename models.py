@@ -208,20 +208,22 @@ class Models :
         if self.name in self.case_raw :
             pbs = self.model.predict(reformat_vectors(self.loader.X_va, reduced=self.reduced, red_index=self.red_idx))
             print('\n|-> Main scores on test subset :')
-            score_verbose(self.loader.y_va, [np.argmax(ele) for ele in pbs])
+            dtf = score_verbose(self.loader.y_va, [np.argmax(ele) for ele in pbs])
             del pbs
         elif self.name in self.case_bth :
             X_va = reformat_vectors(self.loader.X_va, reduced=self.reduced, red_index=self.red_idx)
             X_va = X_va + list(self.loader.valid.values)
             pbs = self.model.predict()
             print('\n|-> Main scores on test subset :')
-            score_verbose(self.loader.y_va, [np.argmax(ele) for ele in pbs])
+            dtf = score_verbose(self.loader.y_va, [np.argmax(ele) for ele in pbs])
             del X_va, pbs
         elif self.name in self.case_fea : 
             pbs = self.model.predict_proba(remove_columns(self.loader.valid, ['Labels', 'Subjects']))
             print('\n|-> Main scores on test subset :')
-            score_verbose(self.loader.valid['Labels'].values.ravel(), [np.argmax(ele) for ele in pbs])
+            dtf = score_verbose(self.loader.valid['Labels'].values.ravel(), [np.argmax(ele) for ele in pbs])
             del pbs
+        # Return results
+        return dtf
 
     # Display the importances when the trees are trained
     def plot_importances(self, n_features=20) :
