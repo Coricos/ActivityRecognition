@@ -154,10 +154,10 @@ class Models :
         # Build model
         model = Sequential()
         # Convolutionnal layers
-        model.add(Convolution2D(64, (9, 50), input_shape=X_tr[0].shape, data_format='channels_first'))
+        model.add(Convolution2D(64, (8, 50), input_shape=X_tr[0].shape, data_format='channels_first'))
         model.add(Activation('relu'))
         model.add(BatchNormalization(axis=1, momentum=0.9, center=True, scale=True))
-        model.add(MaxPooling2D(pool_size=(1, 5), data_format='channels_first'))
+        model.add(MaxPooling2D(pool_size=(1, 2), data_format='channels_first'))
         model.add(Dropout(0.5))
         model.add(Convolution2D(64, (1, 25), data_format='channels_first'))
         model.add(Activation('relu'))
