@@ -97,20 +97,20 @@ class Models :
                 mod = Conv1D(50, 25)(mod)
                 mod = BatchNormalization(axis=1, momentum=0.9, center=True, scale=True)(mod)
                 mod = Activation('relu')(mod)
-                mod = GaussianDropout(0.75)(mod)
+                mod = GaussianDropout(0.5)(mod)
 
                 return mod
 
             mod = merge([conv_input(inp) for inp in inputs])
             mod = Flatten()(mod)
-            mod = Dense(400)(mod)
+            mod = Dense(500)(mod)
             mod = BatchNormalization()(mod)
             mod = Activation('tanh')(mod)
             mod = Dropout(0.5)(mod)
-            mod = Dense(200)(mod)
+            mod = Dense(100)(mod)
             mod = BatchNormalization()(mod)
             mod = Activation('tanh')(mod)
-            mod = GaussianDropout(0.75)(mod)
+            mod = GaussianDropout(0.5)(mod)
             mod = Dense(output_size, activation='softmax')(mod)
             return mod
 
@@ -120,7 +120,7 @@ class Models :
         model = Model(inputs=inp, outputs=[build_model(inp, len(np.unique(y_tr)))])
         # Compile and launch the model
         model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
-        early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=7, verbose=0, mode='auto')
+        early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
         if verbose > 0 :
             for ele in list(np.unique(y_tr)) :
                 print('  ~ Class {} with Ratio Of {} ...'.format(int(ele), round(float(len(np.where(y_tr == ele)[0])) / float(len(y_tr)), 2)))
@@ -132,7 +132,7 @@ class Models :
         del X_tr, y_tr, inp, early, model
 
     # Previous model enhanced with features in neural network
-    def deep_conv_1D(self, size_merge=200, max_epochs=100, verbose=0) :
+    def deep_conv_1D(self, size_merge=100, max_epochs=100, verbose=0) :
 
         # Truncate the learning to a maximum of cpus
         from keras import backend as K
@@ -156,7 +156,7 @@ class Models :
             mod = Conv1D(50, 25)(mod)
             mod = BatchNormalization(axis=1, momentum=0.9, center=True, scale=True)(mod)
             mod = Activation('relu')(mod)
-            mod = GaussianDropout(0.75)(mod)
+            mod = GaussianDropout(05)(mod)
             mod = GlobalAveragePooling1D()(mod)
             mod = BatchNormalization()(mod)
             mod = Activation('tanh')(mod)
@@ -166,21 +166,21 @@ class Models :
             return mod
 
         inp1 = Input(shape=(self.loader.train.shape[1],))
-        mod1 = Dense(1000)(inp1)
+        mod1 = Dense(200)(inp1)
         mod1 = BatchNormalization()(mod1)
         mod1 = Activation('tanh')(mod1)
-        mod1 = GaussianDropout(0.75)(mod1)
+        mod1 = GaussianDropout(0.5)(mod1)
         mod1 = Dense(size_merge, activation='tanh')(mod1)
 
         mod = merge([conv_input(inp, size_merge) for inp in inputs] + [mod1])
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
         mod = Dropout(0.5)(mod)
-        mod = Dense(1000)(mod)
+        mod = Dense(500)(mod)
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
         mod = Dropout(0.5)(mod)
-        mod = Dense(200)(mod)
+        mod = Dense(100)(mod)
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
         mod = GaussianDropout(0.75)(mod)
@@ -190,7 +190,7 @@ class Models :
         model = Model(inputs=inputs+[inp1], outputs=mod)
         # Compile and launch the model
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-        early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=7, verbose=0, mode='auto')
+        early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
         if verbose > 0 :
             for ele in list(np.unique(y_tr)) :
                 print('  ~ Class {} with Ratio Of {} ...'.format(int(ele), round(float(len(np.where(y_tr == ele)[0])) / float(len(y_tr)), 2)))
