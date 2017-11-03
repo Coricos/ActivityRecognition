@@ -137,4 +137,4 @@ def score_verbose(y_true, y_pred) :
     # Memory efficiency
     del acc, f1s, rec, pre, lab, y_t, y_p
     # Return dataframe for score per class
-    print(pd.DataFrame(np.asarray(dtf).transpose(), index=['Acc', 'Rec', 'Pre', 'F1S'], columns=['Main'] + ['Class_{}'.format(k) for k in range(len(np.unique(y_pred)))]))
+    return pd.DataFrame(np.asarray(dtf).transpose(), index=['Acc', 'Rec', 'Pre', 'F1S'], columns=['Main'] + ['Class_{}'.format(k) for k in range(len(np.unique(y_pred)))]))
