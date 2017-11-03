@@ -319,6 +319,7 @@ class Models :
         if self.name == 'XGBoost' : self.xgboost(n_iter=n_iter, verbose=verbose)
         elif self.name == 'RandomForest' : self.random_forest(n_iter=n_iter, verbose=verbose)
         elif self.name == 'Conv1D' : self.conv_1D(max_epochs=max_epochs, verbose=verbose)
+        elif self.name == 'Conv2D' :  self.conv_2D(max_epochs)max_epochs, verbose=verbose)
         elif self.name == 'DeepConv1D' : self.deep_conv_1D(max_epochs=max_epochs, verbose=verbose)
         # Return object
         return self
