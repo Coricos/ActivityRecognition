@@ -88,7 +88,7 @@ class Models :
         K.set_session(S)
         # Prepares the data
         X_tr, y_tr = shuffle(self.loader.X_tr, self.loader.y_tr)
-        X_tr = reformat_vectors(X_tr, reduced=self.reduced, red_index=self.red_idx)
+        X_tr = reformat_vectors(X_tr, self.name, reduced=self.reduced, red_index=self.red_idx)
 
         # Build model
         def build_model(inputs, output_size) :
@@ -137,6 +137,64 @@ class Models :
         # Memory efficiency
         del X_tr, y_tr, inp, early, model
 
+    # Launch the one-channeled 2D-convolution model
+    def conv_2D(self, max_epochs=100, verbose=0) :
+
+        # Truncate the learning to a maximum of cpus
+        from keras import backend as K
+        K.set_image_dim_ordering('th')
+        S = tensorflow.Session(config=tensorflow.ConfigProto(intra_op_parallelism_threads=self.njobs))
+        K.set_session(S)
+        # Prepares the data
+        X_tr, y_tr = shuffle(self.loader.X_tr, self.loader.y_tr)
+        X_tr = reformat_vectors(X_tr, reduced=self.reduced, red_index=self.red_idx)
+        # Build model
+        model = Sequential()
+        # Convolutionnal layers
+        model.add(Convolution2D(64, (9, 50), input_shape=self.X_train[0].shape, data_format='channels_first'))
+        model.add(Activation('relu'))
+        model.add(BatchNormalization(axis=1, momentum=0.9, center=True, scale=True))
+        model.add(MaxPooling2D(pool_size=(1, 5), data_format='channels_first'))
+        model.add(Dropout(0.5))
+        model.add(Convolution2D(64, (1, 25), data_format='channels_first'))
+        model.add(Activation('relu'))
+        model.add(BatchNormalization(axis=1, momentum=0.9, center=True, scale=True))
+        model.add(MaxPooling2D(pool_size=(1, 5), data_format='channels_first'))
+        model.add(Dropout(0.5))
+        model.add(Convolution2D(64, (1, 5), data_format='channels_first'))
+        model.add(Activation('relu'))
+        model.add(BatchNormalization(axis=1, momentum=0.9, center=True, scale=True))
+        model.add(Dropout(0.5))
+        # Dense network
+        model.add(GlobalAveragePooling2D(data_format='channels_first'))
+        model.add(Dense(1000))
+        model.add(BatchNormalization())
+        model.add(Activation('tanh'))
+        model.add(Dropout(0.5))
+        model.add(Dense(500))
+        model.add(BatchNormalization())
+        model.add(Activation('tanh'))
+        model.add(Dropout(0.5))
+        model.add(Dense(100))
+        model.add(BatchNormalization())
+        model.add(Activation('tanh'))
+        model.add(Dropout(0.5))
+        model.add(Dense(len(np.unique(self.y_train))))
+        model.add(Activation('softmax'))
+        # Compile the model
+        model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+        # Create the callbacks
+        early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
+        if verbose > 0 :
+            for ele in list(np.unique(y_tr)) :
+                print('  ~ Class {} with Ratio Of {} ...'.format(int(ele), round(float(len(np.where(y_tr == ele)[0])) / float(len(y_tr)), 2)))
+        model.fit(X_tr + [self.loader.train.values], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
+                  verbose=verbose, validation_split=0.2, shuffle=True, callbacks=[early])
+        # Save as attribute
+        self.model = model
+        # Memory efficiency
+        del X_tr, y_tr, inp, early, model
+
     # Previous model enhanced with features in neural network
     def deep_conv_1D(self, size_merge=100, max_epochs=100, verbose=0) :
 
@@ -147,7 +205,7 @@ class Models :
         K.set_session(S)
         # Prepares the data
         X_tr, y_tr = shuffle(self.loader.X_tr, self.loader.y_tr)
-        X_tr = reformat_vectors(X_tr, reduced=self.reduced, red_index=self.red_idx)
+        X_tr = reformat_vectors(X_tr, self.name, reduced=self.reduced, red_index=self.red_idx)
         # Build inputs for convolution
         inputs = [Input(shape=X_tr[0][0].shape) for num in range(len(X_tr))]
 
