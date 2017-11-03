@@ -124,7 +124,8 @@ class Models :
         if verbose > 0 :
             for ele in list(np.unique(y_tr)) :
                 print('  ~ Class {} with Ratio Of {} ...'.format(int(ele), round(float(len(np.where(y_tr == ele)[0])) / float(len(y_tr)), 2)))
-        model.fit(X_tr, np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, verbose=verbose, validation_split=0.2, shuffle=True)
+        model.fit(X_tr, np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
+                  verbose=verbose, validation_split=0.2, shuffle=True, callbacks=[early])
         # Save as attribute
         self.model = model
         # Memory efficiency
@@ -193,7 +194,8 @@ class Models :
         if verbose > 0 :
             for ele in list(np.unique(y_tr)) :
                 print('  ~ Class {} with Ratio Of {} ...'.format(int(ele), round(float(len(np.where(y_tr == ele)[0])) / float(len(y_tr)), 2)))
-        model.fit(X_tr + [list(self.loader.train.values)], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, verbose=verbose, validation_split=0.2, shuffle=True)
+        model.fit(X_tr + [list(self.loader.train.values)], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
+                  verbose=verbose, validation_split=0.2, shuffle=True, callbacks=[early])
         # Save as attribute
         self.model = model
         # Memory efficiency
@@ -249,6 +251,9 @@ class Models :
             self.model = joblib.load('clf_{}.h5'.format(self.name))
         elif self.name in self.case_raw + self.case_bth : 
             self.model = load_model('clf_{}.h5'.format(self.name))
+
+        # Return the model
+        return self
 
     # Defines a launcher
     def learn(self, n_iter=50, max_epochs=100, verbose=0) :
