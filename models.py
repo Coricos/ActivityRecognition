@@ -21,13 +21,16 @@ class Models :
         # Load the data according to the model
         if model in self.case_fea :
             if init : self.loader = Loader().load_fea()
-            else : with open('./Loaders/loader_fea.pickle', 'rb') as raw : self.loader = pickle.load(raw)
+            else : 
+                with open('./Loaders/loader_fea.pickle', 'rb') as raw : self.loader = pickle.load(raw)
         elif model in self.case_raw : 
             if init : self.loader = Loader().load_raw()
-            else : with open('./Loaders/loader_raw.pickle', 'rb') as raw : self.loader = pickle.load(raw)
+            else : 
+                with open('./Loaders/loader_raw.pickle', 'rb') as raw : self.loader = pickle.load(raw)
         elif model in self.case_bth : 
             if init : self.loader = Loader().load_bth()
-            else : with open('./Loaders/loader_bth.pickle', 'rb') as raw : self.loader = pickle.load(raw)
+            else : 
+                with open('./Loaders/loader_bth.pickle', 'rb') as raw : self.loader = pickle.load(raw)
 
     # Launch the random searched XGBoost model
     def xgboost(self, n_iter=50, verbose=0) :
