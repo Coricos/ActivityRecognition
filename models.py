@@ -262,7 +262,5 @@ class Models :
         elif self.name == 'RandomForest' : self.random_forest(n_iter=n_iter, verbose=verbose)
         elif self.name == 'Conv1D' : self.conv_1D(max_epochs=max_epochs, verbose=verbose)
         elif self.name == 'DeepConv1D' : self.deep_conv_1D(max_epochs=max_epochs, verbose=verbose)
-        # Print the performance
-        self.performance()
         # Return object
         return self
