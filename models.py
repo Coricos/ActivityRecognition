@@ -154,7 +154,7 @@ class Models :
         # Build model
         model = Sequential()
         # Convolutionnal layers
-        model.add(Convolution2D(64, (9, 50), input_shape=self.X_train[0].shape, data_format='channels_first'))
+        model.add(Convolution2D(64, (9, 50), input_shape=X_tr[0].shape, data_format='channels_first'))
         model.add(Activation('relu'))
         model.add(BatchNormalization(axis=1, momentum=0.9, center=True, scale=True))
         model.add(MaxPooling2D(pool_size=(1, 5), data_format='channels_first'))
@@ -182,7 +182,7 @@ class Models :
         model.add(BatchNormalization())
         model.add(Activation('tanh'))
         model.add(Dropout(0.5))
-        model.add(Dense(len(np.unique(self.y_train))))
+        model.add(Dense(len(np.unique(y_tr))))
         model.add(Activation('softmax'))
         # Compile the model
         model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
