@@ -28,7 +28,11 @@ class Loader :
 
         # Load the features names
         with open('./Fea_Data/features.txt') as raw : lab = raw.readlines()
-        for ind in range(len(lab)) : lab[ind] = lab[ind].replace('\n','').replace(' ','')
+        for ind in range(len(lab)) : 
+            tmp = str(lab[ind].replace('\n','').replace(' ',''))
+            if tmp in lab : tmp = tmp.replace('1', '2')
+            if tmp in lab : tmp = tmp.replace('2', '3')
+            lab[ind] = tmp
         # Defines the scaler
         sca = StandardScaler(with_std=False)
         # Training set
