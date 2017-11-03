@@ -116,34 +116,29 @@ def extract(couple_index, data) :
 # Function aiming at displaying scores
 def score_verbose(y_true, y_pred) :
 
-    try : 
-        # Compute the mean scores
-        acc = accuracy_score(y_true, y_pred, sample_weight=sample_weight(y_true))
-        f1s = f1_score(y_true, y_pred, average='weighted', sample_weight=sample_weight(y_true))
-        rec = recall_score(y_true, y_pred, average='weighted', sample_weight=sample_weight(y_true))
-        pre = precision_score(y_true, y_pred, average='weighted', sample_weight=sample_weight(y_true))
-        print('    Accuracy {} - F1_Score {} - Recall {} - Precision {}'.format(round(acc, 3), round(f1s, 3), round(rec, 3), round(pre, 3)))
-        # Relative results to each class
+    # Compute the mean scores
+    acc = accuracy_score(y_true, y_pred, sample_weight=sample_weight(y_true))
+    f1s = f1_score(y_true, y_pred, average='weighted', sample_weight=sample_weight(y_true))
+    rec = recall_score(y_true, y_pred, average='weighted', sample_weight=sample_weight(y_true))
+    pre = precision_score(y_true, y_pred, average='weighted', sample_weight=sample_weight(y_true))
+    print('    Accuracy {} - F1_Score {} - Recall {} - Precision {}'.format(round(acc, 3), round(f1s, 3), round(rec, 3), round(pre, 3)))
+    # Relative results to each class
+    lab = np.unique(list(np.unique(y_true)) + list(np.unique(y_pred)))
+    y_t = preprocessing.label_binarize(y_true, np.unique(lab), pos_label=1)
+    y_p = preprocessing.label_binarize(y_pred, np.unique(lab), pos_label=1) 
+    for ind in range(len(lab)) :
+        # Common binary costs
+        pre = precision_score(y_t[:,ind], y_p[:,ind], sample_weight=sample_weight(y_t[:,ind]))
+        rec = recall_score(y_t[:,ind], y_p[:,ind], sample_weight=sample_weight(y_t[:,ind]))
+        f1s = f1_score(y_t[:,ind], y_p[:,ind], sample_weight=sample_weight(y_t[:,ind]))
+        acc = accuracy_score(y_t[:,ind], y_p[:,ind], sample_weight=sample_weight(y_t[:,ind]))
+        print('    Class {} : Acc {} - F1S {} - Pre {}'.format(ind, round(acc, 3), round(f1s, 3), round(pre, 3)))
+        # Works not on myopathy intern validation
         try : 
-            lab = np.unique(list(np.unique(y_true)) + list(np.unique(y_pred)))
-            y_t = preprocessing.label_binarize(y_true, np.unique(lab), pos_label=1)
-            y_p = preprocessing.label_binarize(y_pred, np.unique(lab), pos_label=1) 
-            for ind in range(len(lab)) :
-                # Common binary costs
-                pre = precision_score(y_t[:,ind], y_p[:,ind], sample_weight=sample_weight(y_t[:,ind]))
-                rec = recall_score(y_t[:,ind], y_p[:,ind], sample_weight=sample_weight(y_t[:,ind]))
-                f1s = f1_score(y_t[:,ind], y_p[:,ind], sample_weight=sample_weight(y_t[:,ind]))
-                acc = accuracy_score(y_t[:,ind], y_p[:,ind], sample_weight=sample_weight(y_t[:,ind]))
-                print('    Class {} : Acc {} - F1S {} - Pre {}'.format(ind, round(acc, 3), round(f1s, 3), round(pre, 3)))
-                # Works not on myopathy intern validation
-                try : 
-                    auc = roc_auc_score(y_t[:,ind], y_p[:,ind], sample_weight=sample_weight(y_t[:,ind]))
-                    sen, tpr = roc_curve(y_t[:,ind], y_p[:,ind], sample_weight=sample_weight(y_t[:,ind]))
-                    spe = 1 - tpr
-                    print('               AUC {} - Sen {} - Spe {}'.format(ind, round(auc, 3), round(sen, 3), round(spe, 3)))
-                except : pass
+            auc = roc_auc_score(y_t[:,ind], y_p[:,ind], sample_weight=sample_weight(y_t[:,ind]))
+            sen, tpr = roc_curve(y_t[:,ind], y_p[:,ind], sample_weight=sample_weight(y_t[:,ind]))
+            spe = 1 - tpr
+            print('               AUC {} - Sen {} - Spe {}'.format(ind, round(auc, 3), round(sen, 3), round(spe, 3)))
         except : pass
-        # Memory efficiency
-        del acc, f1s, rec, pre, lab, y_t, y_p
-
-    except : print('!!! Cannot display the scores ...')
+    # Memory efficiency
+    del acc, f1s, rec, pre, lab, y_t, y_p
