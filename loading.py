@@ -63,7 +63,7 @@ class Loader :
         # Where to gather the constructed dataframes
         raw = []
         # Extracts iteratively
-        for fle in tqdm.tqdm(remove_doublon(['_'.join(fle.split('_')[1:]) for fle in os.listdir(self.raw_path)])) :
+        for fle in remove_doublon(['_'.join(fle.split('_')[1:]) for fle in os.listdir(self.raw_path)]) :
             try : 
                 # Load the accelerometer data
                 acc = pd.read_csv('{}/acc_{}'.format(self.raw_path, fle), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
@@ -126,7 +126,7 @@ class Loader :
         # Where to gather the new arrays
         X_tr, y_tr, X_va, y_va = [], [], [], []
         # Deals with the training set
-        for ids in tqdm.tqdm(self.usr_train) :
+        for ids in self.usr_train :
             for exp in np.unique(self.description.query('User == {}'.format(ids))['Experience']) :
                 cut = self.description.query('Experience == {} & User == {}'.format(exp, ids))
                 for val in cut[['Label', 'Begin', 'End']].values :
@@ -137,7 +137,7 @@ class Loader :
                     del tmp, sig
                 del cut
         # Deals with the validation set
-        for ids in tqdm.tqdm(self.usr_valid) :
+        for ids in self.usr_valid :
             for exp in np.unique(self.description.query('User == {}'.format(ids))['Experience']) :
                 cut = self.description.query('Experience == {} & User == {}'.format(exp, ids))
                 for val in cut[['Label', 'Begin', 'End']].values :
