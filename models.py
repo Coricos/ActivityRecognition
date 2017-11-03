@@ -27,11 +27,11 @@ class Models :
     def xgboost(self, n_iter=50, verbose=0) :
 
         # Prepares the data
-        X_tr, y_tr = shuffle(remove_columns(self.loader.train, ['Subject', 'Labels']).values, self.loader.train['Labels'].values.ravel().astype(int) - 1)
+        X_tr, y_tr = shuffle(remove_columns(self.loader.train, ['Subjects', 'Labels']).values, self.loader.train['Labels'].values.ravel().astype(int) - 1)
         # Defines the model
         clf = xgboost.XGBClassifier(nthread=self.njobs)
-        prm = {'learning_rate': [0.0001, 0.001, 0.01, 0.1, 0.5, 1.0, 2.5, 5.0], 'max_depth': randint(10, 30),
-               'n_estimators': randint(250, 350),'gamma': [1.0, 0.1, 0.01, 0.001, 0.0001, 0.00001]}
+        prm = {'learning_rate': [0.01, 0.1, 0.25, 0.5, 0.75, 1.0], 'max_depth': randint(10, 30),
+               'n_estimators': randint(250, 300),'gamma': [0.01, 0.001, 0.0001]}
         # Launching the fine-tuning
         clf = RandomizedSearchCV(clf, verbose=verbose, cv=5, param_distributions=prm, n_iter=n_iter, 
                                  scoring=['accuracy', 'neg_log_loss', 'f1_weighted'], refit='accuracy')
@@ -164,14 +164,14 @@ class Models :
 
             return mod
 
-        inp1 = Input(shape=(bth.train.shape[1],))
+        inp1 = Input(shape=(self.loader.train.shape[1],))
         mod1 = Dense(1000)(inp1)
         mod1 = BatchNormalization()(mod1)
         mod1 = Activation('tanh')(mod1)
         mod1 = GaussianDropout(0.75)(mod1)
-        mod1 = Dense(output, activation='tanh')(mod1)
+        mod1 = Dense(size_merge, activation='tanh')(mod1)
 
-        mod = merge([conv_input(inp, output) for inp in inputs] + [mod1])
+        mod = merge([conv_input(inp, size_merge) for inp in inputs] + [mod1])
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
         mod = Dropout(0.5)(mod)
@@ -203,12 +203,23 @@ class Models :
     def performance(self) :
 
         # Compute the probabilities
-        if self.name in self.case_raw : pbs = self.model.predict(reformat_vectors(self.loader.X_va, reduced=self.reduced, red_index=self.red_idx))
-        elif self.name in self.case_bth : pass
-        elif self.name in self.case_fea : pbs = self.model.predict_proba(self.loader.X_va)
-        # Performance on the testing subset 
-        print('\n|-> Main scores on test subset :')
-        score_verbose(self.loader.y_va, [np.argmax(ele) for ele in pbs])
+        if self.name in self.case_raw :
+            pbs = self.model.predict(reformat_vectors(self.loader.X_va, reduced=self.reduced, red_index=self.red_idx))
+            print('\n|-> Main scores on test subset :')
+            score_verbose(self.loader.y_va, [np.argmax(ele) for ele in pbs])
+            del pbs
+        elif self.name in self.case_bth :
+            X_va = reformat_vectors(self.loader.X_va, reduced=self.reduced, red_index=self.red_idx)
+            X_va = X_va + list(self.loader.valid.values)
+            pbs = self.model.predict()
+            print('\n|-> Main scores on test subset :')
+            score_verbose(self.loader.y_va, [np.argmax(ele) for ele in pbs])
+            del X_va, pbs
+        elif self.name in self.case_fea : 
+            pbs = self.model.predict_proba(remove_columns(self.loader.valid, ['Labels', 'Subjects']))
+            print('\n|-> Main scores on test subset :')
+            score_verbose(self.loader.valid['Labels'].values.ravel(), [np.argmax(ele) for ele in pbs])
+            del pbs
 
     # Display the importances when the trees are trained
     def plot_importances(self, n_features=20) :
