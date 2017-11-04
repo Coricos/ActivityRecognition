@@ -61,7 +61,7 @@ class Models :
     def random_forest(self, n_iter=50, verbose=0) :
 
         # Prepares the data
-        X_tr, y_tr = shuffle(remove_columns(self.loader.train, ['Subject', 'Labels']).values, self.loader.train['Labels'].values.ravel().astype(int) - 1)
+        X_tr, y_tr = shuffle(remove_columns(self.loader.train, ['Subjects', 'Labels']).values, self.loader.train['Labels'].values.ravel().astype(int) - 1)
         # Defines the model
         clf = RandomForestClassifier(bootstrap=True, n_jobs=self.njobs, criterion='entropy')
         prm = {'n_estimators': randint(150, 250), 'max_depth': randint(10, 30), 'max_features': ['sqrt', None]}
@@ -274,7 +274,7 @@ class Models :
             dtf = score_verbose(self.loader.y_va, [np.argmax(ele) for ele in pbs])
             del X_va, pbs
         elif self.name in self.case_fea : 
-            pbs = self.model.predict_proba(remove_columns(self.loader.valid, ['Labels', 'Subjects']))
+            pbs = self.model.predict_proba(remove_columns(self.loader.valid, ['Subjects', 'Labels']).values)
             dtf = score_verbose(self.loader.valid['Labels'].values.ravel(), [np.argmax(ele) for ele in pbs])
             del pbs
         # Return results
