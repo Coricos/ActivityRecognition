@@ -287,7 +287,7 @@ class Models :
         idx = np.argsort(imp)[::-1]
         imp = imp[idx][:n_features]
         plt.figure(figsize=(18,10))
-        plt.title('Feature Importances - {}'.format(title))
+        plt.title('Feature Importances - {}'.format(self.name))
         plt.barh(range(len(imp)), imp, color="lightblue", align="center")
         plt.yticks(range(len(imp)), self.loader.train.columns[idx][:len(imp)])
         plt.ylim([-1, len(imp)])
