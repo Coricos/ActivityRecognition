@@ -275,7 +275,7 @@ class Models :
             del X_va, pbs
         elif self.name in self.case_fea : 
             pbs = self.model.predict_proba(remove_columns(self.loader.valid, ['Subjects', 'Labels']).values)
-            dtf = score_verbose(self.loader.valid['Labels'].values.ravel(), [np.argmax(ele) for ele in pbs])
+            dtf = score_verbose(self.loader.valid['Labels'].values.ravel(), np.asarray([np.argmax(ele) for ele in pbs]) + 1)
             del pbs
         # Return results
         return dtf
