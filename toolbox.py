@@ -137,6 +137,6 @@ def score_verbose(y_true, y_pred) :
         acc = accuracy_score(y_t[:,ind], y_p[:,ind], sample_weight=sample_weight(y_t[:,ind]))
         dtf.append([acc, rec, pre, f1s])
     # Memory efficiency
-    del acc, f1s, rec, pre, lab, y_t, y_p
+    del acc, f1s, rec, pre, y_t, y_p
     # Return dataframe for score per class
     return pd.DataFrame(np.asarray(dtf).transpose(), index=['Acc', 'Rec', 'Pre', 'F1S'], columns=['Main'] + ['Class_{}'.format(k) for k in range(len(np.unique(lab)))])
