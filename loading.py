@@ -224,8 +224,3 @@ class Loader :
         print('  ! Labels do match : {} out of {}...'.format(len(np.where(((self.train['Labels'].values.astype(int) - 1) == self.y_tr) == True)[0]), len(self.y_tr)))
         # Avoid corruption
         dtb.close()
-
-    # Add hand-crafted features from another source
-    # def add_features(self) :
-
-        # Refer to the dataset

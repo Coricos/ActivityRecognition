@@ -348,7 +348,8 @@ class Models :
             del pbs
         elif self.name in self.case_bth :
             X_va = reformat_vectors(self.r_e, self.name, reduced=self.reduced, red_index=self.red_idx)
-            X_va = X_va + [self.f_e]
+            if self.name == 'DeepConv1D' : X_va = X_va + [self.f_e]
+            elif self.name == 'DeepConv2D' : X_va = [X_va, self.f_e]
             pbs = self.model.predict(X_va)
             dtf = score_verbose(self.l_e, [np.argmax(ele) for ele in pbs])
             del X_va, pbs
