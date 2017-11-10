@@ -348,13 +348,13 @@ class Models :
             del pbs
         elif self.name in self.case_bth :
             X_va = reformat_vectors(self.r_e, self.name, reduced=self.reduced, red_index=self.red_idx)
-            X_va = X_va + [self.f_e.values]
+            X_va = X_va + [self.f_e]
             pbs = self.model.predict(X_va)
             dtf = score_verbose(self.l_e, [np.argmax(ele) for ele in pbs])
             del X_va, pbs
         elif self.name in self.case_fea : 
-            pbs = self.model.predict_proba(remove_columns(self.f_e, ['Subjects', 'Labels']).values)
-            dtf = score_verbose(self.f_e['Labels'].values.ravel(), np.asarray([np.argmax(ele) for ele in pbs]) + 1)
+            pbs = self.model.predict_proba(self.f_e)
+            dtf = score_verbose(self.l_e, np.asarray([np.argmax(ele) for ele in pbs]) + 1)
             del pbs
         # Return results
         return dtf
