@@ -18,25 +18,31 @@ class Models :
         # Default arguments for convolution
         self.reduced = reduced
         self.red_idx = red_index
-        # Load the data according to the model
+        # Load dataset
+        dtb = h5py.File('data.h5', 'r')
+        # Load specific intel according to the problematic
         if model in self.case_fea :
-            if init : self.loader = Loader().load_fea()
-            else : 
-                with open('./Loaders/loader_fea.pickle', 'rb') as raw : self.loader = pickle.load(raw)
+            self.f_t = dtb['FEA_t'].value
+            self.f_e = dtb['FEA_e'].value
         elif model in self.case_raw : 
-            if init : self.loader = Loader().load_raw()
-            else : 
-                with open('./Loaders/loader_raw.pickle', 'rb') as raw : self.loader = pickle.load(raw)
+            self.r_t = dtb['RAW_t'].value
+            self.r_e = dtb['RAW_e'].value
         elif model in self.case_bth : 
-            if init : self.loader = Loader().load_bth()
-            else : 
-                with open('./Loaders/loader_bth.pickle', 'rb') as raw : self.loader = pickle.load(raw)
+            self.f_t = dtb['FEA_t'].value
+            self.f_e = dtb['FEA_e'].value
+            self.r_t = dtb['RAW_t'].value
+            self.r_e = dtb['RAW_e'].value
+        # Load the labels
+        self.l_t = dtb['LAB_t'].value
+        self.l_e = dtb['LAB_e'].value
+        # Avoid corruption
+        dtb.close()
 
     # Launch the random searched XGBoost model
     def xgboost(self, n_iter=50, verbose=0) :
 
         # Prepares the data
-        X_tr, y_tr = shuffle(remove_columns(self.loader.train, ['Subjects', 'Labels']).values, self.loader.train['Labels'].values.ravel().astype(int) - 1)
+        X_tr, y_tr = shuffle(self.f_t, self.l_t)
         # Defines the model
         clf = xgboost.XGBClassifier(nthread=self.njobs)
         prm = {'learning_rate': [0.01, 0.1, 0.25, 0.5, 0.75, 1.0], 'max_depth': randint(10, 30),
@@ -56,12 +62,13 @@ class Models :
         print('  ~ Best score of {} ...'.format(clf.best_score_))
         # Save the best estimator as attribute
         self.model = clf.best_estimator_
+        del X_tr, y_tr, prm, clf, msg
 
     # Launch the random searched RandomForest model
     def random_forest(self, n_iter=50, verbose=0) :
 
         # Prepares the data
-        X_tr, y_tr = shuffle(remove_columns(self.loader.train, ['Subjects', 'Labels']).values, self.loader.train['Labels'].values.ravel().astype(int) - 1)
+        X_tr, y_tr = shuffle(self.f_t, self.l_t)
         # Defines the model
         clf = RandomForestClassifier(bootstrap=True, n_jobs=self.njobs, criterion='entropy')
         prm = {'n_estimators': randint(150, 250), 'max_depth': randint(10, 30), 'max_features': ['sqrt', None]}
@@ -80,6 +87,7 @@ class Models :
         print('  ~ Best score of {} ...'.format(clf.best_score_))
         # Save the best estimator as attribute
         self.model = clf.best_estimator_
+        del X_tr, y_tr, clf, prm, msg
 
     # Launch the multi-channels 1D-convolution model
     def conv_1D(self, max_epochs=100, verbose=0) :
@@ -90,7 +98,7 @@ class Models :
         S = tensorflow.Session(config=tensorflow.ConfigProto(intra_op_parallelism_threads=self.njobs))
         K.set_session(S)
         # Prepares the data
-        X_tr, y_tr = shuffle(self.loader.X_tr, self.loader.y_tr)
+        X_tr, y_tr = shuffle(self.r_t, self.l_t)
         X_tr = reformat_vectors(X_tr, self.name, reduced=self.reduced, red_index=self.red_idx)
 
         # Build model
@@ -155,7 +163,7 @@ class Models :
         S = tensorflow.Session(config=tensorflow.ConfigProto(intra_op_parallelism_threads=self.njobs))
         K.set_session(S)
         # Prepares the data
-        X_tr, y_tr = shuffle(self.loader.X_tr, self.loader.y_tr)
+        X_tr, y_tr = shuffle(self.r_t, self.l_t)
         X_tr = reformat_vectors(X_tr, self.name, reduced=self.reduced, red_index=self.red_idx)
         # Build model
         model = Sequential()
@@ -206,7 +214,7 @@ class Models :
         S = tensorflow.Session(config=tensorflow.ConfigProto(intra_op_parallelism_threads=self.njobs))
         K.set_session(S)
         # Prepares the data
-        X_tr, y_tr = shuffle(self.loader.X_tr, self.loader.y_tr)
+        X_tr, y_tr = shuffle(self.r_t, self.l_t)
         X_tr = reformat_vectors(X_tr, self.name, reduced=self.reduced, red_index=self.red_idx)
         # Build inputs for convolution
         inputs = [Input(shape=X_tr[0][0].shape) for num in range(len(X_tr))]
@@ -228,7 +236,7 @@ class Models :
 
             return mod
 
-        inp1 = Input(shape=(self.loader.train.shape[1],))
+        inp1 = Input(shape=(self.f_t.shape[1],))
         mod1 = Dense(200)(inp1)
         mod1 = BatchNormalization()(mod1)
         mod1 = Activation('tanh')(mod1)
@@ -256,7 +264,7 @@ class Models :
         # Compile and launch the model
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
-        model.fit(X_tr + [self.loader.train.values], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
+        model.fit(X_tr + [self.f_t.values], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
                   verbose=verbose, validation_split=0.2, shuffle=True, callbacks=[early])
         # Save as attribute
         self.model = model
@@ -272,7 +280,7 @@ class Models :
         S = tensorflow.Session(config=tensorflow.ConfigProto(intra_op_parallelism_threads=self.njobs))
         K.set_session(S)
         # Prepares the data
-        X_tr, y_tr = shuffle(self.loader.X_tr, self.loader.y_tr)
+        X_tr, y_tr = shuffle(self.r_t, self.l_t)
         X_tr = reformat_vectors(X_tr, self.name, reduced=self.reduced, red_index=self.red_idx)
         # Build inputs for convolution
         inp0 = Input(shape=X_tr[0].shape)
@@ -293,7 +301,7 @@ class Models :
         mod0 = Dropout(0.25)(mod0)
         mod0 = Dense(size_merge, activation='tanh')(mod0)
         # Input features
-        inp1 = Input(shape=(self.loader.train.shape[1],))
+        inp1 = Input(shape=(self.f_t.shape[1],))
         mod1 = Dense(250)(inp1)
         mod1 = BatchNormalization()(mod1)
         mod1 = Activation('tanh')(mod1)
@@ -326,7 +334,7 @@ class Models :
         # Compile and launch the model
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
-        model.fit([X_tr, self.loader.train.values], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
+        model.fit([X_tr, self.f_t.values], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
                   verbose=verbose, validation_split=0.2, shuffle=True, callbacks=[early])
         # Save as attribute
         self.model = model
@@ -338,18 +346,18 @@ class Models :
 
         # Compute the probabilities
         if self.name in self.case_raw :
-            pbs = self.model.predict(reformat_vectors(self.loader.X_va, self.name, reduced=self.reduced, red_index=self.red_idx))
-            dtf = score_verbose(self.loader.y_va, [np.argmax(ele) for ele in pbs])
+            pbs = self.model.predict(reformat_vectors(self.r_e, self.name, reduced=self.reduced, red_index=self.red_idx))
+            dtf = score_verbose(self.l_e, [np.argmax(ele) for ele in pbs])
             del pbs
         elif self.name in self.case_bth :
-            X_va = reformat_vectors(self.loader.X_va, self.name, reduced=self.reduced, red_index=self.red_idx)
-            X_va = X_va + [self.loader.valid.values]
+            X_va = reformat_vectors(self.r_e, self.name, reduced=self.reduced, red_index=self.red_idx)
+            X_va = X_va + [self.f_e.values]
             pbs = self.model.predict(X_va)
-            dtf = score_verbose(self.loader.y_va, [np.argmax(ele) for ele in pbs])
+            dtf = score_verbose(self.l_e, [np.argmax(ele) for ele in pbs])
             del X_va, pbs
         elif self.name in self.case_fea : 
-            pbs = self.model.predict_proba(remove_columns(self.loader.valid, ['Subjects', 'Labels']).values)
-            dtf = score_verbose(self.loader.valid['Labels'].values.ravel(), np.asarray([np.argmax(ele) for ele in pbs]) + 1)
+            pbs = self.model.predict_proba(remove_columns(self.f_e, ['Subjects', 'Labels']).values)
+            dtf = score_verbose(self.f_e['Labels'].values.ravel(), np.asarray([np.argmax(ele) for ele in pbs]) + 1)
             del pbs
         # Return results
         return dtf
@@ -363,7 +371,7 @@ class Models :
         plt.figure(figsize=(18,10))
         plt.title('Feature Importances - {}'.format(self.name))
         plt.barh(range(len(imp)), imp, color="lightblue", align="center")
-        plt.yticks(range(len(imp)), self.loader.train.columns[idx][:len(imp)])
+        plt.yticks(range(len(imp)), self.f_t.columns[idx][:len(imp)])
         plt.ylim([-1, len(imp)])
         plt.show()
 
