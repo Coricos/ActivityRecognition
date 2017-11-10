@@ -106,11 +106,11 @@ class Models :
                 mod = Conv1D(50, 25)(mod)
                 mod = BatchNormalization()(mod)
                 mod = Activation('relu')(mod)
-                mod = MaxPooling1D(pool_size=2)(mod)
                 mod = Dropout(0.30)(mod)
-                mod = Conv1D(25, 10)(mod)
+                mod = Conv1D(50, 25)(mod)
                 mod = BatchNormalization()(mod)
                 mod = Activation('relu')(mod)
+                mod = Dropout(0.30)(mod)
                 mod = GlobalAveragePooling1D()(mod)
 
                 return mod
