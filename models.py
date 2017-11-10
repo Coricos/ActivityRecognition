@@ -22,9 +22,12 @@ class Models :
         dtb = h5py.File('data.h5', 'r')
         # Load specific intel according to the problematic
         if model in self.case_fea + self.case_bth:
+            self.h_t = dtb['HDF_t'].value
+            self.h_e = dtb['HDF_e'].value
             self.f_t = dtb['FEA_t'].value
             self.f_e = dtb['FEA_e'].value
             print('  ! Fea_Train_Mean : {}, Fea_Valid_Mean : {}'.format(round(np.mean(self.f_t), 3), round(np.mean(self.f_e), 3)))
+            print('  ! Hdf_Train_Mean : {}, Hdf_Valid_Mean : {}'.format(round(np.mean(self.h_t), 3), round(np.mean(self.h_e), 3)))
         if model in self.case_raw + self.case_bth: 
             self.r_t = dtb['RAW_t'].value
             self.r_e = dtb['RAW_e'].value
@@ -39,7 +42,7 @@ class Models :
     def xgboost(self, n_iter=50, verbose=0) :
 
         # Prepares the data
-        X_tr, y_tr = shuffle(self.f_t, self.l_t)
+        X_tr, y_tr = shuffle(np.hstack((self.f_t, self.h_t)), self.l_t)
         # Defines the model
         clf = xgboost.XGBClassifier(nthread=self.njobs)
         prm = {'learning_rate': [0.01, 0.1, 0.25, 0.5, 0.75, 1.0], 'max_depth': randint(10, 30),
@@ -65,7 +68,7 @@ class Models :
     def random_forest(self, n_iter=50, verbose=0) :
 
         # Prepares the data
-        X_tr, y_tr = shuffle(self.f_t, self.l_t)
+        X_tr, y_tr = shuffle(np.hstack((self.f_t, self.h_t)), self.l_t)
         # Defines the model
         clf = RandomForestClassifier(bootstrap=True, n_jobs=self.njobs, criterion='entropy')
         prm = {'n_estimators': randint(150, 250), 'max_depth': randint(10, 30), 'max_features': ['sqrt', None]}
@@ -170,12 +173,12 @@ class Models :
         model.add(BatchNormalization(axis=1, momentum=0.95))
         model.add(MaxPooling2D(pool_size=(1, 1.5), data_format='channels_first'))
         model.add(Dropout(0.25))
-        model.add(Convolution2D(64, (1, 30), data_format='channels_first'))
+        model.add(Convolution2D(128, (1, 30), data_format='channels_first'))
         model.add(Activation('relu'))
         model.add(BatchNormalization(axis=1, momentum=0.925))
         model.add(MaxPooling2D(pool_size=(1, 1.5), data_format='channels_first'))
         model.add(Dropout(0.25))
-        model.add(Convolution2D(64, (1, 10), data_format='channels_first'))
+        model.add(Convolution2D(256, (1, 10), data_format='channels_first'))
         model.add(Activation('relu'))
         model.add(BatchNormalization(axis=1, momentum=0.9))
         model.add(GaussianDropout(0.25))
@@ -203,7 +206,7 @@ class Models :
         del X_tr, y_tr, early, model
 
     # Previous model enhanced with features in neural network
-    def deep_conv_1D(self, size_merge=75, max_epochs=100, verbose=0) :
+    def deep_conv_1D(self, size_merge=100, max_epochs=100, verbose=0) :
 
         # Truncate the learning to a maximum of cpus
         from keras import backend as K
@@ -211,7 +214,7 @@ class Models :
         S = tensorflow.Session(config=tensorflow.ConfigProto(intra_op_parallelism_threads=self.njobs))
         K.set_session(S)
         # Prepares the data
-        X_tr, f_tr, y_tr = shuffle(self.r_t, self.f_t, self.l_t)
+        X_tr, f_tr, h_tr, y_tr = shuffle(self.r_t, self.f_t, self.h_t, self.l_t)
         X_tr = reformat_vectors(X_tr, self.name, reduced=self.reduced, red_index=self.red_idx)
         # Build inputs for convolution
         inputs = [Input(shape=X_tr[0][0].shape) for num in range(len(X_tr))]
@@ -224,7 +227,7 @@ class Models :
             mod = Activation('relu')(mod)
             mod = MaxPooling1D(pool_size=2)(mod)
             mod = Dropout(0.1)(mod)
-            mod = Conv1D(50, 32)(mod)
+            mod = Conv1D(100, 32)(mod)
             mod = BatchNormalization(axis=1, momentum=0.9, center=True, scale=True)(mod)
             mod = Activation('relu')(mod)
             mod = GaussianDropout(0.25)(mod)
@@ -234,34 +237,41 @@ class Models :
             return mod
 
         inp1 = Input(shape=(f_tr.shape[1],))
-        mod1 = Dense(200)(inp1)
+        mod1 = Dense(300)(inp1)
         mod1 = BatchNormalization()(mod1)
         mod1 = Activation('tanh')(mod1)
         mod1 = Dropout(0.25)(mod1)
         mod1 = Dense(size_merge, activation='relu')(mod1)
 
-        mod = merge([conv_input(inp, size_merge) for inp in inputs] + [mod1])
+        inp2 = Input(shape=(f_tr.shape[1],))
+        mod2 = Dense(300)(inp2)
+        mod2 = BatchNormalization()(mod2)
+        mod2 = Activation('tanh')(mod2)
+        mod2 = Dropout(0.25)(mod2)
+        mod2 = Dense(size_merge, activation='relu')(mod2)
+
+        mod = merge([conv_input(inp, size_merge) for inp in inputs] + [mod1, mod2])
         mod = BatchNormalization()(mod)
-        mod = Dense(200)(mod)
+        mod = Dense(500)(mod)
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
         mod = Dropout(0.2)(mod)
-        mod = Dense(200)(mod)
+        mod = Dense(500)(mod)
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
         mod = Dropout(0.2)(mod)
-        mod = Dense(100)(mod)
+        mod = Dense(250)(mod)
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
         mod = GaussianDropout(0.2)(mod)
         mod = Dense(len(np.unique(y_tr)), activation='softmax')(mod)
 
         # Final build of model
-        model = Model(inputs=inputs+[inp1], outputs=mod)
+        model = Model(inputs=inputs+[inp1, inp2], outputs=mod)
         # Compile and launch the model
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
-        model.fit(X_tr + [f_tr], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
+        model.fit(X_tr + [f_tr, h_tr], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
                   verbose=verbose, validation_split=0.2, shuffle=True, callbacks=[early])
         # Save as attribute
         self.model = model
@@ -277,7 +287,7 @@ class Models :
         S = tensorflow.Session(config=tensorflow.ConfigProto(intra_op_parallelism_threads=self.njobs))
         K.set_session(S)
         # Prepares the data
-        X_tr, f_tr, y_tr = shuffle(self.r_t, self.f_t, self.l_t)
+        X_tr, f_tr, h_tr, y_tr = shuffle(self.r_t, self.f_t, self.h_t, self.l_t)
         X_tr = reformat_vectors(X_tr, self.name, reduced=self.reduced, red_index=self.red_idx)
         # Build inputs for convolution
         inp0 = Input(shape=X_tr[0].shape)
@@ -286,7 +296,7 @@ class Models :
         mod0 = BatchNormalization(axis=1)(mod0)
         mod0 = MaxPooling2D(pool_size=(1, 2), data_format='channels_first')(mod0)
         mod0 = Dropout(0.25)(mod0)
-        mod0 = Convolution2D(64, (1, 30), data_format='channels_first')(mod0)
+        mod0 = Convolution2D(128, (1, 30), data_format='channels_first')(mod0)
         mod0 = Activation('relu')(mod0)
         mod0 = BatchNormalization(axis=1)(mod0)
         mod0 = MaxPooling2D(pool_size=(1, 2), data_format='channels_first')(mod0)
@@ -303,11 +313,22 @@ class Models :
         mod1 = BatchNormalization()(mod1)
         mod1 = Activation('tanh')(mod1)
         mod1 = Dropout(0.25)(mod1)
-        mod1 = Dense(150)(inp1)
+        mod1 = Dense(150)(mod1)
         mod1 = BatchNormalization()(mod1)
         mod1 = Activation('tanh')(mod1)
         mod1 = Dropout(0.25)(mod1)
         mod1 = Dense(size_merge, activation='tanh')(mod1)
+        # Handcrafted features
+        inp2 = Input(shape=(h_tr.shape[1],))
+        mod2 = Dense(250)(inp2)
+        mod2 = BatchNormalization()(mod2)
+        mod2 = Activation('tanh')(mod2)
+        mod2 = Dropout(0.25)(mod2)
+        mod2 = Dense(150)(mod2)
+        mod2 = BatchNormalization()(mod2)
+        mod2 = Activation('tanh')(mod2)
+        mod2 = Dropout(0.25)(mod2)
+        mod2 = Dense(size_merge, activation='tanh')(mod2)
         # Merge both channels
         mod = merge([mod0, mod1])
         mod = BatchNormalization()(mod)
@@ -327,11 +348,11 @@ class Models :
         mod = Dropout(0.25)(mod)
         mod = Dense(len(np.unique(y_tr)), activation='softmax')(mod)
         # Final build of model
-        model = Model(inputs=[inp0, inp1], outputs=mod)
+        model = Model(inputs=[inp0, inp1, inp2], outputs=mod)
         # Compile and launch the model
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
-        model.fit([X_tr, f_tr], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
+        model.fit([X_tr, f_tr, h_tr], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
                   verbose=verbose, validation_split=0.2, shuffle=True, callbacks=[early])
         # Save as attribute
         self.model = model

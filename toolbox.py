@@ -140,3 +140,16 @@ def score_verbose(y_true, y_pred) :
     del acc, f1s, rec, pre, y_t, y_p
     # Return dataframe for score per class
     return pd.DataFrame(np.asarray(dtf).transpose(), index=['Acc', 'Rec', 'Pre', 'F1S'], columns=['Main'] + ['Class_{}'.format(k) for k in range(len(np.unique(lab)))])
+
+
+# From vector to movement, on multiprocessed way
+def from_vec_to_mvt(vec, sampling_frequency=50) :
+    
+    col = ['Time', 'Battery', 'Temp', 'Altitude', 'Ga1', 'Ga2', 'Ga3', 'Om1', 'Om2', 'Om3', 'Ma1', 'Ma2', 'Ma3']
+    tmp = np.random.rand(vec.shape[1]).reshape(1, vec.shape[1])
+    vec = np.vstack([tmp, tmp, tmp, tmp, vec[:6], tmp, tmp, tmp])
+    dtf = pd.DataFrame(vec.transpose(), columns=col)
+    sam = Sample('None', dtf=dtf)
+    sam.sampling_frequency = 50
+    
+    return Movement(sam)
