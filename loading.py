@@ -218,7 +218,14 @@ class Loader :
         dtb.create_dataset('FEA_e', data=remove_columns(self.valid, ['Subjects', 'Labels']))
         dtb.create_dataset('RAW_t', data=self.X_tr)
         dtb.create_dataset('RAW_e', data=self.X_va)
+        dtb.create_dataset('LAB_t', data=self.y_tr.astype(int))
+        dtb.create_dataset('LAB_e', data=self.y_va.astype(int))
         print('  ~ Data serialized ...')
-        print('  ! Labels do match : {} ...'.format((self.train['Labels'].values.astype(int) - 1) == self.y_tr))
+        print('  ! Labels do match : {} out of {}...'.format(len(np.where(((self.train['Labels'].values.astype(int) - 1) == self.y_tr) == True)[0]), len(self.y_tr)))
         # Avoid corruption
         dtb.close()
+
+    # Add hand-crafted features from another source
+    # def add_features(self) :
+
+        # Refer to the dataset
