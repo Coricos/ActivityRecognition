@@ -25,7 +25,7 @@ class Models :
             self.f_t = dtb['FEA_t'].value
             self.f_e = dtb['FEA_e'].value
             print('  ! Fea_Train_Mean : {}, Fea_Valid_Mean : {}'.format(round(np.mean(self.f_t), 3), round(np.mean(self.f_e), 3)))
-        elif model in self.case_raw + self.case_bth: 
+        if model in self.case_raw + self.case_bth: 
             self.r_t = dtb['RAW_t'].value
             self.r_e = dtb['RAW_e'].value
             print('  ! Raw_Train_Mean : {}, Raw_Valid_Mean : {}'.format(round(np.mean(self.r_t), 3), round(np.mean(self.r_e), 3)))
@@ -211,7 +211,7 @@ class Models :
         S = tensorflow.Session(config=tensorflow.ConfigProto(intra_op_parallelism_threads=self.njobs))
         K.set_session(S)
         # Prepares the data
-        X_tr, y_tr = shuffle(self.r_t, self.l_t)
+        X_tr, f_tr, y_tr = shuffle(self.r_t, self.f_t, self.l_t)
         X_tr = reformat_vectors(X_tr, self.name, reduced=self.reduced, red_index=self.red_idx)
         # Build inputs for convolution
         inputs = [Input(shape=X_tr[0][0].shape) for num in range(len(X_tr))]
@@ -233,7 +233,7 @@ class Models :
 
             return mod
 
-        inp1 = Input(shape=(self.f_t.shape[1],))
+        inp1 = Input(shape=(f_tr.shape[1],))
         mod1 = Dense(200)(inp1)
         mod1 = BatchNormalization()(mod1)
         mod1 = Activation('tanh')(mod1)
@@ -261,12 +261,12 @@ class Models :
         # Compile and launch the model
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
-        model.fit(X_tr + [self.f_t.values], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
+        model.fit(X_tr + [f_tr], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
                   verbose=verbose, validation_split=0.2, shuffle=True, callbacks=[early])
         # Save as attribute
         self.model = model
         # Memory efficiency
-        del X_tr, y_tr, inp, early, model
+        del X_tr, y_tr, f_tr, inp, early, model
 
     # Previous model enhanced with features in neural network
     def deep_conv_2D(self, size_merge=100, max_epochs=100, verbose=0) :
