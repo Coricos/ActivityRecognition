@@ -7,7 +7,7 @@ from loading import *
 class Models :
 
     # Initialization
-    def __init__(self, model, init=False, max_jobs=multiprocessing.cpu_count()-1, reduced=False, red_index=[6, 7]) :
+    def __init__(self, model, max_jobs=multiprocessing.cpu_count()-1, reduced=False, red_index=[6, 7]) :
 
         self.name = model
         self.njobs = max_jobs
@@ -21,17 +21,14 @@ class Models :
         # Load dataset
         dtb = h5py.File('data.h5', 'r')
         # Load specific intel according to the problematic
-        if model in self.case_fea :
+        if model in self.case_fea + self.case_bth:
             self.f_t = dtb['FEA_t'].value
             self.f_e = dtb['FEA_e'].value
-        elif model in self.case_raw : 
+            print('  ! Fea_Train_Mean : {}, Fea_Valid_Mean : {}'.format(round(np.mean(self.f_t), 3), round(np.mean(self.f_e), 3)))
+        elif model in self.case_raw + self.case_bth: 
             self.r_t = dtb['RAW_t'].value
             self.r_e = dtb['RAW_e'].value
-        elif model in self.case_bth : 
-            self.f_t = dtb['FEA_t'].value
-            self.f_e = dtb['FEA_e'].value
-            self.r_t = dtb['RAW_t'].value
-            self.r_e = dtb['RAW_e'].value
+            print('  ! Raw_Train_Mean : {}, Raw_Valid_Mean : {}'.format(round(np.mean(self.r_t), 3), round(np.mean(self.r_e), 3)))
         # Load the labels
         self.l_t = dtb['LAB_t'].value
         self.l_e = dtb['LAB_e'].value
@@ -168,17 +165,17 @@ class Models :
         # Build model
         model = Sequential()
         # Convolutionnal layers
-        model.add(Convolution2D(64, (8, 92), input_shape=X_tr[0].shape, data_format='channels_first'))
+        model.add(Convolution2D(64, (8, 85), input_shape=X_tr[0].shape, data_format='channels_first'))
         model.add(Activation('relu'))
         model.add(BatchNormalization(axis=1, momentum=0.95))
         model.add(MaxPooling2D(pool_size=(1, 1.5), data_format='channels_first'))
         model.add(Dropout(0.25))
-        model.add(Convolution2D(64, (1, 46), data_format='channels_first'))
+        model.add(Convolution2D(64, (1, 45), data_format='channels_first'))
         model.add(Activation('relu'))
         model.add(BatchNormalization(axis=1, momentum=0.925))
         model.add(MaxPooling2D(pool_size=(1, 1.5), data_format='channels_first'))
         model.add(Dropout(0.25))
-        model.add(Convolution2D(64, (1, 23), data_format='channels_first'))
+        model.add(Convolution2D(64, (1, 10), data_format='channels_first'))
         model.add(Activation('relu'))
         model.add(BatchNormalization(axis=1, momentum=0.9))
         model.add(GaussianDropout(0.25))
