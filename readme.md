@@ -13,3 +13,7 @@ My whole project is based on the [dataset](https://www.kaggle.com/uciml/human-ac
 * 1D Convolution
 * 2D Convolution
 * Mixed Neural Networks
+
+## Features
+
+The features being used to feed both the boosted trees and the neural networks are based on the ones given in the dataset, but also my own handcrafted features, based on experience, which I could obtain due to the extracted raw signals.
