@@ -170,7 +170,7 @@ class Models :
         model.add(BatchNormalization(axis=1, momentum=0.95))
         model.add(MaxPooling2D(pool_size=(1, 1.5), data_format='channels_first'))
         model.add(Dropout(0.25))
-        model.add(Convolution2D(64, (1, 45), data_format='channels_first'))
+        model.add(Convolution2D(64, (1, 30), data_format='channels_first'))
         model.add(Activation('relu'))
         model.add(BatchNormalization(axis=1, momentum=0.925))
         model.add(MaxPooling2D(pool_size=(1, 1.5), data_format='channels_first'))
