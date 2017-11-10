@@ -216,8 +216,8 @@ class Loader :
         # Create the corresponding datasets
         dtb.create_dataset('FEA_t', data=remove_columns(self.train, ['Subjects', 'Labels']))
         dtb.create_dataset('FEA_e', data=remove_columns(self.valid, ['Subjects', 'Labels']))
-        dtb.create_dataset('RAW_t', data=X_tr)
-        dtb.create_dataset('RAW_e', data=X_va)
+        dtb.create_dataset('RAW_t', data=self.X_tr)
+        dtb.create_dataset('RAW_e', data=self.X_va)
         print('  ~ Data serialized ...')
         print('  ! Labels do match : {} ...'.format((self.train['Labels'].values.astype(int) - 1) == self.y_tr))
         # Avoid corruption
