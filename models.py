@@ -277,7 +277,7 @@ class Models :
         S = tensorflow.Session(config=tensorflow.ConfigProto(intra_op_parallelism_threads=self.njobs))
         K.set_session(S)
         # Prepares the data
-        X_tr, y_tr = shuffle(self.r_t, self.l_t)
+        X_tr, f_tr, y_tr = shuffle(self.r_t, self.f_t, self.l_t)
         X_tr = reformat_vectors(X_tr, self.name, reduced=self.reduced, red_index=self.red_idx)
         # Build inputs for convolution
         inp0 = Input(shape=X_tr[0].shape)
@@ -298,7 +298,7 @@ class Models :
         mod0 = Dropout(0.25)(mod0)
         mod0 = Dense(size_merge, activation='tanh')(mod0)
         # Input features
-        inp1 = Input(shape=(self.f_t.shape[1],))
+        inp1 = Input(shape=(f_tr.shape[1],))
         mod1 = Dense(250)(inp1)
         mod1 = BatchNormalization()(mod1)
         mod1 = Activation('tanh')(mod1)
@@ -331,12 +331,12 @@ class Models :
         # Compile and launch the model
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
-        model.fit([X_tr, self.f_t.values], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
+        model.fit([X_tr, f_tr], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
                   verbose=verbose, validation_split=0.2, shuffle=True, callbacks=[early])
         # Save as attribute
         self.model = model
         # Memory efficiency
-        del X_tr, y_tr, inp1, inp0, mod, mod0, early, model
+        del X_tr, y_tr, f_tr, inp1, inp0, mod, mod0, early, model
 
     # Estimates the performance of the model
     def performance(self) :
