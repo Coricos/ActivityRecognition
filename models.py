@@ -98,7 +98,7 @@ class Models :
 
             def conv_input(inp) :
 
-                mod = Conv1D(100, 70)(inp)
+                mod = Conv1D(100, 75)(inp)
                 mod = BatchNormalization()(mod)
                 mod = Activation('relu')(mod)
                 mod = MaxPooling1D(pool_size=2)(mod)
