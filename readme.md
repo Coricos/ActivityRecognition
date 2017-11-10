@@ -1,5 +1,3 @@
-Author : DINDIN Meryll, Date : 01/11/2017
-
 # Activity Recognition
 
 ## Introduction 

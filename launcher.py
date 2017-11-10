@@ -1,6 +1,3 @@
-# Author : DINDIN Meryll
-# Date : 02/11/2017
-
 from models import *
 
 if __name__ == '__main__' :

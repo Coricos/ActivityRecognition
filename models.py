@@ -1,6 +1,3 @@
-# Author : DINDIN Meryll
-# Date : 01/11/2017
-
 from loading import *
 
 # Build the models as initialized
