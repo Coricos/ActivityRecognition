@@ -46,7 +46,7 @@ class Loader :
         l_va = read_text_file('{}/y_test.txt'.format(self.fea_path), 'Labels')
         i_va = read_text_file('{}/subject_id_test.txt'.format(self.fea_path), 'Subjects')
         # Fit and rescaler
-        sca.fit(fast_concatenate([X_tr, X_va], axis=0))
+        sca.fit(X_tr)
         X_tr = pd.DataFrame(sca.transform(X_tr), columns=X_tr.columns, index=X_tr.index)
         X_va = pd.DataFrame(sca.transform(X_va), columns=X_va.columns, index=X_va.index)
         # Save as attribute
@@ -163,7 +163,7 @@ class Loader :
         self.sliding_extraction(both)
 
         # Local function for processing
-        def process(img, scalers) :
+        def process(img, scalers, fit=False) :
 
             # Save and apply new adapted format
             sz0, sz1 = img.shape[0], img.shape[1]*img.shape[2]/8
@@ -185,7 +185,7 @@ class Loader :
         # Defines the scalers
         sca = [Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler(with_std=False))]) for i in range(8)]
         # Fit the scalers
-        img = np.concatenate((self.X_tr, self.X_va))
+        img = self.X_tr
         img = np.asarray([img[:, sig, :] for sig in range(img.shape[1])])
         img = img.reshape(img.shape[0], img.shape[1]*img.shape[2])
         for idx in range(img.shape[0]) : 
@@ -207,3 +207,18 @@ class Loader :
         self = self.load_raw(both=True)
         # Return object
         return self
+
+    # Creates the corresponding database
+    def save(self) :
+
+        # Defines where to save the data
+        dtb = h5py.File('data.h5', 'w')
+        # Create the corresponding datasets
+        dtb.create_dataset('FEA_t', data=remove_columns(self.train, ['Subjects', 'Labels']))
+        dtb.create_dataset('FEA_e', data=remove_columns(self.valid, ['Subjects', 'Labels']))
+        dtb.create_dataset('RAW_t', data=X_tr)
+        dtb.create_dataset('RAW_e', data=X_va)
+        print('  ~ Data serialized ...')
+        print('  ! Labels do match : {} ...'.format((self.train['Labels'].values.astype(int) - 1) == self.y_tr))
+        # Avoid corruption
+        dtb.close()
