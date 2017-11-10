@@ -243,7 +243,7 @@ class Models :
         mod1 = Dropout(0.25)(mod1)
         mod1 = Dense(size_merge, activation='relu')(mod1)
 
-        inp2 = Input(shape=(f_tr.shape[1],))
+        inp2 = Input(shape=(h_tr.shape[1],))
         mod2 = Dense(300)(inp2)
         mod2 = BatchNormalization()(mod2)
         mod2 = Activation('tanh')(mod2)
@@ -369,13 +369,13 @@ class Models :
             del pbs
         elif self.name in self.case_bth :
             X_va = reformat_vectors(self.r_e, self.name, reduced=self.reduced, red_index=self.red_idx)
-            if self.name == 'DeepConv1D' : X_va = X_va + [self.f_e]
-            elif self.name == 'DeepConv2D' : X_va = [X_va, self.f_e]
+            if self.name == 'DeepConv1D' : X_va = X_va + [self.f_e, self.h_e]
+            elif self.name == 'DeepConv2D' : X_va = [X_va, self.f_e, self.h_e]
             pbs = self.model.predict(X_va)
             dtf = score_verbose(self.l_e, [np.argmax(ele) for ele in pbs])
             del X_va, pbs
         elif self.name in self.case_fea : 
-            pbs = self.model.predict_proba(self.f_e)
+            pbs = self.model.predict_proba(np.hstack((self.f_e, self.h_e)))
             dtf = score_verbose(self.l_e, np.asarray([np.argmax(ele) for ele in pbs]))
             del pbs
         # Return results
