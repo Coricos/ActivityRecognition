@@ -98,17 +98,17 @@ class Models :
 
             def conv_input(inp) :
 
-                mod = Conv1D(100, 75)(inp)
+                mod = Conv1D(100, 18)(inp)
                 mod = BatchNormalization()(mod)
                 mod = Activation('relu')(mod)
                 mod = MaxPooling1D(pool_size=2)(mod)
                 mod = Dropout(0.30)(mod)
-                mod = Conv1D(50, 30)(mod)
+                mod = Conv1D(50, 32)(mod)
                 mod = BatchNormalization()(mod)
                 mod = Activation('relu')(mod)
                 mod = MaxPooling1D(pool_size=2)(mod)
                 mod = Dropout(0.30)(mod)
-                mod = Conv1D(25, 10)(mod)
+                mod = Conv1D(25, 64)(mod)
                 mod = BatchNormalization()(mod)
                 mod = Activation('relu')(mod)
                 mod = GlobalAveragePooling1D()(mod)
