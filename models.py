@@ -355,7 +355,7 @@ class Models :
             del X_va, pbs
         elif self.name in self.case_fea : 
             pbs = self.model.predict_proba(self.f_e)
-            dtf = score_verbose(self.l_e, np.asarray([np.argmax(ele) for ele in pbs]) + 1)
+            dtf = score_verbose(self.l_e, np.asarray([np.argmax(ele) for ele in pbs]))
             del pbs
         # Return results
         return dtf
