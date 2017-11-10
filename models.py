@@ -98,41 +98,36 @@ class Models :
 
             def conv_input(inp) :
 
-                mod = Conv1D(200, 50)(inp)
-                mod = BatchNormalization(axis=1, momentum=0.9, center=True, scale=True)(mod)
+                mod = Conv1D(100, 64)(inp)
+                mod = BatchNormalization()(mod)
                 mod = Activation('relu')(mod)
-                mod = MaxPooling1D(pool_size=2)(mod)
-                mod = Dropout(0.1)(mod)
-                mod = Conv1D(100, 25)(inp)
-                mod = BatchNormalization(axis=1, momentum=0.9, center=True, scale=True)(mod)
+                mod = MaxPooling1D(pool_size=1.5)(mod)
+                mod = Dropout(0.30)(mod)
+                mod = Conv1D(50, 32)(mod)
+                mod = BatchNormalization()(mod)
                 mod = Activation('relu')(mod)
-                mod = MaxPooling1D(pool_size=5)(mod)
-                mod = Dropout(0.1)(mod)
-                mod = Conv1D(20, 5)(mod)
-                mod = BatchNormalization(axis=1, momentum=0.9, center=True, scale=True)(mod)
+                mod = MaxPooling1D(pool_size=1.5)(mod)
+                mod = Dropout(0.30)(mod)
+                mod = Conv1D(25, 16)(mod)
+                mod = BatchNormalization()(mod)
                 mod = Activation('relu')(mod)
-                mod = GaussianDropout(0.25)(mod)
+                mod = GlobalAveragePooling1D()(mod)
 
                 return mod
 
             mod = merge([conv_input(inp) for inp in inputs])
-            mod = Flatten()(mod)
             mod = Dense(200)(mod)
             mod = BatchNormalization()(mod)
             mod = Activation('tanh')(mod)
-            mod = Dropout(0.2)(mod)
-            mod = Dense(200)(mod)
-            mod = BatchNormalization()(mod)
-            mod = Activation('tanh')(mod)
-            mod = Dropout(0.2)(mod)
-            mod = Dense(200)(mod)
-            mod = BatchNormalization()(mod)
-            mod = Activation('tanh')(mod)
-            mod = Dropout(0.2)(mod)
+            mod = Dropout(0.25)(mod)
             mod = Dense(100)(mod)
             mod = BatchNormalization()(mod)
             mod = Activation('tanh')(mod)
-            mod = GaussianDropout(0.2)(mod)
+            mod = Dropout(0.25)(mod)
+            mod = Dense(100)(mod)
+            mod = BatchNormalization()(mod)
+            mod = Activation('tanh')(mod)
+            mod = GaussianDropout(0.25)(mod)
             mod = Dense(output_size, activation='softmax')(mod)
             
             return mod
@@ -165,22 +160,20 @@ class Models :
         # Build model
         model = Sequential()
         # Convolutionnal layers
-        model.add(Convolution2D(128, (8, 50), input_shape=X_tr[0].shape, data_format='channels_first'))
+        model.add(Convolution2D(64, (8, 92), input_shape=X_tr[0].shape, data_format='channels_first'))
         model.add(Activation('relu'))
-        model.add(BatchNormalization())
-        model.add(Dropout(0.2))
-        model.add(Convolution2D(64, (1, 25), data_format='channels_first'))
+        model.add(BatchNormalization(axis=1, momentum=0.95))
+        model.add(MaxPooling2D(pool_size=(1, 1.5), data_format='channels_first'))
+        model.add(Dropout(0.25))
+        model.add(Convolution2D(64, (1, 46), data_format='channels_first'))
         model.add(Activation('relu'))
-        model.add(BatchNormalization())
-        model.add(Dropout(0.2))
-        model.add(Convolution2D(64, (1, 25), data_format='channels_first'))
+        model.add(BatchNormalization(axis=1, momentum=0.925))
+        model.add(MaxPooling2D(pool_size=(1, 1.5), data_format='channels_first'))
+        model.add(Dropout(0.25))
+        model.add(Convolution2D(64, (1, 23), data_format='channels_first'))
         model.add(Activation('relu'))
-        model.add(BatchNormalization())
-        model.add(Dropout(0.2))
-        model.add(Convolution2D(32, (1, 25), data_format='channels_first'))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization(axis=1, momentum=0.9, center=True, scale=True))
-        model.add(GaussianDropout(0.2))
+        model.add(BatchNormalization(axis=1, momentum=0.9))
+        model.add(GaussianDropout(0.25))
         # Dense network
         model.add(GlobalAveragePooling2D(data_format='channels_first'))
         model.add(Dense(500))
@@ -205,11 +198,11 @@ class Models :
         del X_tr, y_tr, early, model
 
     # Previous model enhanced with features in neural network
-    def deep_conv_1D(self, size_merge=100, max_epochs=100, verbose=0) :
+    def deep_conv_1D(self, size_merge=75, max_epochs=100, verbose=0) :
 
         # Truncate the learning to a maximum of cpus
         from keras import backend as K
-        K.set_image_dim_ordering('th')
+        K.set_image_dim_ordering('tf')
         S = tensorflow.Session(config=tensorflow.ConfigProto(intra_op_parallelism_threads=self.njobs))
         K.set_session(S)
         # Prepares the data
@@ -221,59 +214,41 @@ class Models :
         # Build convolution model
         def conv_input(inp, size_merge) :
 
-            mod = Conv1D(200, 50)(inp)
+            mod = Conv1D(100, 64)(inp)
             mod = BatchNormalization(axis=1, momentum=0.9, center=True, scale=True)(mod)
             mod = Activation('relu')(mod)
             mod = MaxPooling1D(pool_size=2)(mod)
             mod = Dropout(0.1)(mod)
-            mod = Conv1D(100, 25)(mod)
+            mod = Conv1D(50, 32)(mod)
             mod = BatchNormalization(axis=1, momentum=0.9, center=True, scale=True)(mod)
             mod = Activation('relu')(mod)
-            mod = MaxPooling1D(pool_size=5)(mod)
-            mod = GaussianDropout(0.1)(mod)
-            mod = Conv1D(20, 5)(inp)
-            mod = BatchNormalization(axis=1, momentum=0.9, center=True, scale=True)(mod)
-            mod = Activation('relu')(mod)
-            mod = Dropout(0.1)(mod)
+            mod = GaussianDropout(0.25)(mod)
             mod = GlobalAveragePooling1D()(mod)
-            mod = BatchNormalization()(mod)
-            mod = Activation('tanh')(mod)
-            mod = Dropout(0.1)(mod)
-            mod = Dense(size_merge, activation='tanh')(mod)
+            mod = Dense(size_merge, activation='relu')(mod)
 
             return mod
 
         inp1 = Input(shape=(self.loader.train.shape[1],))
-        mod1 = Dense(300)(inp1)
+        mod1 = Dense(200)(inp1)
         mod1 = BatchNormalization()(mod1)
         mod1 = Activation('tanh')(mod1)
-        mod1 = GaussianDropout(0.1)(mod1)
-        mod1 = Dense(300)(mod1)
-        mod1 = BatchNormalization()(mod1)
-        mod1 = Activation('tanh')(mod1)
-        mod1 = GaussianDropout(0.1)(mod1)
-        mod1 = Dense(size_merge, activation='tanh')(mod1)
+        mod1 = Dropout(0.25)(mod1)
+        mod1 = Dense(size_merge, activation='relu')(mod1)
 
         mod = merge([conv_input(inp, size_merge) for inp in inputs] + [mod1])
         mod = BatchNormalization()(mod)
-        mod = Activation('tanh')(mod)
-        mod = Dropout(0.25)(mod)
-        mod = Dense(9*size_merge)(mod)
+        mod = Dense(200)(mod)
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
-        mod = Dropout(0.25)(mod)
-        mod = Dense(6*size_merge)(mod)
+        mod = Dropout(0.2)(mod)
+        mod = Dense(200)(mod)
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
-        mod = Dropout(0.25)(mod)
-        mod = Dense(3*size_merge)(mod)
+        mod = Dropout(0.2)(mod)
+        mod = Dense(100)(mod)
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
-        mod = Dropout(0.25)(mod)
-        mod = Dense(size_merge)(mod)
-        mod = BatchNormalization()(mod)
-        mod = Activation('tanh')(mod)
-        mod = GaussianDropout(0.25)(mod)
+        mod = GaussianDropout(0.2)(mod)
         mod = Dense(len(np.unique(y_tr)), activation='softmax')(mod)
 
         # Final build of model
@@ -287,6 +262,76 @@ class Models :
         self.model = model
         # Memory efficiency
         del X_tr, y_tr, inp, early, model
+
+    # Previous model enhanced with features in neural network
+    def deep_conv_2D(self, size_merge=100, max_epochs=100, verbose=0) :
+
+        # Truncate the learning to a maximum of cpus
+        from keras import backend as K
+        K.set_image_dim_ordering('th')
+        S = tensorflow.Session(config=tensorflow.ConfigProto(intra_op_parallelism_threads=self.njobs))
+        K.set_session(S)
+        # Prepares the data
+        X_tr, y_tr = shuffle(self.loader.X_tr, self.loader.y_tr)
+        X_tr = reformat_vectors(X_tr, self.name, reduced=self.reduced, red_index=self.red_idx)
+        # Build inputs for convolution
+        inp0 = Input(shape=X_tr[0].shape)
+        mod0 = Convolution2D(64, (8, 60), data_format='channels_first')(inp0)
+        mod0 = Activation('relu')(mod0)
+        mod0 = BatchNormalization(axis=1)(mod0)
+        mod0 = MaxPooling2D(pool_size=(1, 2), data_format='channels_first')(mod0)
+        mod0 = Dropout(0.25)(mod0)
+        mod0 = Convolution2D(64, (1, 30), data_format='channels_first')(mod0)
+        mod0 = Activation('relu')(mod0)
+        mod0 = BatchNormalization(axis=1)(mod0)
+        mod0 = MaxPooling2D(pool_size=(1, 2), data_format='channels_first')(mod0)
+        mod0 = Dropout(0.25)(mod0)
+        mod0 = Flatten()(mod0)
+        mod0 = Dense(100)(mod0)
+        mod0 = BatchNormalization()(mod0)
+        mod0 = Activation('tanh')(mod0)
+        mod0 = Dropout(0.25)(mod0)
+        mod0 = Dense(size_merge, activation='tanh')(mod0)
+        # Input features
+        inp1 = Input(shape=(self.loader.train.shape[1],))
+        mod1 = Dense(250)(inp1)
+        mod1 = BatchNormalization()(mod1)
+        mod1 = Activation('tanh')(mod1)
+        mod1 = Dropout(0.25)(mod1)
+        mod1 = Dense(150)(inp1)
+        mod1 = BatchNormalization()(mod1)
+        mod1 = Activation('tanh')(mod1)
+        mod1 = Dropout(0.25)(mod1)
+        mod1 = Dense(size_merge, activation='tanh')(mod1)
+        # Merge both channels
+        mod = merge([mod0, mod1])
+        mod = BatchNormalization()(mod)
+        mod = Activation('tanh')(mod)
+        mod = Dropout(0.25)(mod)
+        mod = Dense(150)(mod)
+        mod = BatchNormalization()(mod)
+        mod = Activation('tanh')(mod)
+        mod = Dropout(0.25)(mod)
+        mod = Dense(150)(mod)
+        mod = BatchNormalization()(mod)
+        mod = Activation('tanh')(mod)
+        mod = GaussianDropout(0.25)(mod)
+        mod = Dense(75)(mod)
+        mod = BatchNormalization()(mod)
+        mod = Activation('tanh')(mod)
+        mod = Dropout(0.25)(mod)
+        mod = Dense(len(np.unique(y_tr)), activation='softmax')(mod)
+        # Final build of model
+        model = Model(inputs=[inp0, inp1], outputs=mod)
+        # Compile and launch the model
+        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+        early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
+        model.fit([X_tr, self.loader.train.values], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
+                  verbose=verbose, validation_split=0.2, shuffle=True, callbacks=[early])
+        # Save as attribute
+        self.model = model
+        # Memory efficiency
+        del X_tr, y_tr, inp1, inp0, mod, mod0, early, model
 
     # Estimates the performance of the model
     def performance(self) :
@@ -350,5 +395,6 @@ class Models :
         elif self.name == 'Conv1D' : self.conv_1D(max_epochs=max_epochs, verbose=verbose)
         elif self.name == 'Conv2D' :  self.conv_2D(max_epochs=max_epochs, verbose=verbose)
         elif self.name == 'DeepConv1D' : self.deep_conv_1D(max_epochs=max_epochs, verbose=verbose)
+        elif self.name == 'DeepConv2D' : self.deep_conv_2D(max_epochs=max_epochs, verbose=verbose)
         # Return object
         return self
