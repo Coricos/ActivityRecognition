@@ -327,7 +327,7 @@ class Models :
         mod2 = Dropout(0.25)(mod2)
         mod2 = Dense(size_merge, activation='tanh')(mod2)
         # Merge both channels
-        mod = merge([mod0, mod1])
+        mod = merge([mod0, mod1, mod2])
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
         mod = Dropout(0.25)(mod)
@@ -384,10 +384,11 @@ class Models :
         imp = self.model.feature_importances_
         idx = np.argsort(imp)[::-1]
         imp = imp[idx][:n_features]
+        with open('./Fea_Data/features.txt') as raw : lab = raw.readlines()
         plt.figure(figsize=(18,10))
         plt.title('Feature Importances - {}'.format(self.name))
         plt.barh(range(len(imp)), imp, color="lightblue", align="center")
-        plt.yticks(range(len(imp)), self.f_t.columns[idx][:len(imp)])
+        plt.yticks(range(len(imp)), lab[idx][:len(imp)])
         plt.ylim([-1, len(imp)])
         plt.show()
 
