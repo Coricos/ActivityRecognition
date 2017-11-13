@@ -170,57 +170,6 @@ class Models :
         # Memory efficiency
         del X_tr, y_tr, inp, early, model
 
-    # Launch the one-channeled 2D-convolution model
-    def conv_2D(self, max_epochs=100, verbose=0) :
-
-        # Truncate the learning to a maximum of cpus
-        from keras import backend as K
-        K.set_image_dim_ordering('th')
-        S = tensorflow.Session(config=tensorflow.ConfigProto(intra_op_parallelism_threads=self.njobs))
-        K.set_session(S)
-        # Prepares the data
-        X_tr, y_tr = shuffle(self.r_t, self.l_t)
-        X_tr = reformat_vectors(X_tr, self.name, reduced=self.reduced, red_index=self.red_idx)
-        # Build model
-        model = Sequential()
-        # Convolutionnal layers
-        model.add(Convolution2D(64, (8, 80), input_shape=X_tr[0].shape, data_format='channels_first'))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization(axis=1, momentum=0.95))
-        model.add(MaxPooling2D(pool_size=(1, 1.5), data_format='channels_first'))
-        model.add(Dropout(0.25))
-        model.add(Convolution2D(128, (1, 30), data_format='channels_first'))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization(axis=1, momentum=0.925))
-        model.add(MaxPooling2D(pool_size=(1, 1.5), data_format='channels_first'))
-        model.add(Dropout(0.25))
-        model.add(Convolution2D(256, (1, 10), data_format='channels_first'))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization(axis=1, momentum=0.9))
-        model.add(GaussianDropout(0.25))
-        # Dense network
-        model.add(GlobalAveragePooling2D(data_format='channels_first'))
-        model.add(Dense(500))
-        model.add(BatchNormalization())
-        model.add(Activation('tanh'))
-        model.add(Dropout(0.2))
-        model.add(Dense(100))
-        model.add(BatchNormalization())
-        model.add(Activation('tanh'))
-        model.add(Dropout(0.2))
-        model.add(Dense(len(np.unique(y_tr))))
-        model.add(Activation('softmax'))
-        # Compile the model
-        model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
-        # Create the callbacks
-        early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
-        model.fit(X_tr, np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
-                  verbose=verbose, validation_split=0.2, shuffle=True, callbacks=[early])
-        # Save as attribute
-        self.model = model
-        # Memory efficiency
-        del X_tr, y_tr, early, model
-
     # Previous model enhanced with features in neural network
     def deep_conv_1D(self, size_merge=100, max_epochs=100, verbose=0) :
 
@@ -293,6 +242,57 @@ class Models :
         self.model = model
         # Memory efficiency
         del X_tr, y_tr, f_tr, inp, early, model
+
+    # Launch the one-channeled 2D-convolution model
+    def conv_2D(self, max_epochs=100, verbose=0) :
+
+        # Truncate the learning to a maximum of cpus
+        from keras import backend as K
+        K.set_image_dim_ordering('th')
+        S = tensorflow.Session(config=tensorflow.ConfigProto(intra_op_parallelism_threads=self.njobs))
+        K.set_session(S)
+        # Prepares the data
+        X_tr, y_tr = shuffle(self.r_t, self.l_t)
+        X_tr = reformat_vectors(X_tr, self.name, reduced=self.reduced, red_index=self.red_idx)
+        # Build model
+        model = Sequential()
+        # Convolutionnal layers
+        model.add(Convolution2D(64, (8, 80), input_shape=X_tr[0].shape, data_format='channels_first'))
+        model.add(Activation('relu'))
+        model.add(BatchNormalization(axis=1, momentum=0.95))
+        model.add(MaxPooling2D(pool_size=(1, 1.5), data_format='channels_first'))
+        model.add(Dropout(0.25))
+        model.add(Convolution2D(128, (1, 30), data_format='channels_first'))
+        model.add(Activation('relu'))
+        model.add(BatchNormalization(axis=1, momentum=0.925))
+        model.add(MaxPooling2D(pool_size=(1, 1.5), data_format='channels_first'))
+        model.add(Dropout(0.25))
+        model.add(Convolution2D(256, (1, 10), data_format='channels_first'))
+        model.add(Activation('relu'))
+        model.add(BatchNormalization(axis=1, momentum=0.9))
+        model.add(GaussianDropout(0.25))
+        # Dense network
+        model.add(GlobalAveragePooling2D(data_format='channels_first'))
+        model.add(Dense(500))
+        model.add(BatchNormalization())
+        model.add(Activation('tanh'))
+        model.add(Dropout(0.2))
+        model.add(Dense(100))
+        model.add(BatchNormalization())
+        model.add(Activation('tanh'))
+        model.add(Dropout(0.2))
+        model.add(Dense(len(np.unique(y_tr))))
+        model.add(Activation('softmax'))
+        # Compile the model
+        model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+        # Create the callbacks
+        early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
+        model.fit(X_tr, np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
+                  verbose=verbose, validation_split=0.2, shuffle=True, callbacks=[early])
+        # Save as attribute
+        self.model = model
+        # Memory efficiency
+        del X_tr, y_tr, early, model
 
     # Previous model enhanced with features in neural network
     def deep_conv_2D(self, size_merge=100, max_epochs=100, verbose=0) :
@@ -374,6 +374,135 @@ class Models :
         self.model = model
         # Memory efficiency
         del X_tr, y_tr, f_tr, inp1, inp0, mod, mod0, early, model
+
+    # Defines a multi-channel LSTM
+    def LSTM(self, size_merge=100, max_epochs=100, verbose=0) :
+
+        # Truncate the learning to a maximum of cpus
+        from keras import backend as K
+        K.set_image_dim_ordering('th')
+        S = tensorflow.Session(config=tensorflow.ConfigProto(intra_op_parallelism_threads=self.njobs))
+        K.set_session(S)
+        # Prepares the data
+        X_tr, y_tr = shuffle(self.r_t, self.l_t)
+        X_tr = reformat_vectors(X_tr, self.name, reduced=self.reduced, red_index=self.red_idx)
+
+        # Build model
+        def build_model(inputs, output_size) :
+
+            def LSTM_input(inp) :
+
+                mod = Bidirectionnal(LSTM(500, return_sequences=True))(inp)
+                mod = BatchNormalization()(mod)
+                mod = Activation('tanh')(mod)
+                mod = Dropout(0.30)(mod)
+                mod = Bidirectionnal(LSTM(250, return_sequences=False))(mod)
+                mod = BatchNormalization()(mod)
+                mod = Activation('tanh')(mod)
+                mod = Dropout(0.30)(mod)
+                mod = Dense(size_merge, activation='relu')(mod)
+
+                return mod
+
+            mod = merge([LSTM_input(inp) for inp in inputs])
+            mod = Dense(200)(mod)
+            mod = BatchNormalization()(mod)
+            mod = Activation('tanh')(mod)
+            mod = Dropout(0.25)(mod)
+            mod = Dense(100)(mod)
+            mod = BatchNormalization()(mod)
+            mod = Activation('tanh')(mod)
+            mod = Dropout(0.25)(mod)
+            mod = Dense(100)(mod)
+            mod = BatchNormalization()(mod)
+            mod = Activation('tanh')(mod)
+            mod = GaussianDropout(0.25)(mod)
+            mod = Dense(output_size, activation='softmax')(mod)
+            
+            return mod
+
+        # Define the inputs
+        inp = [Input(shape=X_tr[0][0].shape) for num in range(len(X_tr))]
+        # Build model
+        model = Model(inputs=inp, outputs=[build_model(inp, len(np.unique(y_tr)))])
+        # Compile and launch the model
+        model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+        early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
+        model.fit(X_tr, np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
+                  verbose=verbose, validation_split=0.2, shuffle=True, callbacks=[early])
+        # Save as attribute
+        self.model = model
+        # Memory efficiency
+        del X_tr, y_tr, inp, early, model
+
+    # Defines an enhanced LSTM classficiation model
+    def deep_LSTM(self, size_merge=100, max_epochs=100, verbose=0) :
+
+        # Truncate the learning to a maximum of cpus
+        from keras import backend as K
+        K.set_image_dim_ordering('th')
+        S = tensorflow.Session(config=tensorflow.ConfigProto(intra_op_parallelism_threads=self.njobs))
+        K.set_session(S)
+        # Prepares the data
+        X_tr, y_tr = shuffle(self.r_t, self.l_t)
+        X_tr = reformat_vectors(X_tr, self.name, reduced=self.reduced, red_index=self.red_idx)
+        # Build inputs for convolution
+        inputs = [Input(shape=X_tr[0][0].shape) for num in range(len(X_tr))]
+
+        def LSTM_input(inp, size_merge) :
+
+            mod = Bidirectionnal(LSTM(500, return_sequences=True))(inp)
+            mod = BatchNormalization()(mod)
+            mod = Activation('tanh')(mod)
+            mod = Dropout(0.30)(mod)
+            mod = Bidirectionnal(LSTM(250, return_sequences=False))(mod)
+            mod = BatchNormalization()(mod)
+            mod = Activation('tanh')(mod)
+            mod = Dropout(0.30)(mod)
+            mod = Dense(size_merge, activation='relu')(mod)
+
+            return mod
+
+        inp1 = Input(shape=(f_tr.shape[1],))
+        mod1 = Dense(300)(inp1)
+        mod1 = BatchNormalization()(mod1)
+        mod1 = Activation('tanh')(mod1)
+        mod1 = Dropout(0.25)(mod1)
+        mod1 = Dense(size_merge, activation='relu')(mod1)
+
+        inp2 = Input(shape=(h_tr.shape[1],))
+        mod2 = Dense(300)(inp2)
+        mod2 = BatchNormalization()(mod2)
+        mod2 = Activation('tanh')(mod2)
+        mod2 = Dropout(0.25)(mod2)
+        mod2 = Dense(size_merge, activation='relu')(mod2)
+
+        mod = merge([conv_input(inp) for inp in inputs])
+        mod = Dense(200)(mod)
+        mod = BatchNormalization()(mod)
+        mod = Activation('tanh')(mod)
+        mod = Dropout(0.25)(mod)
+        mod = Dense(100)(mod)
+        mod = BatchNormalization()(mod)
+        mod = Activation('tanh')(mod)
+        mod = Dropout(0.25)(mod)
+        mod = Dense(100)(mod)
+        mod = BatchNormalization()(mod)
+        mod = Activation('tanh')(mod)
+        mod = GaussianDropout(0.25)(mod)
+        mod = Dense(output_size, activation='softmax')(mod)
+
+        # Final build of model
+        model = Model(inputs=inputs+[inp1, inp2], outputs=mod)
+        # Compile and launch the model
+        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+        early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
+        model.fit(X_tr + [f_tr, h_tr], np_utils.to_categorical(y_tr), batch_size=32, epochs=max_epochs, 
+                  verbose=verbose, validation_split=0.2, shuffle=True, callbacks=[early])
+        # Save as attribute
+        self.model = model
+        # Memory efficiency
+        del X_tr, y_tr, f_tr, inp, early, model
 
     # Estimates the performance of the model
     def performance(self) :

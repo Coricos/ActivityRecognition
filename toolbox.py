@@ -37,7 +37,7 @@ def windows(size, time_window, overlap) :
 # Reformat data according to a problematic
 def reformat_vectors(vec, mod, reduced=False, red_index=[6,7]) :
 
-    if mod in ['Conv1D', 'DeepConv1D'] :
+    if mod in ['Conv1D', 'LSTM', 'DeepConv1D'] :
         if not reduced : return [vec[:,idx,:].reshape(vec.shape[0], vec.shape[2], 1) for idx in range(vec.shape[1])]
         else : return [vec[:,idx,:].reshape(vec.shape[0], vec.shape[2], 1) for idx in red_index]
     
@@ -149,7 +149,6 @@ def from_vec_to_mvt(vec, sampling_frequency=50) :
     sam.sampling_frequency = 50
     
     return Movement(sam)
-
 
 # Defines a way to truncate the given problematic
 def truncate_data(vec, lab, lab_to_del=[6, 7, 8, 9, 10, 11]) :
