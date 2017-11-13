@@ -389,7 +389,7 @@ class Models :
         # Prepares the data
         X_tr, y_tr = shuffle(self.r_t, self.l_t)
         X_tr = reformat_vectors(X_tr, self.name, reduced=self.reduced, red_index=self.red_idx)
-
+        print(X_tr.shape)
         # Build model
         def build_model(inputs, output_size) :
 
@@ -399,7 +399,7 @@ class Models :
                 mod = BatchNormalization()(mod)
                 mod = Activation('tanh')(mod)
                 mod = Dropout(0.30)(mod)
-                mod = LSTM(250)(mod)
+                mod = LSTM(500)(mod)
                 mod = BatchNormalization()(mod)
                 mod = Activation('tanh')(mod)
                 mod = Dropout(0.30)(mod)
