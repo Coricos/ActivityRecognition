@@ -480,7 +480,7 @@ class Models :
         mod2 = Dropout(0.25)(mod2)
         mod2 = Dense(size_merge, activation='relu')(mod2)
 
-        mod = merge([conv_input(inp) for inp in inputs])
+        mod = merge([LSTM_input(inp) for inp in inputs])
         mod = Dense(200)(mod)
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
