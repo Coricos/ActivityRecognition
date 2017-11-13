@@ -395,7 +395,7 @@ class Models :
 
             def LSTM_input(inp) :
 
-                mod = LSTM(500)(inp)
+                mod = LSTM(500, return_sequences=True)(inp)
                 mod = BatchNormalization()(mod)
                 mod = Activation('tanh')(mod)
                 mod = Dropout(0.30)(mod)
@@ -425,7 +425,7 @@ class Models :
             return mod
 
         # Define the inputs
-        inp = [Input(shape=(None, X_tr[0].shape[1], X_tr[0].shape[2])) for num in range(len(X_tr))]
+        inp = [Input(shape=(X_tr[0].shape[1], X_tr[0].shape[2])) for num in range(len(X_tr))]
         # Build model
         model = Model(inputs=inp, outputs=[build_model(inp, len(np.unique(y_tr)))])
         # Compile and launch the model
