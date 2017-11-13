@@ -379,7 +379,7 @@ class Models :
         del X_tr, y_tr, f_tr, inp1, inp0, mod, mod0, early, model
 
     # Defines a multi-channel LSTM
-    def LSTM(self, size_merge=100, max_epochs=100, verbose=0) :
+    def LSTM(self, size_merge=50, max_epochs=100, verbose=0) :
 
         # Truncate the learning to a maximum of cpus
         from keras import backend as K
@@ -395,11 +395,11 @@ class Models :
 
             def LSTM_input(inp) :
 
-                mod = LSTM(500, return_sequences=True)(inp)
+                mod = LSTM(100, return_sequences=True)(inp)
                 mod = BatchNormalization()(mod)
                 mod = Activation('tanh')(mod)
                 mod = Dropout(0.30)(mod)
-                mod = LSTM(500)(mod)
+                mod = LSTM(100)(mod)
                 mod = BatchNormalization()(mod)
                 mod = Activation('tanh')(mod)
                 mod = Dropout(0.30)(mod)
