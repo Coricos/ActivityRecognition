@@ -10,8 +10,8 @@ class Models :
         self.njobs = max_jobs
         # Differentiate cases
         self.case_fea = ['XGBoost', 'RandomForest']
-        self.case_raw = ['Conv1D', 'Conv2D']
-        self.case_bth = ['DeepConv1D', 'DeepConv2D']
+        self.case_raw = ['Conv1D', 'Conv2D', 'LSTM']
+        self.case_bth = ['DeepConv1D', 'DeepConv2D', 'DeepLSTM']
         # Default arguments for convolution
         self.reduced = reduced
         self.red_idx = red_index
