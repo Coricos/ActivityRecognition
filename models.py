@@ -1,3 +1,6 @@
+# Author : DINDIN Meryll
+# Date : 01/11/2017
+
 from loading import *
 
 # Build the models as initialized
@@ -422,7 +425,7 @@ class Models :
             return mod
 
         # Define the inputs
-        inp = [Input(shape=X_tr[0][0].shape) for num in range(len(X_tr))]
+        inp = [Input(shape=X_tr[0].shape) for num in range(len(X_tr))]
         # Build model
         model = Model(inputs=inp, outputs=[build_model(inp, len(np.unique(y_tr)))])
         # Compile and launch the model

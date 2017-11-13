@@ -1,3 +1,6 @@
+# Author : DINDIN Meryll
+# Date : 01/11/2017
+
 from imports import *
 
 # Defines the weights corresponding to a given array of labels
