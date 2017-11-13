@@ -540,11 +540,17 @@ class Models :
         imp = self.model.feature_importances_
         idx = np.argsort(imp)[::-1]
         imp = imp[idx][:n_features]
-        with open('./Fea_Data/features.txt') as raw : lab = raw.readlines()
+        with open('./Fea_Data/features.txt', 'r') as raw : fea = raw.readlines()
+        for ind in range(len(fea)) : 
+            tmp = str(fea[ind].replace('\n','').replace(' ',''))
+            if tmp in fea : tmp = tmp.replace('1', '2')
+            if tmp in fea : tmp = tmp.replace('2', '3')
+            fea[ind] = tmp
+        with open('./Fea_Data/handcrafted.txt', 'rb') as raw : lab = pickle.load(raw)
         plt.figure(figsize=(18,10))
         plt.title('Feature Importances - {}'.format(self.name))
         plt.barh(range(len(imp)), imp, color="lightblue", align="center")
-        plt.yticks(range(len(imp)), lab[idx][:len(imp)])
+        plt.yticks(range(len(imp)), (fea+lab)[idx][:len(imp)])
         plt.ylim([-1, len(imp)])
         plt.show()
 
@@ -579,7 +585,9 @@ class Models :
         elif self.name == 'RandomForest' : self.random_forest(n_iter=n_iter, verbose=verbose)
         elif self.name == 'Conv1D' : self.conv_1D(max_epochs=max_epochs, verbose=verbose)
         elif self.name == 'Conv2D' :  self.conv_2D(max_epochs=max_epochs, verbose=verbose)
+        elif self.name == 'LSTM' : self.LSTM(max_epochs=max_epochs, verbose=verbose)
         elif self.name == 'DeepConv1D' : self.deep_conv_1D(max_epochs=max_epochs, verbose=verbose)
         elif self.name == 'DeepConv2D' : self.deep_conv_2D(max_epochs=max_epochs, verbose=verbose)
+        elif self.name == 'DeepLSTM' : self.deep_LSTM(max_epochs=max_epochs, verbose=verbose)
         # Return object
         return self
