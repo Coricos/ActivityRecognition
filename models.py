@@ -493,7 +493,7 @@ class Models :
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
         mod = GaussianDropout(0.25)(mod)
-        mod = Dense(output_size, activation='softmax')(mod)
+        mod = Dense(len(np.unique(y_tr)), activation='softmax')(mod)
 
         # Final build of model
         model = Model(inputs=inputs+[inp1, inp2], outputs=mod)
