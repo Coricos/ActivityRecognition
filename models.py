@@ -383,7 +383,7 @@ class Models :
 
         # Truncate the learning to a maximum of cpus
         from keras import backend as K
-        K.set_image_dim_ordering('th')
+        K.set_image_dim_ordering('tf')
         S = tensorflow.Session(config=tensorflow.ConfigProto(intra_op_parallelism_threads=self.njobs))
         K.set_session(S)
         # Prepares the data
