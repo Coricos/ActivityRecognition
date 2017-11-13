@@ -12,7 +12,7 @@ import os, tqdm, h5py, pickle, multiprocessing, sys
 import tensorflow, xgboost
 
 from functools import partial
-from scipy.stats import randint
+from scipy.stats import randint, moment, kurtosis, skew
 
 from sklearn import preprocessing
 from sklearn.ensemble import RandomForestClassifier
