@@ -454,11 +454,11 @@ class Models :
 
         def LSTM_input(inp, size_merge) :
 
-            mod = Bidirectionnal(LSTM(500, return_sequences=True))(inp)
+            mod = LSTM(100, return_sequences=True)(inp)
             mod = BatchNormalization()(mod)
             mod = Activation('tanh')(mod)
             mod = Dropout(0.30)(mod)
-            mod = Bidirectionnal(LSTM(250, return_sequences=False))(mod)
+            mod = LSTM(100)(mod)
             mod = BatchNormalization()(mod)
             mod = Activation('tanh')(mod)
             mod = Dropout(0.30)(mod)
