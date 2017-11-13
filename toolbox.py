@@ -37,10 +37,12 @@ def windows(size, time_window, overlap) :
 # Reformat data according to a problematic
 def reformat_vectors(vec, mod, reduced=False, red_index=[6,7]) :
 
-    if mod in ['Conv1D', 'DeepConv1D', 'LSTM', 'DeepLSTM'] :
+    if mod in ['Conv1D', 'DeepConv1D'] :
         if not reduced : return [vec[:,idx,:].reshape(vec.shape[0], vec.shape[2], 1) for idx in range(vec.shape[1])]
         else : return [vec[:,idx,:].reshape(vec.shape[0], vec.shape[2], 1) for idx in red_index]
-    
+    elif mod in ['LSTM', 'DeepLSTM'] :
+        if not reduced : return [vec[:,idx,:].reshape(vec.shape[0], vec.shape[2], 1) for idx in range(vec.shape[1])]
+        else : return [vec[:,idx,:].reshape(vec.shape[0], 1, vec.shape[2]) for idx in red_index]
     elif mod in ['Conv2D', 'DeepConv2D'] :
         return vec.reshape(vec.shape[0], 1, vec.shape[1], vec.shape[2])
 
