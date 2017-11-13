@@ -34,8 +34,8 @@ class Models :
 
         if model in self.case_raw : 
             if truncate : 
-                [self.r_t], self.l_t = truncate_data(dtb['RAW_t'].value, self.l_t)
-                [self.r_e], self.l_e = truncate_data(dtb['RAW_e'].value, self.l_e)
+                [self.r_t], self.l_t = truncate_data([dtb['RAW_t'].value], self.l_t)
+                [self.r_e], self.l_e = truncate_data([dtb['RAW_e'].value], self.l_e)
             else : 
                 self.r_t = dtb['RAW_t'].value
                 self.r_e = dtb['RAW_e'].value
