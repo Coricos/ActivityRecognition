@@ -4,7 +4,7 @@ from loading import *
 class Models :
 
     # Initialization
-    def __init__(self, model, max_jobs=multiprocessing.cpu_count()-1, reduced=False, red_index=[6, 7]) :
+    def __init__(self, model, truncate=False, max_jobs=multiprocessing.cpu_count()-1, reduced=False, red_index=[6, 7]) :
 
         self.name = model
         self.njobs = max_jobs
@@ -15,23 +15,42 @@ class Models :
         # Default arguments for convolution
         self.reduced = reduced
         self.red_idx = red_index
+        self.truncate = truncate
         # Load dataset
         dtb = h5py.File('data.h5', 'r')
-        # Load specific intel according to the problematic
-        if model in self.case_fea + self.case_bth:
-            self.h_t = dtb['HDF_t'].value
-            self.h_e = dtb['HDF_e'].value
-            self.f_t = dtb['FEA_t'].value
-            self.f_e = dtb['FEA_e'].value
-            print('  ! Fea_Train_Mean : {}, Fea_Valid_Mean : {}'.format(round(np.mean(self.f_t), 3), round(np.mean(self.f_e), 3)))
-            print('  ! Hdf_Train_Mean : {}, Hdf_Valid_Mean : {}'.format(round(np.mean(self.h_t), 3), round(np.mean(self.h_e), 3)))
-        if model in self.case_raw + self.case_bth: 
-            self.r_t = dtb['RAW_t'].value
-            self.r_e = dtb['RAW_e'].value
-            print('  ! Raw_Train_Mean : {}, Raw_Valid_Mean : {}'.format(round(np.mean(self.r_t), 3), round(np.mean(self.r_e), 3)))
         # Load the labels
         self.l_t = dtb['LAB_t'].value
         self.l_e = dtb['LAB_e'].value
+        # Load specific intel according to the problematic
+        if model in self.case_fea :
+            if truncate : 
+                [self.h_t, self.f_t], self.l_t = truncate_data([dtb['HDF_t'].value, dtb['FEA_t'].value], self.l_t)
+                [self.h_e, self.f_e], self.l_e = truncate_data([dtb['HDF_e'].value, dtb['FEA_e'].value], self.l_e)
+            else : 
+                self.h_t, self.f_t = dtb['HDF_t'].value, dtb['FEA_t'].value
+                self.h_e, self.f_e = dtb['HDF_e'].value, dtb['FEA_e'].value
+            print('  ! Fea_Train_Mean : {}, Fea_Valid_Mean : {}'.format(round(np.mean(self.f_t), 3), round(np.mean(self.f_e), 3)))
+            print('  ! Hdf_Train_Mean : {}, Hdf_Valid_Mean : {}'.format(round(np.mean(self.h_t), 3), round(np.mean(self.h_e), 3)))
+
+        if model in self.case_raw : 
+            if truncate : 
+                [self.r_t], self.l_t = truncate(dtb['RAW_t'].value, self.l_t)
+                [self.r_e], self.l_e = truncate(dtb['RAW_e'].value, self.l_e)
+            else : 
+                self.r_t = dtb['RAW_t'].value
+                self.r_e = dtb['RAW_e'].value
+            print('  ! Raw_Train_Mean : {}, Raw_Valid_Mean : {}'.format(round(np.mean(self.r_t), 3), round(np.mean(self.r_e), 3)))
+
+        if model in self.case_bth : 
+            if truncate :
+                [self.h_t, self.f_t, self.r_t], self.l_t = truncate_data([dtb['HDF_t'].value, dtb['FEA_t'].value, dtb['RAW_t'].value], self.l_t)
+                [self.h_e, self.f_e, self.r_e], self.l_e = truncate_data([dtb['HDF_e'].value, dtb['FEA_e'].value, dtb['RAW_e'].value], self.l_e)
+            else : 
+                self.h_t, self.f_t, self.r_t = dtb['HDF_t'].value, dtb['FEA_t'].value, dtb['RAW_t'].value
+                self.h_e, self.f_e, self.r_e = dtb['HDF_e'].value, dtb['FEA_e'].value, dtb['RAW_e'].value
+            print('  ! Fea_Train_Mean : {}, Fea_Valid_Mean : {}'.format(round(np.mean(self.f_t), 3), round(np.mean(self.f_e), 3)))
+            print('  ! Hdf_Train_Mean : {}, Hdf_Valid_Mean : {}'.format(round(np.mean(self.h_t), 3), round(np.mean(self.h_e), 3)))
+            print('  ! Raw_Train_Mean : {}, Raw_Valid_Mean : {}'.format(round(np.mean(self.r_t), 3), round(np.mean(self.r_e), 3)))
         # Avoid corruption
         dtb.close()
 
@@ -396,9 +415,11 @@ class Models :
     def save_model(self) :
 
         if self.name in self.case_fea : 
-            joblib.dump(self.model, './Classifiers/clf_{}.h5'.format(self.name))
-        elif self.name in self.case_raw + self.case_bth : 
-            self.model.save('./Classifiers/clf_{}.h5'.format(self.name))
+            if self.truncate : joblib.dump(self.model, './Truncates/clf_{}.h5'.format(self.name))
+            else : joblib.dump(self.model, './Classifiers/clf_{}.h5'.format(self.name))
+        elif self.name in self.case_raw + self.case_bth :
+            if self.truncate : self.model.save('./Truncates/clf_{}.h5'.format(self.name))
+            else : self.model.save('./Classifiers/clf_{}.h5'.format(self.name))
 
     # Lazy function if necessary
     def load_model(self) :

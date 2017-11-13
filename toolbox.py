@@ -138,7 +138,6 @@ def score_verbose(y_true, y_pred) :
     # Return dataframe for score per class
     return pd.DataFrame(np.asarray(dtf).transpose(), index=['Acc', 'Rec', 'Pre', 'F1S'], columns=['Main'] + ['Class_{}'.format(k) for k in range(len(np.unique(lab)))])
 
-
 # From vector to movement, on multiprocessed way
 def from_vec_to_mvt(vec, sampling_frequency=50) :
     
@@ -150,3 +149,14 @@ def from_vec_to_mvt(vec, sampling_frequency=50) :
     sam.sampling_frequency = 50
     
     return Movement(sam)
+
+
+# Defines a way to truncate the given problematic
+def truncate_data(vec, lab, lab_to_del=[6, 7, 8, 9, 10, 11]) :
+
+    # Defines the mask
+    msk = np.ones(lab.shape[0], dtype=bool)
+    # Incremental deletion
+    for val in lab_to_del : msk[np.where(lab == val)[0]] = False
+
+    return [ele[msk] for ele in vec], lab[msk]
