@@ -392,11 +392,11 @@ class Models :
 
             def LSTM_input(inp) :
 
-                mod = Bidirectionnal(LSTM(500, return_sequences=True))(inp)
+                mod = LSTM(500)(inp)
                 mod = BatchNormalization()(mod)
                 mod = Activation('tanh')(mod)
                 mod = Dropout(0.30)(mod)
-                mod = Bidirectionnal(LSTM(250, return_sequences=False))(mod)
+                mod = LSTM(250)(mod)
                 mod = BatchNormalization()(mod)
                 mod = Activation('tanh')(mod)
                 mod = Dropout(0.30)(mod)
