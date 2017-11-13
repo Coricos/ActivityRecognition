@@ -447,7 +447,7 @@ class Models :
         S = tensorflow.Session(config=tensorflow.ConfigProto(intra_op_parallelism_threads=self.njobs))
         K.set_session(S)
         # Prepares the data
-        X_tr, y_tr = shuffle(self.r_t, self.l_t)
+        X_tr, h_tr, f_tr, y_tr = shuffle(self.r_t, self.h_t, self.f_t, self.l_t)
         X_tr = reformat_vectors(X_tr, self.name, reduced=self.reduced, red_index=self.red_idx)
         # Build inputs for convolution
         inputs = [Input(shape=X_tr[0][0].shape) for num in range(len(X_tr))]
