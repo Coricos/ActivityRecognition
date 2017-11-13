@@ -7,7 +7,7 @@ from loading import *
 class Models :
 
     # Initialization
-    def __init__(self, model, truncate=False, max_jobs=multiprocessing.cpu_count()-1, reduced=False, red_index=[6, 7]) :
+    def __init__(self, model, show_mean=True, truncate=False, max_jobs=multiprocessing.cpu_count()-1, reduced=False, red_index=[6, 7]) :
 
         self.name = model
         self.njobs = max_jobs
@@ -32,8 +32,9 @@ class Models :
             else : 
                 self.h_t, self.f_t = dtb['HDF_t'].value, dtb['FEA_t'].value
                 self.h_e, self.f_e = dtb['HDF_e'].value, dtb['FEA_e'].value
-            print('  ! Fea_Train_Mean : {}, Fea_Valid_Mean : {}'.format(round(np.mean(self.f_t), 3), round(np.mean(self.f_e), 3)))
-            print('  ! Hdf_Train_Mean : {}, Hdf_Valid_Mean : {}'.format(round(np.mean(self.h_t), 3), round(np.mean(self.h_e), 3)))
+            if show_mean : 
+                print('  ! Fea_Train_Mean : {}, Fea_Valid_Mean : {}'.format(round(np.mean(self.f_t), 3), round(np.mean(self.f_e), 3)))
+                print('  ! Hdf_Train_Mean : {}, Hdf_Valid_Mean : {}'.format(round(np.mean(self.h_t), 3), round(np.mean(self.h_e), 3)))
 
         if model in self.case_raw : 
             if truncate : 
@@ -42,7 +43,8 @@ class Models :
             else : 
                 self.r_t = dtb['RAW_t'].value
                 self.r_e = dtb['RAW_e'].value
-            print('  ! Raw_Train_Mean : {}, Raw_Valid_Mean : {}'.format(round(np.mean(self.r_t), 3), round(np.mean(self.r_e), 3)))
+            if show_mean : 
+                print('  ! Raw_Train_Mean : {}, Raw_Valid_Mean : {}'.format(round(np.mean(self.r_t), 3), round(np.mean(self.r_e), 3)))
 
         if model in self.case_bth : 
             if truncate :
@@ -51,9 +53,10 @@ class Models :
             else : 
                 self.h_t, self.f_t, self.r_t = dtb['HDF_t'].value, dtb['FEA_t'].value, dtb['RAW_t'].value
                 self.h_e, self.f_e, self.r_e = dtb['HDF_e'].value, dtb['FEA_e'].value, dtb['RAW_e'].value
-            print('  ! Fea_Train_Mean : {}, Fea_Valid_Mean : {}'.format(round(np.mean(self.f_t), 3), round(np.mean(self.f_e), 3)))
-            print('  ! Hdf_Train_Mean : {}, Hdf_Valid_Mean : {}'.format(round(np.mean(self.h_t), 3), round(np.mean(self.h_e), 3)))
-            print('  ! Raw_Train_Mean : {}, Raw_Valid_Mean : {}'.format(round(np.mean(self.r_t), 3), round(np.mean(self.r_e), 3)))
+            if show_mean : 
+                print('  ! Fea_Train_Mean : {}, Fea_Valid_Mean : {}'.format(round(np.mean(self.f_t), 3), round(np.mean(self.f_e), 3)))
+                print('  ! Hdf_Train_Mean : {}, Hdf_Valid_Mean : {}'.format(round(np.mean(self.h_t), 3), round(np.mean(self.h_e), 3)))
+                print('  ! Raw_Train_Mean : {}, Raw_Valid_Mean : {}'.format(round(np.mean(self.r_t), 3), round(np.mean(self.r_e), 3)))
         # Avoid corruption
         dtb.close()
 
@@ -395,14 +398,14 @@ class Models :
 
             def LSTM_input(inp) :
 
-                mod = LSTM(100, return_sequences=True)(inp)
+                mod = LSTM(250, recurrent_dropout=0.25, return_sequences=True)(inp)
                 mod = BatchNormalization()(mod)
-                mod = Activation('tanh')(mod)
-                mod = Dropout(0.30)(mod)
-                mod = LSTM(100)(mod)
+                mod = Activation('relu')(mod)
+                mod = Dropout(0.25)(mod)
+                mod = LSTM(250, recurrent_dropout=0.25, go_backwards=True)(mod)
                 mod = BatchNormalization()(mod)
-                mod = Activation('tanh')(mod)
-                mod = Dropout(0.30)(mod)
+                mod = Activation('relu')(mod)
+                mod = Dropout(0.25)(mod)
                 mod = Dense(size_merge, activation='relu')(mod)
 
                 return mod
@@ -412,7 +415,7 @@ class Models :
             mod = BatchNormalization()(mod)
             mod = Activation('tanh')(mod)
             mod = Dropout(0.25)(mod)
-            mod = Dense(100)(mod)
+            mod = Dense(150)(mod)
             mod = BatchNormalization()(mod)
             mod = Activation('tanh')(mod)
             mod = Dropout(0.25)(mod)
@@ -517,8 +520,10 @@ class Models :
             del pbs
         elif self.name in self.case_bth :
             X_va = reformat_vectors(self.r_e, self.name, reduced=self.reduced, red_index=self.red_idx)
-            if self.name == 'DeepConv1D' : X_va = X_va + [self.f_e, self.h_e]
-            elif self.name == 'DeepConv2D' : X_va = [X_va, self.f_e, self.h_e]
+            if self.name in ['DeepLSTM', 'DeepConv1D'] : 
+                X_va = X_va + [self.f_e, self.h_e]
+            elif self.name == 'DeepConv2D' : 
+                X_va = [X_va, self.f_e, self.h_e]
             pbs = self.model.predict(X_va)
             dtf = score_verbose(self.l_e, [np.argmax(ele) for ele in pbs])
             del X_va, pbs
@@ -557,9 +562,11 @@ class Models :
     def load_model(self) :
 
         if self.name in self.case_fea : 
-            self.model = joblib.load('./Classifiers/clf_{}.h5'.format(self.name))
-        elif self.name in self.case_raw + self.case_bth : 
-            self.model = load_model('./Classifiers/clf_{}.h5'.format(self.name))
+            if self.truncate : joblib.load('./Truncates/clf_{}.h5'.format(self.name))
+            else : self.model = joblib.load('./Classifiers/clf_{}.h5'.format(self.name))
+        elif self.name in self.case_raw + self.case_bth :
+            if self.truncate : load_model('./Truncates/clf_{}.h5'.format(self.name))
+            else : self.model = load_model('./Classifiers/clf_{}.h5'.format(self.name))
 
         # Return the model
         return self
