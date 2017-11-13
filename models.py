@@ -383,7 +383,7 @@ class Models :
 
         # Truncate the learning to a maximum of cpus
         from keras import backend as K
-        K.set_image_dim_ordering('tf')
+        K.set_image_dim_ordering('th')
         S = tensorflow.Session(config=tensorflow.ConfigProto(intra_op_parallelism_threads=self.njobs))
         K.set_session(S)
         # Prepares the data
@@ -425,7 +425,7 @@ class Models :
             return mod
 
         # Define the inputs
-        inp = [Input(shape=(1, X_tr[0].shape[1], X_tr[0].shape[2])) for num in range(len(X_tr))]
+        inp = [Input(shape=(None, X_tr[0].shape[1], X_tr[0].shape[2])) for num in range(len(X_tr))]
         # Build model
         model = Model(inputs=inp, outputs=[build_model(inp, len(np.unique(y_tr)))])
         # Compile and launch the model
