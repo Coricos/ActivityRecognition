@@ -546,11 +546,12 @@ class Models :
             if tmp in fea : tmp = tmp.replace('1', '2')
             if tmp in fea : tmp = tmp.replace('2', '3')
             fea[ind] = tmp
-        with open('./Fea_Data/handcrafted.txt', 'rb') as raw : lab = pickle.load(raw)
+        fea = list(fea)
+        with open('./Fea_Data/handcrafted.txt', 'rb') as raw : lab = list(pickle.load(raw))
         plt.figure(figsize=(18,10))
         plt.title('Feature Importances - {}'.format(self.name))
         plt.barh(range(len(imp)), imp, color="lightblue", align="center")
-        plt.yticks(range(len(imp)), (fea+lab)[idx][:len(imp)])
+        plt.yticks(range(len(imp)), np.asarray(fea + lab)[idx][:len(imp)])
         plt.ylim([-1, len(imp)])
         plt.show()
 
