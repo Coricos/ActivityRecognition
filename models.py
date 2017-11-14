@@ -32,6 +32,9 @@ class Models :
             else : 
                 self.h_t, self.f_t = dtb['HDF_t'].value, dtb['FEA_t'].value
                 self.h_e, self.f_e = dtb['HDF_e'].value, dtb['FEA_e'].value
+            # Shuffle the data
+            self.h_t, self.f_t, self.l_t = shuffle(self.h_t, self.f_t, self.l_t)
+            # Verbose
             if show_mean : 
                 print('  ! Fea_Train_Mean : {}, Fea_Valid_Mean : {}'.format(round(np.mean(self.f_t), 3), round(np.mean(self.f_e), 3)))
                 print('  ! Hdf_Train_Mean : {}, Hdf_Valid_Mean : {}'.format(round(np.mean(self.h_t), 3), round(np.mean(self.h_e), 3)))
@@ -43,6 +46,9 @@ class Models :
             else : 
                 self.r_t = dtb['RAW_t'].value
                 self.r_e = dtb['RAW_e'].value
+            # Shuffle the data
+            self.r_t, self.l_t = shuffle(self.r_t, self.l_t)
+            # Verbose
             if show_mean : 
                 print('  ! Raw_Train_Mean : {}, Raw_Valid_Mean : {}'.format(round(np.mean(self.r_t), 3), round(np.mean(self.r_e), 3)))
 
@@ -53,6 +59,9 @@ class Models :
             else : 
                 self.h_t, self.f_t, self.r_t = dtb['HDF_t'].value, dtb['FEA_t'].value, dtb['RAW_t'].value
                 self.h_e, self.f_e, self.r_e = dtb['HDF_e'].value, dtb['FEA_e'].value, dtb['RAW_e'].value
+            # Shuffle the data
+            self.h_t, self.f_t, self.r_t, self.l_t = shuffle(self.h_t, self.f_t, self.r_t, self.l_t)
+            # Verbose
             if show_mean : 
                 print('  ! Fea_Train_Mean : {}, Fea_Valid_Mean : {}'.format(round(np.mean(self.f_t), 3), round(np.mean(self.f_e), 3)))
                 print('  ! Hdf_Train_Mean : {}, Hdf_Valid_Mean : {}'.format(round(np.mean(self.h_t), 3), round(np.mean(self.h_e), 3)))
