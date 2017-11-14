@@ -568,10 +568,10 @@ class Models :
     def load_model(self) :
 
         if self.name in self.case_fea : 
-            if self.truncate : joblib.load('./Truncates/clf_{}.h5'.format(self.name))
+            if self.truncate : self.model = joblib.load('./Truncates/clf_{}.h5'.format(self.name))
             else : self.model = joblib.load('./Classifiers/clf_{}.h5'.format(self.name))
         elif self.name in self.case_raw + self.case_bth :
-            if self.truncate : load_model('./Truncates/clf_{}.h5'.format(self.name))
+            if self.truncate : self.model = load_model('./Truncates/clf_{}.h5'.format(self.name))
             else : self.model = load_model('./Classifiers/clf_{}.h5'.format(self.name))
 
         # Return the model
