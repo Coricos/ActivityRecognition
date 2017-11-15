@@ -26,6 +26,9 @@ from sklearn.metrics import confusion_matrix, mean_squared_error, roc_auc_score
 from sklearn.utils import shuffle
 from sklearn.neural_network import MLPClassifier
 
+from keras import backend as K
+from keras import initializers
+from keras.engine.topology import Layer
 from keras.utils import np_utils
 from keras.models import Sequential, Model, load_model
 from keras.layers import Convolution2D, MaxPooling2D, merge, Activation, Dropout, Flatten, Dense
