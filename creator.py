@@ -284,3 +284,11 @@ class Creator :
         self.model = model
         # Return the object
         return self
+
+    # Observe its performance
+    def evaluate(self) :
+
+        # Compute the predictions
+        prd = [np.argmax(pbs) for pbs in self.model.predict(self.valid)]
+        # Returns the corresponding dataframe
+        return score_verbose(self.l_e, prd)
