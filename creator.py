@@ -277,9 +277,12 @@ class Creator :
         # Compile the modelel
         model = Model(inputs=self.input, outputs=model)
         model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+        # Implements the early stopping
+        early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
         # Fit the model
         model.fit(self.train, np_utils.to_categorical(self.l_t), batch_size=16, epochs=max_epochs, 
-                  verbose=verbose, validation_split=0.2, shuffle=True, sample_weight=sample_weight(self.l_t))
+                  verbose=verbose, validation_split=0.2, shuffle=True, 
+                  sample_weight=sample_weight(self.l_t), callbacks=[early])
         # Save model as attribute
         self.model = model
         # Return the object
