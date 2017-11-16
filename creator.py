@@ -240,14 +240,19 @@ class Creator :
     # Build the whole model
     def build(self) :
 
-        if self.with_raw :
-            if self.basis == 'Conv1D' : self.add_conv_1D()
-            elif self.basis == 'Conv2D' : self.add_conv_2D()
-            elif self.basis == 'LSTM' : self.add_LSTM()
-        if self.with_hdf : self.add_dense_hdf()
-        if self.with_fea : self.add_dense_fea()
-        if self.with_tda : self.add_dense_tda()
-        if self.with_lds : self.add_silhouette_layers()
+        if hasattr(self, 'with_raw') :
+            if self.with_raw :
+                if self.basis == 'Conv1D' : self.add_conv_1D()
+                elif self.basis == 'Conv2D' : self.add_conv_2D()
+                elif self.basis == 'LSTM' : self.add_LSTM()
+        if hasattr(self, 'with_hdf') :
+            if self.with_hdf : self.add_dense_hdf()
+        if hasattr(self, 'with_fea') :
+            if self.with_fea : self.add_dense_fea()
+        if hasattr(self, 'with_tda') :
+            if self.with_tda : self.add_dense_tda()
+        if hasattr(self, 'with_lds') :
+            if self.with_lds : self.add_silhouette_layers()
 
         # Return the object
         return self
