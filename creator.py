@@ -128,7 +128,7 @@ class Creator :
     # Add LSTM model
     def add_LSTM(self) :
 
-        def LSTM(inp) : 
+        def build_LSTM(inp) : 
 
             mod = LSTM(100, return_sequences=True)(inp)
             mod = BatchNormalization()(mod)
@@ -148,7 +148,7 @@ class Creator :
         # Add layers to the model
         inp = [Input(shape=self.raw_t[0][0].shape) for num in range(len(self.raw_t))]
         self.input += inp
-        self.merge += [LSTM(ele) for ele in inp]
+        self.merge += [build_LSTM(ele) for ele in inp]
         self.train += self.raw_t
         self.valid += self.raw_e
 
