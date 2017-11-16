@@ -249,6 +249,9 @@ class Creator :
         if self.with_tda : self.add_dense_tda()
         if self.with_lds : self.add_silhouette_layers()
 
+        # Return the object
+        return self
+
     # Lauch the fit
     def learn(self, verbose=1, max_epochs=100) :
 
@@ -272,10 +275,12 @@ class Creator :
         model = GaussianDropout(0.3)(model)
         model = Dense(len(np.unique(self.l_t)), activation='softmax')(model)
         # Compile the modelel
-        model = modelel(inputs=self.input, outputs=model)
+        model = Model(inputs=self.input, outputs=model)
         model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
         # Fit the model
         model.fit(self.train, np_utils.to_categorical(self.l_t), batch_size=16, epochs=max_epochs, 
                   verbose=verbose, validation_split=0.2, shuffle=True, sample_weight=sample_weight(self.l_t))
         # Save model as attribute
         self.model = model
+        # Return the object
+        return self
