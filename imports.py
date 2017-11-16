@@ -1,20 +1,25 @@
 # Author : DINDIN Meryll
 # Date : 01/11/2017
 
-import warnings
-warnings.filterwarnings('ignore')
+import warnings, sys
 
+warnings.filterwarnings('ignore')
+sys.path.append('/home/mdindin/Project_Dyskinesia/Install/2017-10-02-10-19-30_GUDHI_2.0.1/cython/')
+
+import gudhi
 import pandas as pd
 import numpy as np
 import seaborn as sb
 import matplotlib.pyplot as plt
-import os, tqdm, h5py, pickle, multiprocessing, sys
-import tensorflow, xgboost
+import os, tqdm, h5py, pickle, multiprocessing
+import tensorflow, xgboost, itertools
 
 from functools import partial
 from scipy.stats import randint, moment, kurtosis, skew
+from mpl_toolkits.mplot3d import Axes3D
 
 from sklearn import preprocessing
+from sklearn.neighbors import KDTree
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.pipeline import Pipeline
@@ -33,7 +38,8 @@ from keras.utils import np_utils
 from keras.models import Sequential, Model, load_model
 from keras.layers import Convolution2D, MaxPooling2D, merge, Activation, Dropout, Flatten, Dense
 from keras.layers import Conv1D, Input, MaxPooling1D, GlobalAveragePooling1D, LSTM, Bidirectional
-from keras.layers import TimeDistributed, BatchNormalization, GlobalAveragePooling2D, GaussianDropout
+from keras.layers import TimeDistributed, BatchNormalization, GlobalAveragePooling2D
+from keras.layers import GlobalMaxPooling1D, GaussianDropout
 from keras.layers.core import Dense, Dropout, Activation
 from keras.optimizers import SGD
 from keras.callbacks import EarlyStopping, ModelCheckpoint

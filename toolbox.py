@@ -95,6 +95,15 @@ def fast_clear(dtf) :
 
     return pd.DataFrame(vec, columns=dtf.columns, index=dtf.index)
 
+# Clearing arrays
+def clear_array(arr) :
+
+    arr[arr == -np.inf] = 0
+    arr[arr == np.inf] = 0
+    arr = np.nan_to_num(arr)
+
+    return arr 
+
 # Time efficient concatenation
 def fast_concatenate(list_dtf, axis=1) :
 
@@ -164,3 +173,13 @@ def truncate_data(vec, lab, lab_to_del=[6, 7, 8, 9, 10, 11]) :
     for val in lab_to_del : msk[np.where(lab == val)[0]] = False
 
     return [ele[msk] for ele in vec], lab[msk]
+
+# Get the mask to spread it, same as above
+def get_mask(lab, lab_to_del=[6, 7, 8, 9, 10, 11]) :
+    
+    # Defines the mask
+    msk = np.ones(len(lab), dtype=bool)
+    # Incremental deletion
+    for val in lab_to_del : msk[np.where(lab == val)[0]] = False
+        
+    return msk
