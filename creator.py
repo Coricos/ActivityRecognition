@@ -297,6 +297,8 @@ class Creator :
         self.model = model
         # Memory efficiency
         del self.train, self.l_t, self.merge, self.input, early, check, model
+        # Returns the object
+        return self
 
     # Observe its performance
     def evaluate(self) :
