@@ -45,13 +45,13 @@ class Creator :
             self.name[1] = 'T'
         self.with_n_g = with_n_g
         if with_acc :
-            self.n_a_t = reformat(raw_t[:,0:3,:][m_t], '2D')
-            self.n_a_e = reformat(raw_e[:,0:3,:][m_e], '2D')
+            self.acc_t = reformat(raw_t[:,0:3,:][m_t], '2D')
+            self.acc_e = reformat(raw_e[:,0:3,:][m_e], '2D')
             self.name[2] = 'T'
         self.with_acc = with_acc
         if with_gyr :
-            self.n_a_t = reformat(raw_t[:,3:6,:][m_t], '2D')
-            self.n_a_e = reformat(raw_e[:,3:6,:][m_e], '2D')
+            self.gyr_t = reformat(raw_t[:,3:6,:][m_t], '2D')
+            self.gyr_e = reformat(raw_e[:,3:6,:][m_e], '2D')
             self.name[3] = 'T'
         self.with_gyr = with_gyr
         if with_fft :
