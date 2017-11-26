@@ -37,23 +37,23 @@ class Creator :
         if with_n_a :
             self.n_a_t = reformat(raw_t[:,6,:][m_t], '1D')
             self.n_a_e = reformat(raw_e[:,6,:][m_e], '1D')
-            self.with_n_a = with_n_a
             self.name[0] = 'T'
+        self.with_n_a = with_n_a
         if with_n_g :
             self.n_a_t = reformat(raw_t[:,7,:][m_t], '1D')
             self.n_a_e = reformat(raw_e[:,7,:][m_e], '1D')
-            self.with_n_g = with_n_g
             self.name[1] = 'T'
+        self.with_n_g = with_n_g
         if with_acc :
             self.n_a_t = reformat(raw_t[:,0:3,:][m_t], '2D')
             self.n_a_e = reformat(raw_e[:,0:3,:][m_e], '2D')
-            self.with_acc = with_acc
             self.name[2] = 'T'
+        self.with_acc = with_acc
         if with_gyr :
             self.n_a_t = reformat(raw_t[:,3:6,:][m_t], '2D')
             self.n_a_e = reformat(raw_e[:,3:6,:][m_e], '2D')
-            self.with_gyr = with_gyr
             self.name[3] = 'T'
+        self.with_gyr = with_gyr
         if with_fft :
             pol = multiprocessing.Pool(processes=multiprocessing.cpu_count())
             self.fft_t = np.asarray(pol.map(multi_fft, list(raw_t[:,6,:][m_t])))
@@ -61,23 +61,23 @@ class Creator :
             pol.close()
             pol.join()
             del pol
-            self.with_fft = with_fft
             self.name[4] = 'T'
+        self.with_fft = with_fft
         if with_hdf :
             self.hdf_t = dtb['HDF_t'].value[m_t]
             self.hdf_e = dtb['HDF_e'].value[m_e]
-            self.with_hdf = with_hdf
             self.name[5] = 'T'
+        self.with_hdf = with_hdf
         if with_fea :
             self.fea_t = dtb['FEA_t'].value[m_t]
             self.fea_e = dtb['FEA_e'].value[m_e]
-            self.with_fea = with_fea
             self.name[6] = 'T'
+        self.with_fea = with_fea
         if with_tda :
             self.tda_t = np.hstack((dtb['TDA_A_t'].value[m_t], dtb['TDA_G_t'].value[m_t], dtb['TDA_AG_t'].value[m_t]))
             self.tda_e = np.hstack((dtb['TDA_A_e'].value[m_t], dtb['TDA_G_e'].value[m_t], dtb['TDA_AG_e'].value[m_t])) 
-            self.with_tda = with_tda
             self.name[7] = 'T'
+        self.with_tda = with_tda
         if with_lds :
             self.lA0_t = dtb['LDS_A_0_t'].value[m_t]
             self.lA1_t = dtb['LDS_A_1_t'].value[m_t]
@@ -91,8 +91,8 @@ class Creator :
             self.lG1_e = dtb['LDS_G_1_e'].value[m_e]
             self.AG0_e = dtb['LDS_AG_0_e'].value[m_e]
             self.AG1_e = dtb['LDS_AG_1_e'].value[m_e]
-            self.with_lds = with_lds
             self.name[8] = 'T'
+        self.with_lds = with_lds
         # Memory efficiency
         if with_n_a or with_n_g or with_acc or with_gyr or with_fft : 
             del raw_t, raw_e
