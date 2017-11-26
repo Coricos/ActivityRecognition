@@ -281,14 +281,12 @@ class Creator :
         model = Model(inputs=self.input, outputs=model)
         model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
         # Implements the early stopping
-        if self.truncate : 
-            pth = '../Truncates/clf_{}.h5'.format(self.name)
-        else : 
-            pth = '../Classifiers/clf_{}.h5'.format(self.name)            
+        if self.truncate : pth = './Truncates/clf_{}.h5'.format(self.name)
+        else : pth = './Classifiers/clf_{}.h5'.format(self.name)            
         early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
         check = ModelCheckpoint(pth, period=3, monitor='val_acc', save_best_only=True, mode='auto', save_weights_only=False)
         # Fit the model
-        model.fit(self.train, np_utils.to_categorical(self.l_t), batch_size=16, epochs=max_epochs, 
+        model.fit(self.train, np_utils.to_categorical(self.l_t), batch_size=64, epochs=max_epochs, 
                   verbose=verbose, validation_split=0.1, shuffle=True, 
                   sample_weight=sample_weight(self.l_t), callbacks=[early, check])
         # Save model as attribute
