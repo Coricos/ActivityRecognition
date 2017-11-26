@@ -282,9 +282,9 @@ class Creator :
         model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
         # Implements the early stopping
         if self.truncate : 
-            pth = '../Truncates/clf_{}_{}_{}s.h5'.format(self.name, self.anatomy, self.time_window)
+            pth = '../Truncates/clf_{}.h5'.format(self.name)
         else : 
-            pth = '../Classifiers/clf_{}_{}_{}s.h5'.format(self.name, self.anatomy, self.time_window)            
+            pth = '../Classifiers/clf_{}.h5'.format(self.name)            
         early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
         check = ModelCheckpoint(pth, period=3, monitor='val_acc', save_best_only=True, mode='auto', save_weights_only=False)
         # Fit the model
