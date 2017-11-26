@@ -40,8 +40,8 @@ class Creator :
             self.name[0] = 'T'
         self.with_n_a = with_n_a
         if with_n_g :
-            self.n_a_t = reformat(raw_t[:,7,:][m_t], '1D')
-            self.n_a_e = reformat(raw_e[:,7,:][m_e], '1D')
+            self.n_g_t = reformat(raw_t[:,7,:][m_t], '1D')
+            self.n_g_e = reformat(raw_e[:,7,:][m_e], '1D')
             self.name[1] = 'T'
         self.with_n_g = with_n_g
         if with_acc :
