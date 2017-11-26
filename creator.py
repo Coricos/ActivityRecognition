@@ -36,7 +36,7 @@ class Creator :
         if with_n_a or with_n_g or with_acc or with_gyr or with_fft: 
             raw_t, raw_e = dtb['RAW_t'].value, dtb['RAW_e'].value
         if with_n_a :
-            self.n_a_t = reformat(raw_t[:,6,:][m_t], '1D')kj
+            self.n_a_t = reformat(raw_t[:,6,:][m_t], '1D')
             self.n_a_e = reformat(raw_e[:,6,:][m_e], '1D')
             self.with_n_a = with_n_a
             self.name[0] = 'T'
