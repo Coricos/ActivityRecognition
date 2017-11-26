@@ -37,17 +37,11 @@ def windows(size, time_window, overlap) :
 
     return cnt  
 
-# Reformat data according to a problematic
-def reformat_vectors(vec, mod, reduced=False, red_index=[6,7]) :
+# Reformat the vectors : dynamic model
+def reformat(vec, typ) :
 
-    if mod in ['Conv1D', 'DeepConv1D'] :
-        if not reduced : return [vec[:,idx,:].reshape(vec.shape[0], vec.shape[2], 1) for idx in range(vec.shape[1])]
-        else : return [vec[:,idx,:].reshape(vec.shape[0], vec.shape[2], 1) for idx in red_index]
-    elif mod in ['LSTM', 'DeepLSTM'] :
-        if not reduced : return [vec[:,idx,:].reshape(vec.shape[0], vec.shape[2], 1) for idx in range(vec.shape[1])]
-        else : return [vec[:,idx,:].reshape(vec.shape[0], vec.shape[2], 1) for idx in red_index]
-    elif mod in ['Conv2D', 'DeepConv2D'] :
-        return vec.reshape(vec.shape[0], 1, vec.shape[1], vec.shape[2])
+    if typ == '1D' : return vec.reshape(vec.shape[0], vec.shape[1], 1)
+    elif typ == '2D' : return vec.reshape(vec.shape[0], 1, vec.shape[1], vec.shape[2])
 
 # Remove doublon
 def remove_doublon(l) :
@@ -183,3 +177,9 @@ def get_mask(lab, lab_to_del=[6, 7, 8, 9, 10, 11]) :
     for val in lab_to_del : msk[np.where(lab == val)[0]] = False
         
     return msk
+
+
+# Multiprocessed fft computation
+def multi_fft(vec) :
+
+    return np.abs(np.fft.rfft(vec, axis=0))
