@@ -10,7 +10,6 @@ class Creator :
     # Initialization
     def __init__(self, merge_size=50, with_n_a=True, with_n_g=True, with_acc=True, with_gyr=True, with_fft=False, with_tda=False, with_lds=False, with_hdf=False, with_fea=False, truncate=False) :
 
-        self.basis = basis
         self.njobs = multiprocessing.cpu_count()
         self.merge_size = merge_size
         # Initialize the constructor
