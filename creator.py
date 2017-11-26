@@ -57,7 +57,7 @@ class Creator :
         if with_fft :
             pol = multiprocessing.Pool(processes=multiprocessing.cpu_count())
             self.fft_t = np.asarray(pol.map(multi_fft, list(raw_t[:,6,:][m_t])))
-            self.fft_e = np.asarray(pol.mpa(multi_fft, list(raw_e[:,6,:][m_e])))
+            self.fft_e = np.asarray(pol.map(multi_fft, list(raw_e[:,6,:][m_e])))
             pol.close()
             pol.join()
             del pol
@@ -75,7 +75,7 @@ class Creator :
         self.with_fea = with_fea
         if with_tda :
             self.tda_t = np.hstack((dtb['TDA_A_t'].value[m_t], dtb['TDA_G_t'].value[m_t], dtb['TDA_AG_t'].value[m_t]))
-            self.tda_e = np.hstack((dtb['TDA_A_e'].value[m_t], dtb['TDA_G_e'].value[m_t], dtb['TDA_AG_e'].value[m_t])) 
+            self.tda_e = np.hstack((dtb['TDA_A_e'].value[m_e], dtb['TDA_G_e'].value[m_e], dtb['TDA_AG_e'].value[m_e])) 
             self.name[7] = 'T'
         self.with_tda = with_tda
         if with_lds :
@@ -237,7 +237,7 @@ class Creator :
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
         mod = Dropout(0.3)(mod)
-        mod = Dense(self.size_merge, activation='softmax')(mod)
+        mod = Dense(self.merge_size, activation='softmax')(mod)
 
         # Adds to attributes
         self.input += inp
