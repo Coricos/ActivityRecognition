@@ -263,6 +263,9 @@ class Creator :
 
         # Build the corresponding model
         self.build()
+        # Shuffle all the data
+        idx, self.l_t = shuffle(range(len(self.l_t)), self.l_t)
+        self.train = [ele[idx] for ele in self.train]
         # Gather all the model in one dense network
         model = merge(self.merge)
         model = BatchNormalization()(model)
@@ -286,7 +289,7 @@ class Creator :
         early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
         check = ModelCheckpoint(pth, period=3, monitor='val_acc', save_best_only=True, mode='auto', save_weights_only=False)
         # Fit the model
-        model.fit(self.train, np_utils.to_categorical(self.l_t), batch_size=64, epochs=max_epochs, 
+        model.fit(self.train, np_utils.to_categorical(self.l_t), batch_size=16, epochs=max_epochs, 
                   verbose=verbose, validation_split=0.1, shuffle=True, 
                   sample_weight=sample_weight(self.l_t), callbacks=[early, check])
         # Save model as attribute
