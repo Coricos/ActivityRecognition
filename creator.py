@@ -94,8 +94,8 @@ class Creator :
             self.name[8] = 'T'
         self.with_lds = with_lds
         if with_qua :
-            self.qua_t = dtb['QUA_t'].value[m_t]
-            self.qua_e = dtb['QUA_e'].value[m_e]
+            self.qua_t = reformat(dtb['QUA_t'].value[m_t], '2D')
+            self.qua_e = reformat(dtb['QUA_e'].value[m_e], '2D')
             self.name[9] = 'T'
         self.with_qua = with_qua
         # Memory efficiency
