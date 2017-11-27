@@ -178,7 +178,6 @@ def get_mask(lab, lab_to_del=[6, 7, 8, 9, 10, 11]) :
         
     return msk
 
-
 # Multiprocessed fft computation
 def multi_fft(vec) :
 

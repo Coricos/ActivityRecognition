@@ -43,3 +43,4 @@ from keras.layers import GlobalMaxPooling1D, GaussianDropout
 from keras.layers.core import Dense, Dropout, Activation
 from keras.optimizers import SGD
 from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.layers.merge import concatenate

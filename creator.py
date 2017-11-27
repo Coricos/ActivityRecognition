@@ -8,7 +8,7 @@ from topology import *
 class Creator :
     
     # Initialization
-    def __init__(self, merge_size=50, with_n_a=True, with_n_g=True, with_acc=True, with_gyr=True, with_fft=False, with_tda=False, with_lds=False, with_hdf=False, with_fea=False, truncate=False) :
+    def __init__(self, merge_size=50, with_n_a=True, with_n_g=True, with_acc=True, with_gyr=True, with_fft=False, with_qua=False, with_tda=False, with_lds=False, with_hdf=False, with_fea=False, truncate=False) :
 
         self.njobs = multiprocessing.cpu_count()
         self.merge_size = merge_size
@@ -20,7 +20,7 @@ class Creator :
         # Default arguments for convolution
         self.truncate = truncate
         # Name
-        self.name = ['F' for i in range(9)]
+        self.name = ['F' for i in range(10)]
         # Load dataset
         dtb = h5py.File('data.h5', 'r')
         # Load the labels and initialize training and testing sets
@@ -93,6 +93,11 @@ class Creator :
             self.AG1_e = dtb['LDS_AG_1_e'].value[m_e]
             self.name[8] = 'T'
         self.with_lds = with_lds
+        if with_qua :
+            self.qua_t = dtb['QUA_t'].value[m_t]
+            self.qua_e = dtb['QUA_e'].value[m_t]
+            self.name[9] = 'T'
+        self.with_qua = with_qua
         # Memory efficiency
         if with_n_a or with_n_g or with_acc or with_gyr or with_fft : 
             del raw_t, raw_e
@@ -146,14 +151,21 @@ class Creator :
             self.train.append(self.acc_t)
             self.valid.append(self.acc_e)
             del self.acc_t, self.acc_e
+            mod = Convolution2D(64, (self.acc_t.shape[2], 60), data_format='channels_first')(inp)
         elif channel == 'gyr' : 
             inp = Input(shape=self.gyr_t[0].shape)
             self.train.append(self.gyr_t)
             self.valid.append(self.gyr_e)
             del self.gyr_t, self.gyr_e
+            mod = Convolution2D(64, (self.gyr_t.shape[2], 60), data_format='channels_first')(inp)
+        elif channel == 'qua' :
+            inp = Input(shape=self.qua_t[0].shape)
+            self.train.append(self.qua_t)
+            self.valid.append(self.qua_e)
+            del self.qua_t, self.qua_e
+            mod = Convolution2D(64, (self.qua_t.shape[2], 60), data_format='channels_first')(inp)
 
         # Build model
-        mod = Convolution2D(64, (3, 60), data_format='channels_first')(inp)
         mod = Activation('relu')(mod)
         mod = BatchNormalization(axis=1)(mod)
         mod = MaxPooling2D(pool_size=(1, 2), data_format='channels_first')(mod)
@@ -257,6 +269,7 @@ class Creator :
         if self.with_n_g : self.add_CONV_1D('n_g')
         if self.with_tda : self.add_DENSE('tda')
         if self.with_lds : self.add_SILHOUETTE()
+        if self.with_qua : self.add_CONV_2D('qua')
 
     # Lauch the fit
     def learn(self, verbose=1, max_epochs=100) :
@@ -267,18 +280,19 @@ class Creator :
         idx, self.l_t = shuffle(range(len(self.l_t)), self.l_t)
         self.train = [ele[idx] for ele in self.train]
         # Gather all the model in one dense network
-        model = merge(self.merge)
+        model = concatenate(self.merge)
+        model = Dense(int(0.75 * self.merge_size * len(self.train)))(model)
         model = BatchNormalization()(model)
         model = Activation('tanh')(model)
-        model = Dropout(0.3)(model)
-        model = Dense(self.merge_size*len(self.train)/2)(model)
+        model = Dropout(0.5)(model)
+        model = Dense(int(0.5 * self.merge_size * len(self.train)))(model)
         model = BatchNormalization()(model)
         model = Activation('tanh')(model)
-        model = Dropout(0.3)(model)
-        model = Dense(self.merge_size*len(self.train)/4)(model)
+        model = Dropout(0.5)(model)
+        model = Dense(int(0.25 * self.merge_size * len(self.train)))(model)
         model = BatchNormalization()(model)
         model = Activation('tanh')(model)
-        model = GaussianDropout(0.3)(model)
+        model = GaussianDropout(0.5)(model)
         model = Dense(len(np.unique(self.l_t)), activation='softmax')(model)
         # Compile the modelel
         model = Model(inputs=self.input, outputs=model)
