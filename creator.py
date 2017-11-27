@@ -95,7 +95,7 @@ class Creator :
         self.with_lds = with_lds
         if with_qua :
             self.qua_t = dtb['QUA_t'].value[m_t]
-            self.qua_e = dtb['QUA_e'].value[m_t]
+            self.qua_e = dtb['QUA_e'].value[m_e]
             self.name[9] = 'T'
         self.with_qua = with_qua
         # Memory efficiency
