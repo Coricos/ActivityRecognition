@@ -150,20 +150,20 @@ class Creator :
             inp = Input(shape=self.acc_t[0].shape)
             self.train.append(self.acc_t)
             self.valid.append(self.acc_e)
-            del self.acc_t, self.acc_e
             mod = Convolution2D(64, (self.acc_t.shape[2], 60), data_format='channels_first')(inp)
+            del self.acc_t, self.acc_e
         elif channel == 'gyr' : 
             inp = Input(shape=self.gyr_t[0].shape)
             self.train.append(self.gyr_t)
             self.valid.append(self.gyr_e)
-            del self.gyr_t, self.gyr_e
             mod = Convolution2D(64, (self.gyr_t.shape[2], 60), data_format='channels_first')(inp)
+            del self.gyr_t, self.gyr_e
         elif channel == 'qua' :
             inp = Input(shape=self.qua_t[0].shape)
             self.train.append(self.qua_t)
             self.valid.append(self.qua_e)
-            del self.qua_t, self.qua_e
             mod = Convolution2D(64, (self.qua_t.shape[2], 60), data_format='channels_first')(inp)
+            del self.qua_t, self.qua_e
 
         # Build model
         mod = Activation('relu')(mod)
