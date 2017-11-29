@@ -296,10 +296,6 @@ class Creator :
         self.train = [ele[idx] for ele in self.train]
         # Gather all the model in one dense network
         model = concatenate(self.merge)
-        model = Dense(int(0.75 * self.merge_size * len(self.train)))(model)
-        model = BatchNormalization()(model)
-        model = Activation('tanh')(model)
-        model = Dropout(0.5)(model)
         model = Dense(int(0.5 * self.merge_size * len(self.train)))(model)
         model = BatchNormalization()(model)
         model = Activation('tanh')(model)
