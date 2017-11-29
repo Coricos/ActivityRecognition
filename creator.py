@@ -222,30 +222,43 @@ class Creator :
         self.merge.append(mod)
 
     # Add silhouette layer for landscapes
-    def add_SILHOUETTE(self) :
+    def add_SILHOUETTE(self, channel) :
 
         def silhouette(inp) :
 
             mod = SilhouetteLayer(int(inp.shape[-1]))(inp)
+            mod = GlobalMaxPooling1D()(mod)
+            mod = Dense(100)(mod)
             mod = BatchNormalization()(mod)
             mod = Activation('relu')(mod)
             mod = Dropout(0.25)(mod)
-            mod = MaxPooling1D(pool_size=2)(mod)
-            mod = GlobalMaxPooling1D()(mod)
             mod = Dense(self.merge_size, activation='softmax')(mod)
     
             return mod
 
-        # Build model
-        inp = [Input(shape=(ele[0].shape)) for ele in [self.lA0_t, self.lA1_t, self.lG0_t, self.lG1_t, self.AG0_t, self.AG1_t]]
+        # Build the inputs
+        if channel == 'acc' : 
+            inp = [Input(shape=(ele[0].shape)) for ele in [self.lA0_t, self.lA1_t]]
+            self.train += [self.lA0_t, self.lA1_t]
+            self.valid += [self.lA0_e, self.lA1_e]
+        if channel == 'gyr' :
+            inp = [Input(shape=(ele[0].shape)) for ele in [self.lG0_t, self.lG1_t]]
+            self.train += [self.lG0_t, self.lG1_t]
+            self.valid += [self.lG0_e, self.lG1_e]
+        if channel == 'mix' : 
+            inp = [Input(shape=(ele[0].shape)) for ele in [self.AG0_t, self.AG1_t]]
+            self.train += [self.lA0_t, self.lA1_t]
+            self.valid += [self.AG0_e, self.AG1_e]
+        if channel == 'qua' :
+            inp = [Input(shape=(ele[0].shape)) for ele in [self.lQ0_t, self.lQ1_t]]
+            self.train += [self.lQ0_t, self.lQ1_t]
+            self.valid += [self.lQ0_e, self.lQ1_e]
+        
+        # Build the silhouettes
         mrg = [silhouette(ele) for ele in inp]
-
         # Intermediary model
-        mod = merge(mrg)
-        mod = BatchNormalization()(mod)
-        mod = Activation('tanh')(mod)
-        mod = Dropout(0.3)(mod)
-        mod = Dense(100)(mod)
+        mod = concatenate(mrg)
+        mod = Dense(2*self.merge_size)(mod)
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
         mod = Dropout(0.3)(mod)
@@ -254,8 +267,6 @@ class Creator :
         # Adds to attributes
         self.input += inp
         self.merge.append(mod)
-        self.train += [self.lA0_t, self.lA1_t, self.lG0_t, self.lG1_t, self.AG0_t, self.AG1_t]
-        self.valid += [self.lA0_e, self.lA1_e, self.lG0_e, self.lG1_e, self.AG0_e, self.AG1_e]
 
     # Build the whole model
     def build(self) :
@@ -268,7 +279,11 @@ class Creator :
         if self.with_n_a : self.add_CONV_1D('n_a')
         if self.with_n_g : self.add_CONV_1D('n_g')
         if self.with_tda : self.add_DENSE('tda')
-        if self.with_lds : self.add_SILHOUETTE()
+        if self.with_lds : 
+            self.add_SILHOUETTE('acc')
+            self.add_SILHOUETTE('gyr')
+            self.add_SILHOUETTE('mix')
+            # self.add_SILHOUETTE('qua')
         if self.with_qua : self.add_CONV_2D('qua')
 
     # Lauch the fit
