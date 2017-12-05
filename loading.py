@@ -135,7 +135,7 @@ class Loader :
                 cut = self.description.query('Experience == {} & User == {}'.format(exp, ids))
                 for val in cut[['Label', 'Begin', 'End']].values :
                     tmp = self.raw_signals.query('Experience == {} & User == {}'.format(exp, ids))
-                    sig = slice_signal(remove_columns(tmp[val[1]:val[2]+1], ['Experience', 'User']), both)
+                    sig = slice_signal(remove_columns(tmp[val[1]:val[2]+1], ['Experience', 'User']))
                     y_tr += list(np.full(len(sig), val[0]))
                     X_tr += sig
                     del tmp, sig
@@ -146,7 +146,7 @@ class Loader :
                 cut = self.description.query('Experience == {} & User == {}'.format(exp, ids))
                 for val in cut[['Label', 'Begin', 'End']].values :
                     tmp = self.raw_signals.query('Experience == {} & User == {}'.format(exp, ids))
-                    sig = slice_signal(remove_columns(tmp[val[1]:val[2]+1], ['Experience', 'User']), both)
+                    sig = slice_signal(remove_columns(tmp[val[1]:val[2]+1], ['Experience', 'User']))
                     y_va += list(np.full(len(sig), val[0]))
                     X_va += sig
                     del tmp, sig
@@ -225,11 +225,11 @@ class Loader :
         print('|-> Quaternions computed and saved ...')
 
     # Preprocess the raw signals
-    def standardize(self, both=False) :
+    def standardize(self) :
 
         # Prepares the data
         self.load_signals()
-        self.sliding_extraction(both)
+        self.sliding_extraction()
 
         # Local function for processing
         def process(img, scalers, fit=False) :
