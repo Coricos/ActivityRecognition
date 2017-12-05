@@ -7,7 +7,7 @@ from toolbox import *
 class Loader :
 
     # Initialization
-    def __init__(self, max_jobs=multiprocessing.cpu_count()-1, path) :
+    def __init__(self, path, max_jobs=multiprocessing.cpu_count()-1) :
 
         # Cares about multiprocessing instances
         self.njobs = max_jobs
@@ -277,4 +277,4 @@ class Loader :
         self.load_fft()
         self.load_qua()
 
-    
+
