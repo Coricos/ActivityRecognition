@@ -224,6 +224,8 @@ class Loader :
         # Log
         print('|-> Quaternions computed and saved ...')
 
+    # Computes the landscapes out of given signals
+
     # Preprocess the raw signals
     def standardize(self) :
 
@@ -276,5 +278,3 @@ class Loader :
         self.load_raw()
         self.load_fft()
         self.load_qua()
-
-
