@@ -182,3 +182,20 @@ def get_mask(lab, lab_to_del=[6, 7, 8, 9, 10, 11]) :
 def multi_fft(vec) :
 
     return np.abs(np.fft.rfft(vec, axis=0))
+
+# Multiprocessed computation of quaternions
+def compute_quaternion(sig):
+
+    dT = 1.0/50.0
+    quaternion = np.zeros((4, sig.shape[1]))
+    quaternion[0,0] = 1
+
+    for j in range(1, sig.shape[1]) :
+        r = quaternion[:,j-1]
+        q = np.array([1, dT*sig[0,j]*math.pi/360., dT*sig[1,j]*math.pi/360., dT*sig[2,j]*math.pi/360.])
+        quaternion[0,j] = (r[0]*q[0] - r[1]*q[1] - r[2]*q[2] - r[3]*q[3])
+        quaternion[1,j] = (r[0]*q[1] + r[1]*q[0] - r[2]*q[3] + r[3]*q[2])
+        quaternion[2,j] = (r[0]*q[2] + r[1]*q[3] + r[2]*q[0] - r[3]*q[1])
+        quaternion[3,j] = (r[0]*q[3] - r[1]*q[2] + r[2]*q[1] + r[3]*q[0])
+                
+    return quaternion

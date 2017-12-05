@@ -7,7 +7,7 @@ from toolbox import *
 class Loader :
 
     # Initialization
-    def __init__(self, max_jobs=multiprocessing.cpu_count()-1) :
+    def __init__(self, max_jobs=multiprocessing.cpu_count()-1, path) :
 
         # Cares about multiprocessing instances
         self.njobs = max_jobs
@@ -22,6 +22,8 @@ class Loader :
         # Defines conditions relative to the experiment
         self.time_window = 128
         self.overlap_rto = 0.5
+        # Path for serialization
+        self.path = path
 
     # Load the features relative to the signals
     def load_fea(self) :
@@ -54,8 +56,13 @@ class Loader :
         self.valid = fast_concatenate([X_va, l_va, i_va], axis=1)
         # Memory efficiency
         del X_va, l_va, i_va, lab, sca, X_tr, l_tr, i_tr, raw
-        # Return object
-        return self
+        # Serialize the features in database
+        with h5py.File(self.path, 'w') as dtb :
+            dtb.create_dataset('FEA_t', data=remove_columns(self.train, ['Subjects', 'Labels']))
+            dtb.create_dataset('FEA_e', data=remove_columns(self.valid, ['Subjects', 'Labels']))
+        # Memory efficiency
+        del self.train, self.valid
+        print('|-> Features serialized ...')
 
     # Loads the raw signals as dataframe
     def load_signals(self) :
@@ -92,14 +99,15 @@ class Loader :
         self.description = lab
         # Memory efficiency
         del raw, lab
-        # Return object
-        return self
 
     # Slice the signal accordingly to the time_window and overlap
-    def sliding_extraction(self, both) :
+    def load_raw(self) :
+
+        # First, load the signals
+        self.load_signals()
 
         # Local function for slicing
-        def slice_signal(sig, both) :
+        def slice_signal(sig) :
 
             if len(sig) < self.time_window : return []
             else :
@@ -109,10 +117,6 @@ class Loader :
                 while srt <= top - self.time_window :
                     tme.append((srt, srt + self.time_window))
                     srt += int(self.overlap_rto * self.time_window)
-                # Take care of the last slice
-                if not both : 
-                    try : tme.append((top - self.time_window, top))
-                    except : pass
                 # Launch multiprocessing
                 pol = multiprocessing.Pool(processes=min(len(tme), self.njobs))
                 mvs = pol.map(partial(extract, data=sig), tme)
@@ -147,16 +151,81 @@ class Loader :
                     X_va += sig
                     del tmp, sig
                 del cut
-        # Save as attributes
-        self.X_tr = np.asarray(X_tr)
-        self.y_tr = np.asarray(y_tr).astype(int) - 1
-        self.X_va = np.asarray(X_va)
-        self.y_va = np.asarray(y_va).astype(int) - 1
+        # Serialize the features in database
+        with h5py.File(self.path, 'r+') as dtb :
+            dtb.create_dataset('ACC_t', data=np.asarray(X_tr)[:,0:3,:])
+            dtb.create_dataset('ACC_e', data=np.asarray(X_va)[:,0:3,:])
+            dtb.create_dataset('GYR_t', data=np.asarray(X_tr)[:,3:6,:])
+            dtb.create_dataset('GYR_e', data=np.asarray(X_va)[:,3:6,:])
+            dtb.create_dataset('N_A_t', data=np.asarray(X_tr)[:,6,:])
+            dtb.create_dataset('N_A_e', data=np.asarray(X_va)[:,6,:])
+            dtb.create_dataset('N_G_t', data=np.asarray(X_tr)[:,7,:])
+            dtb.create_dataset('N_G_e', data=np.asarray(X_va)[:,7,:])
+            dtb.create_dataset('y_train', data=np.asarray(y_tr).astype(int) - 1)
+            dtb.create_dataset('y_valid', data=np.asarray(y_va).astype(int) - 1)
+        print('|-> Signals serialized ...')
         # Memory efficiency
         del X_tr, X_va, y_tr, y_va, self.raw_signals, self.description
 
+    # Computes the fft of each norm
+    def load_fft(self) :
+
+        with h5py.File(self.path, 'r+') as dtb :
+            # FFT of the normed accelerometer
+            acc = dtb['N_A_t'].value
+            pol = multiprocessing.Pool(processes=self.njobs)
+            fft = np.asarray(pol.map(multi_fft, acc))
+            pol.close()
+            pol.join()
+            dtb.create_dataset('FFT_A_t', data=fft)
+            acc = dtb['N_A_e'].value
+            pol = multiprocessing.Pool(processes=self.njobs)
+            fft = np.asarray(pol.map(multi_fft, acc))
+            pol.close()
+            pol.join()
+            dtb.create_dataset('FFT_A_e', data=fft)
+            # FFT of the normed gyrometer
+            gyr = dtb['N_G_t'].value
+            pol = multiprocessing.Pool(processes=self.njobs)
+            fft = np.asarray(pol.map(multi_fft, gyr))
+            pol.close()
+            pol.join()
+            dtb.create_dataset('FFT_G_t', data=fft)
+            gyr = dtb['N_G_e'].value
+            pol = multiprocessing.Pool(processes=self.njobs)
+            fft = np.asarray(pol.map(multi_fft, gyr))
+            pol.close()
+            pol.join()
+            dtb.create_dataset('FFT_G_e', data=fft)
+            # Memory efficiency
+            del acc, pol, fft, gyr
+        # Log
+        print('|-> FFT computed and saved ...')
+
+    # Computes the quaternion for the gyrometer
+    def load_qua(self) :
+
+        with h5py.File(self.path, 'r+') as dtb :
+            # Quaternion multiprocessed computation
+            gyr = dtb['GYR_t'].value
+            pol = multiprocessing.Pool(processes=self.njobs)
+            qua = np.asarray(pol.map(compute_quaternion, gyr))
+            pol.close()
+            pol.join()
+            dtb.create_dataset('QUA_t', data=qua)
+            gyr = dtb['GYR_e'].value
+            pol = multiprocessing.Pool(processes=self.njobs)
+            qua = np.asarray(pol.map(compute_quaternion, gyr))
+            pol.close()
+            pol.join()
+            dtb.create_dataset('QUA_e', data=qua)
+            # Memory efficiency
+            del gyr, pol, qua
+        # Log
+        print('|-> Quaternions computed and saved ...')
+
     # Preprocess the raw signals
-    def load_raw(self, both=False) :
+    def standardize(self, both=False) :
 
         # Prepares the data
         self.load_signals()
@@ -200,27 +269,12 @@ class Loader :
         return self
 
     # Defines a loading instance caring about both features and raw signals
-    def load_bth(self) :
+    def build_database(self) :
 
         # Load signals
-        self = self.load_fea()
-        self = self.load_raw(both=True)
-        # Return object
-        return self
+        self.load_fea()
+        self.load_raw()
+        self.load_fft()
+        self.load_qua()
 
-    # Creates the corresponding database
-    def save(self) :
-
-        # Defines where to save the data
-        dtb = h5py.File('data.h5', 'w')
-        # Create the corresponding datasets
-        dtb.create_dataset('FEA_t', data=remove_columns(self.train, ['Subjects', 'Labels']))
-        dtb.create_dataset('FEA_e', data=remove_columns(self.valid, ['Subjects', 'Labels']))
-        dtb.create_dataset('RAW_t', data=self.X_tr)
-        dtb.create_dataset('RAW_e', data=self.X_va)
-        dtb.create_dataset('LAB_t', data=self.y_tr.astype(int))
-        dtb.create_dataset('LAB_e', data=self.y_va.astype(int))
-        print('  ~ Data serialized ...')
-        print('  ! Labels do match : {} out of {}...'.format(len(np.where(((self.train['Labels'].values.astype(int) - 1) == self.y_tr) == True)[0]), len(self.y_tr)))
-        # Avoid corruption
-        dtb.close()
+    
