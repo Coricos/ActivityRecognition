@@ -174,7 +174,7 @@ class Creator :
 
         # Depends on the selected channel
         if channel == 'fea' : 
-            inp = Input(shape=(self.f_t.shape[1], ))
+            inp = Input(shape=(self.fea_t.shape[1], ))
             self.train.append(self.fea_t)
             self.valid.append(self.fea_e)
             del self.fea_t, self.fea_e
