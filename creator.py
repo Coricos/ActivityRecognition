@@ -1,14 +1,13 @@
 # Author : DINDIN Meryll
 # Date : 16/11/2017
 
-from models import *
-from topology import *
+from toolbox import *
 
 # Deep-learning models of mixed channels
 class Creator :
     
     # Initialization
-    def __init__(self, merge_size=50, with_n_a=True, with_n_g=True, with_acc=True, with_gyr=True, with_fft=False, with_qua=False, with_tda=False, with_lds=False, with_hdf=False, with_fea=False, truncate=False) :
+    def __init__(self, path, merge_size=20, with_n_a=True, with_n_g=True, with_acc=True, with_gyr=True, with_fft=False, with_qua=False, with_fea=False, with_R_l=False, with_A_l=False, truncate=False) :
 
         self.njobs = multiprocessing.cpu_count()
         self.merge_size = merge_size
@@ -20,87 +19,73 @@ class Creator :
         # Default arguments for convolution
         self.truncate = truncate
         # Name
-        self.name = ['F' for i in range(10)]
+        self.name = ['F' for i in range(9)]
         # Load dataset
-        dtb = h5py.File('data.h5', 'r')
-        # Load the labels and initialize training and testing sets
-        self.l_t = dtb['LAB_t'].value
-        self.l_e = dtb['LAB_e'].value
+        with h5py.File(path, 'r') as dtb :
+            # Load the labels and initialize training and testing sets
+            self.l_t = dtb['y_train'].value
+            self.l_e = dtb['y_valid'].value
         # If masks are necessary
         if truncate : m_t, m_e = get_mask(self.l_t), get_mask(self.l_e)
         else : m_t, m_e = np.ones(len(self.l_t), dtype=bool), np.ones(len(self.l_e), dtype=bool)
         self.l_t = self.l_t[m_t]
         self.l_e = self.l_e[m_e]
         # Load data accordingly
-        if with_n_a or with_n_g or with_acc or with_gyr or with_fft: 
-            raw_t, raw_e = dtb['RAW_t'].value, dtb['RAW_e'].value
-        if with_n_a :
-            self.n_a_t = reformat(raw_t[:,6,:][m_t], '1D')
-            self.n_a_e = reformat(raw_e[:,6,:][m_e], '1D')
-            self.name[0] = 'T'
-        self.with_n_a = with_n_a
-        if with_n_g :
-            self.n_g_t = reformat(raw_t[:,7,:][m_t], '1D')
-            self.n_g_e = reformat(raw_e[:,7,:][m_e], '1D')
-            self.name[1] = 'T'
-        self.with_n_g = with_n_g
-        if with_acc :
-            self.acc_t = reformat(raw_t[:,0:3,:][m_t], '2D')
-            self.acc_e = reformat(raw_e[:,0:3,:][m_e], '2D')
-            self.name[2] = 'T'
-        self.with_acc = with_acc
-        if with_gyr :
-            self.gyr_t = reformat(raw_t[:,3:6,:][m_t], '2D')
-            self.gyr_e = reformat(raw_e[:,3:6,:][m_e], '2D')
-            self.name[3] = 'T'
-        self.with_gyr = with_gyr
-        if with_fft :
-            pol = multiprocessing.Pool(processes=multiprocessing.cpu_count())
-            self.fft_t = np.asarray(pol.map(multi_fft, list(raw_t[:,6,:][m_t])))
-            self.fft_e = np.asarray(pol.map(multi_fft, list(raw_e[:,6,:][m_e])))
-            pol.close()
-            pol.join()
-            del pol
-            self.name[4] = 'T'
-        self.with_fft = with_fft
-        if with_hdf :
-            self.hdf_t = dtb['HDF_t'].value[m_t]
-            self.hdf_e = dtb['HDF_e'].value[m_e]
-            self.name[5] = 'T'
-        self.with_hdf = with_hdf
-        if with_fea :
-            self.fea_t = dtb['FEA_t'].value[m_t]
-            self.fea_e = dtb['FEA_e'].value[m_e]
-            self.name[6] = 'T'
-        self.with_fea = with_fea
-        if with_tda :
-            self.tda_t = np.hstack((dtb['TDA_A_t'].value[m_t], dtb['TDA_G_t'].value[m_t], dtb['TDA_AG_t'].value[m_t]))
-            self.tda_e = np.hstack((dtb['TDA_A_e'].value[m_e], dtb['TDA_G_e'].value[m_e], dtb['TDA_AG_e'].value[m_e])) 
-            self.name[7] = 'T'
-        self.with_tda = with_tda
-        if with_lds :
-            self.lA0_t = dtb['LDS_A_0_t'].value[m_t]
-            self.lA1_t = dtb['LDS_A_1_t'].value[m_t]
-            self.lG0_t = dtb['LDS_G_0_t'].value[m_t]
-            self.lG1_t = dtb['LDS_G_1_t'].value[m_t]
-            self.AG0_t = dtb['LDS_AG_0_t'].value[m_t]
-            self.AG1_t = dtb['LDS_AG_1_t'].value[m_t]
-            self.lA0_e = dtb['LDS_A_0_e'].value[m_e]
-            self.lA1_e = dtb['LDS_A_1_e'].value[m_e]
-            self.lG0_e = dtb['LDS_G_0_e'].value[m_e]
-            self.lG1_e = dtb['LDS_G_1_e'].value[m_e]
-            self.AG0_e = dtb['LDS_AG_0_e'].value[m_e]
-            self.AG1_e = dtb['LDS_AG_1_e'].value[m_e]
-            self.name[8] = 'T'
-        self.with_lds = with_lds
-        if with_qua :
-            self.qua_t = reformat(dtb['QUA_t'].value[m_t], '2D')
-            self.qua_e = reformat(dtb['QUA_e'].value[m_e], '2D')
-            self.name[9] = 'T'
-        self.with_qua = with_qua
-        # Memory efficiency
-        if with_n_a or with_n_g or with_acc or with_gyr or with_fft : 
-            del raw_t, raw_e
+        with h5py.File(path, 'r') as dtb :
+            if with_n_a :
+                self.n_a_t = reformat(dtb['N_A_t'].value[m_t], '1D')
+                self.n_a_e = reformat(dtb['N_A_e'].value[m_t], '1D')
+                self.name[0] = 'T'
+            self.with_n_a = with_n_a
+            if with_n_g :
+                self.n_g_t = reformat(dtb['N_G_t'].value[m_t], '1D')
+                self.n_g_e = reformat(dtb['N_G_e'].value[m_e], '1D')
+                self.name[1] = 'T'
+            self.with_n_g = with_n_g
+            if with_acc :
+                self.acc_t = reformat(dtb['ACC_t'].value[m_t], '2D')
+                self.acc_e = reformat(dtb['ACC_e'].value[m_e], '2D')
+                self.name[2] = 'T'
+            self.with_acc = with_acc
+            if with_gyr :
+                self.gyr_t = reformat(dtb['GYR_t'].value[m_t], '2D')
+                self.gyr_e = reformat(dtb['GYR_e'].value[m_e], '2D')
+                self.name[3] = 'T'
+            self.with_gyr = with_gyr
+            if with_fft :
+                self.fft_t = dtb['FFT_t'].value[m_t]
+                self.fft_e = dtb['FFT_e'].value[m_e]
+                self.name[4] = 'T'
+            self.with_fft = with_fft
+            if with_fea :
+                self.fea_t = dtb['FEA_t'].value[m_t]
+                self.fea_e = dtb['FEA_e'].value[m_e]
+                self.name[5] = 'T'
+            self.with_fea = with_fea
+            if with_qua :
+                self.qua_t = reformat(dtb['QUA_t'].value[m_t], '2D')
+                self.qua_e = reformat(dtb['QUA_e'].value[m_e], '2D')
+                self.name[6] = 'T'
+            self.with_qua = with_qua
+            if with_R_l :
+                self.r_l_acc_t = dtb['R_L_ACC_t'].value[m_t]
+                self.r_l_acc_e = dtb['R_L_ACC_e'].value[m_e]
+                self.r_l_gyr_t = dtb['R_L_GYR_t'].value[m_t]
+                self.r_l_gyr_e = dtb['R_L_GYR_e'].value[m_e]
+                self.r_l_qua_t = dtb['R_L_QUA_t'].value[m_t]
+                self.r_l_qua_e = dtb['R_L_QUA_e'].value[m_e]
+                self.name[7] = 'T'
+            self.with_R_l = with_R_l
+            if with_A_l :
+                self.a_l_acc_t = dtb['A_L_ACC_t'].value[m_t]
+                self.a_l_acc_e = dtb['A_L_ACC_e'].value[m_e]
+                self.a_l_gyr_t = dtb['A_L_GYR_t'].value[m_t]
+                self.a_l_gyr_e = dtb['A_L_GYR_e'].value[m_e]
+                self.a_l_qua_t = dtb['A_L_QUA_t'].value[m_t]
+                self.a_l_qua_e = dtb['A_L_QUA_e'].value[m_e]
+                self.name[8] = 'T'
+            self.with_A_l = with_A_l
+
         # Build real name
         self.name = ''.join(self.name)
         # Avoid corruption
@@ -124,19 +109,19 @@ class Creator :
         # Build the selected model
         mod = Conv1D(100, 50)(inp)
         mod = BatchNormalization()(mod)
-        mod = Activation('relu')(mod)
+        mod = Activation('tanh')(mod)
         mod = MaxPooling1D(pool_size=2)(mod)
         mod = Dropout(0.30)(mod)
         mod = Conv1D(50, 25)(mod)
         mod = BatchNormalization()(mod)
-        mod = Activation('relu')(mod)
+        mod = Activation('tanh')(mod)
         mod = Dropout(0.30)(mod)
         mod = Conv1D(50, 10)(mod)
         mod = BatchNormalization()(mod)
-        mod = Activation('relu')(mod)
+        mod = Activation('tanh')(mod)
         mod = Dropout(0.30)(mod)
         mod = GlobalMaxPooling1D()(mod)
-        mod = Dense(self.merge_size, activation='softmax')(mod)
+        mod = Dense(self.merge_size, activation='relu')(mod)
 
         # Add model to main model
         self.input.append(inp)
@@ -166,17 +151,17 @@ class Creator :
             del self.qua_t, self.qua_e
 
         # Build model
-        mod = Activation('relu')(mod)
+        mod = Activation('tanh')(mod)
         mod = BatchNormalization(axis=1)(mod)
         mod = MaxPooling2D(pool_size=(1, 2), data_format='channels_first')(mod)
         mod = Dropout(0.25)(mod)
         mod = Convolution2D(128, (1, 30), data_format='channels_first')(mod)
-        mod = Activation('relu')(mod)
+        mod = Activation('tanh')(mod)
         mod = BatchNormalization(axis=1)(mod)
         mod = MaxPooling2D(pool_size=(1, 2), data_format='channels_first')(mod)
         mod = Dropout(0.25)(mod)
         mod = GlobalAveragePooling2D()(mod)
-        mod = Dense(self.merge_size, activation='softmax')(mod)
+        mod = Dense(self.merge_size, activation='relu')(mod)
 
         # Add layers to the model
         self.input.append(inp)
@@ -191,21 +176,11 @@ class Creator :
             self.train.append(self.fea_t)
             self.valid.append(self.fea_e)
             del self.fea_t, self.fea_e
-        elif channel == 'hdf' : 
-            inp = Input(shape=(self.hdf_t.shape[1], ))
-            self.train.append(self.hdf_t)
-            self.valid.append(self.hdf_e)
-            del self.hdf_t, self.hdf_e
         elif channel == 'fft' : 
             inp = Input(shape=(self.fft_t.shape[1], ))
             self.train.append(self.fft_t)
             self.valid.append(self.fft_e)
             del self.fft_t, self.fft_e
-        elif channel == 'tda' :
-            inp = Input(shape=(self.tda_t.shape[1], ))
-            self.train.append(self.tda_t)
-            self.valid.append(self.tda_e)
-            del self.tda_t, self.tda_e
 
         # Build the model
         mod = Dense(200)(inp)
@@ -216,7 +191,7 @@ class Creator :
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
         mod = Dropout(0.25)(mod)
-        mod = Dense(self.merge_size, activation='softmax')(mod)
+        mod = Dense(self.merge_size, activation='relu')(mod)
         # Add layers to model
         self.input.append(inp)
         self.merge.append(mod)
@@ -230,39 +205,35 @@ class Creator :
             mod = GlobalMaxPooling1D()(mod)
             mod = Dense(100)(mod)
             mod = BatchNormalization()(mod)
-            mod = Activation('relu')(mod)
+            mod = Activation('sigmoid')(mod)
             mod = Dropout(0.25)(mod)
-            mod = Dense(self.merge_size, activation='softmax')(mod)
+            mod = Dense(25, activation='relu')(mod)
     
             return mod
 
         # Build the inputs
         if channel == 'acc' : 
-            inp = [Input(shape=(ele[0].shape)) for ele in [self.lA0_t, self.lA1_t]]
-            self.train += [self.lA0_t, self.lA1_t]
-            self.valid += [self.lA0_e, self.lA1_e]
+            inp = [Input(shape=(ele[0].shape)) for ele in [self.r_l_acc_t[:,idx,:,:] for idx in range(4)]]
+            self.train += [self.r_l_acc_t[:,idx,:,:] for idx in range(4)]
+            self.valid += [self.r_l_acc_e[:,idx,:,:] for idx in range(4)]
         if channel == 'gyr' :
-            inp = [Input(shape=(ele[0].shape)) for ele in [self.lG0_t, self.lG1_t]]
-            self.train += [self.lG0_t, self.lG1_t]
-            self.valid += [self.lG0_e, self.lG1_e]
-        if channel == 'mix' : 
-            inp = [Input(shape=(ele[0].shape)) for ele in [self.AG0_t, self.AG1_t]]
-            self.train += [self.lA0_t, self.lA1_t]
-            self.valid += [self.AG0_e, self.AG1_e]
+            inp = [Input(shape=(ele[0].shape)) for ele in [self.r_l_gyr_t[:,idx,:,:] for idx in range(4)]]
+            self.train += [self.r_l_gyr_t[:,idx,:,:] for idx in range(4)]
+            self.valid += [self.r_l_gyr_e[:,idx,:,:] for idx in range(4)]
         if channel == 'qua' :
-            inp = [Input(shape=(ele[0].shape)) for ele in [self.lQ0_t, self.lQ1_t]]
-            self.train += [self.lQ0_t, self.lQ1_t]
-            self.valid += [self.lQ0_e, self.lQ1_e]
+            inp = [Input(shape=(ele[0].shape)) for ele in [self.r_l_qua_t[:,idx,:,:] for idx in range(4)]]
+            self.train += [self.r_l_qua_t[:,idx,:,:] for idx in range(4)]
+            self.valid += [self.r_l_qua_e[:,idx,:,:] for idx in range(4)]
         
         # Build the silhouettes
         mrg = [silhouette(ele) for ele in inp]
         # Intermediary model
         mod = concatenate(mrg)
-        mod = Dense(2*self.merge_size)(mod)
+        mod = Dense(int(1.5*self.merge_size))(mod)
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
         mod = Dropout(0.3)(mod)
-        mod = Dense(self.merge_size, activation='softmax')(mod)
+        mod = Dense(self.merge_size, activation='relu')(mod)
 
         # Adds to attributes
         self.input += inp
@@ -278,13 +249,37 @@ class Creator :
         if self.with_fft : self.add_DENSE('fft')
         if self.with_n_a : self.add_CONV_1D('n_a')
         if self.with_n_g : self.add_CONV_1D('n_g')
-        if self.with_tda : self.add_DENSE('tda')
-        if self.with_lds : 
+        if self.with_qua : self.add_CONV_2D('qua')
+        if self.with_R_l : 
             self.add_SILHOUETTE('acc')
             self.add_SILHOUETTE('gyr')
-            self.add_SILHOUETTE('mix')
-            # self.add_SILHOUETTE('qua')
-        if self.with_qua : self.add_CONV_2D('qua')
+            self.add_SILHOUETTE('qua')
+
+    # Defines a GPU-oriented fit_generator
+    def train_generator(self, batch_size=32) :
+
+        ind = 0
+
+        while True :
+
+            if ind + batch_size >= self.train[0].shape[0] : ind = 0
+                
+            yield([ele[ind : ind+batch_size] for ele in self.train], np_utils.to_categorical(self.l_t[ind : ind+batch_size], num_classes=len(np.unique(self.l_t))))
+
+            ind += batch_size
+
+    # Defines a GPU-oriented fit_generator
+    def valid_generator(self, batch_size=32) :
+
+        ind = 0
+
+        while True :
+
+            if ind + batch_size >= self.valid[0].shape[0] : ind = 0
+
+            yield([ele[ind : ind+batch_size] for ele in self.valid], np_utils.to_categorical(self.l_e[ind : ind+batch_size], num_classes=len(np.unique(self.l_t))))
+
+            ind += batch_size
 
     # Lauch the fit
     def learn(self, verbose=1, max_epochs=100) :
@@ -314,9 +309,10 @@ class Creator :
         early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
         check = ModelCheckpoint(pth, period=3, monitor='val_acc', save_best_only=True, mode='auto', save_weights_only=False)
         # Fit the model
-        model.fit(self.train, np_utils.to_categorical(self.l_t), batch_size=16, epochs=max_epochs, 
-                  verbose=verbose, validation_split=0.1, shuffle=True, 
-                  sample_weight=sample_weight(self.l_t), callbacks=[early, check])
+        model.fit_generator(self.train_generator(batch_size=32), verbose=verbose, epochs=max_epochs,
+                            steps_per_epoch=self.train[0].shape[0]/32, shuffle=True, callbacks=[early, check],
+                            validation_data=self.valid_generator(batch_size=32), validation_steps=self.test[0].shape[0]/32,
+                            class_weight=class_weight(self.l_t))
         # Save model as attribute
         model.save(pth)
         self.model = model

@@ -19,6 +19,15 @@ def sample_weight(lab) :
 
     return res
 
+# Defines a dictionnary composed of class weights
+def class_weight(lab) :
+    
+    res = dict()
+    
+    for idx, ele in enumerate(compute_class_weight('balanced', np.unique(lab), lab)) : res[idx] = ele
+        
+    return res
+
 # Read labels and users for features
 def read_text_file(path, column) :
 
@@ -183,6 +192,11 @@ def multi_fft(vec) :
 
     return np.abs(np.fft.rfft(vec, axis=0))
 
+# Compute the relative landscapes
+def compute_landscapes(vec) :
+
+    return Filtration(vec).create_landscapes()
+    
 # Multiprocessed computation of quaternions
 def compute_quaternion(sig):
 

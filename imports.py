@@ -7,6 +7,8 @@ warnings.filterwarnings('ignore')
 sys.path.append('/home/mdindin/Project_Dyskinesia/Install/2017-10-02-10-19-30_GUDHI_2.0.1/build/cython/')
 sys.path.append('/home/mdindin/Project_Dyskinesia/SN-Project')
 
+from topology import *
+
 import gudhi
 import pandas as pd
 import numpy as np
