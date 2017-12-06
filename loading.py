@@ -333,7 +333,7 @@ class Loader :
             # Fitting
             sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler(with_std=False))])
             n_g = np.log(np.hstack(dtb['N_G_t'].value))
-            n_g = sca.fit_transform(n_a.reshape(-1,1)).reshape(n_g.shape[0])
+            n_g = sca.fit_transform(n_g.reshape(-1,1)).reshape(n_g.shape[0])
             n_g = n_g.reshape(dtb['N_G_t'].shape[0], dtb['N_G_t'].shape[1])
             out.create_dataset('N_G_t', data=n_g)
             # Spreading
