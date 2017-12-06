@@ -99,7 +99,7 @@ class Creator :
         dtb.close()
 
     # Add convolution model
-    def add_CONV_1D(self, channel) :
+    def add_CONV_1D(self, channel, dropout) :
 
         # Depends on the selected channel
         if channel == 'n_a' : 
@@ -118,15 +118,15 @@ class Creator :
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
         mod = MaxPooling1D(pool_size=2)(mod)
-        mod = Dropout(0.30)(mod)
+        mod = Dropout(dropout)(mod)
         mod = Conv1D(50, 25)(mod)
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
-        mod = Dropout(0.30)(mod)
+        mod = Dropout(dropout)(mod)
         mod = Conv1D(50, 10)(mod)
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
-        mod = Dropout(0.30)(mod)
+        mod = Dropout(dropout)(mod)
         mod = GlobalMaxPooling1D()(mod)
         mod = Dense(self.merge_size, activation='relu')(mod)
 
@@ -135,7 +135,7 @@ class Creator :
         self.merge.append(mod)
 
     # Add convolution model
-    def add_CONV_2D(self, channel) :
+    def add_CONV_2D(self, channel, dropout) :
 
         # Depends on the selected channel
         if channel == 'acc' : 
@@ -161,12 +161,12 @@ class Creator :
         mod = Activation('tanh')(mod)
         mod = BatchNormalization(axis=1)(mod)
         mod = MaxPooling2D(pool_size=(1, 2), data_format='channels_first')(mod)
-        mod = Dropout(0.25)(mod)
+        mod = Dropout(dropout)(mod)
         mod = Convolution2D(128, (1, 30), data_format='channels_first')(mod)
         mod = Activation('tanh')(mod)
         mod = BatchNormalization(axis=1)(mod)
         mod = MaxPooling2D(pool_size=(1, 2), data_format='channels_first')(mod)
-        mod = Dropout(0.25)(mod)
+        mod = Dropout(dropout)(mod)
         mod = GlobalAveragePooling2D()(mod)
         mod = Dense(self.merge_size, activation='relu')(mod)
 
@@ -175,7 +175,7 @@ class Creator :
         self.merge.append(mod)
 
     # Add dense network for handcrafted features
-    def add_DENSE(self, channel) :
+    def add_DENSE(self, channel, dropout) :
 
         # Depends on the selected channel
         if channel == 'fea' : 
@@ -198,18 +198,18 @@ class Creator :
         mod = Dense(200)(inp)
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
-        mod = Dropout(0.25)(mod)
+        mod = Dropout(dropout)(mod)
         mod = Dense(100)(mod)
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
-        mod = Dropout(0.25)(mod)
+        mod = Dropout(dropout)(mod)
         mod = Dense(self.merge_size, activation='relu')(mod)
         # Add layers to model
         self.input.append(inp)
         self.merge.append(mod)
 
     # Add silhouette layer for landscapes
-    def add_SILHOUETTE(self, channel) :
+    def add_SILHOUETTE(self, channel, dropout) :
 
         def silhouette(inp) :
 
@@ -218,7 +218,7 @@ class Creator :
             mod = Dense(100)(mod)
             mod = BatchNormalization()(mod)
             mod = Activation('sigmoid')(mod)
-            mod = Dropout(0.25)(mod)
+            mod = Dropout(dropout)(mod)
             mod = Dense(25, activation='relu')(mod)
     
             return mod
@@ -244,7 +244,7 @@ class Creator :
         mod = Dense(int(1.5*self.merge_size))(mod)
         mod = BatchNormalization()(mod)
         mod = Activation('tanh')(mod)
-        mod = Dropout(0.3)(mod)
+        mod = Dropout(dropout)(mod)
         mod = Dense(self.merge_size, activation='relu')(mod)
 
         # Adds to attributes
@@ -252,22 +252,22 @@ class Creator :
         self.merge.append(mod)
 
     # Build the whole model
-    def build(self) :
+    def build(self, dropout=0.5) :
 
         # Look for what has been given
-        if self.with_fea : self.add_DENSE('fea')
-        if self.with_acc : self.add_CONV_2D('acc')
-        if self.with_gyr : self.add_CONV_2D('gyr')
+        if self.with_fea : self.add_DENSE('fea', dropout)
+        if self.with_acc : self.add_CONV_2D('acc', dropout)
+        if self.with_gyr : self.add_CONV_2D('gyr', dropout)
         if self.with_fft : 
-            self.add_DENSE('fft_A')
-            self.add_DENSE('fft_G')
-        if self.with_n_a : self.add_CONV_1D('n_a')
-        if self.with_n_g : self.add_CONV_1D('n_g')
-        if self.with_qua : self.add_CONV_2D('qua')
+            self.add_DENSE('fft_A', dropout)
+            self.add_DENSE('fft_G', dropout)
+        if self.with_n_a : self.add_CONV_1D('n_a', dropout)
+        if self.with_n_g : self.add_CONV_1D('n_g', dropout)
+        if self.with_qua : self.add_CONV_2D('qua', dropout)
         if self.with_R_l : 
-            self.add_SILHOUETTE('acc')
-            self.add_SILHOUETTE('gyr')
-            self.add_SILHOUETTE('qua')
+            self.add_SILHOUETTE('acc', dropout)
+            self.add_SILHOUETTE('gyr', dropout)
+            self.add_SILHOUETTE('qua', dropout)
 
     # Defines a GPU-oriented fit_generator
     def train_generator(self, batch_size=32) :
@@ -296,10 +296,10 @@ class Creator :
             ind += batch_size
 
     # Lauch the fit
-    def learn(self, verbose=1, max_epochs=100) :
+    def learn(self, dropout=0.5, verbose=1, max_epochs=100) :
 
         # Build the corresponding model
-        self.build()
+        self.build(dropout=dropout)
         # Shuffle all the data
         idx, self.l_t = shuffle(range(len(self.l_t)), self.l_t)
         self.train = [ele[idx] for ele in self.train]
@@ -308,11 +308,11 @@ class Creator :
         model = Dense(int(0.5 * self.merge_size * len(self.train)))(model)
         model = BatchNormalization()(model)
         model = Activation('tanh')(model)
-        model = Dropout(0.5)(model)
+        model = Dropout(dropout)(model)
         model = Dense(int(0.25 * self.merge_size * len(self.train)))(model)
         model = BatchNormalization()(model)
         model = Activation('tanh')(model)
-        model = GaussianDropout(0.5)(model)
+        model = GaussianDropout(dropout)(model)
         model = Dense(len(np.unique(self.l_t)), activation='softmax')(model)
         # Compile the modelel
         model = Model(inputs=self.input, outputs=model)
