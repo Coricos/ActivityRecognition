@@ -225,50 +225,156 @@ class Loader :
         print('|-> Quaternions computed and saved ...')
 
     # Computes the landscapes out of given signals
+    def load_relative_ldc(self) :
+
+        with h5py.File(self.path, 'r+') as dtb :
+            # Compute landscapes for acceleration and rotation speed
+            for key in ['ACC_t', 'ACC_e', 'GYR_t', 'GYR_e'] :
+                val = [ele.transpose() for ele in dtb[key].value]
+                pol = multiprocessing.Pool(processes=6)
+                ldc = pol.map(compute_landscapes, val)
+                pol.close()
+                pol.join()
+                dtb.create_dataset('R_L_{}'.format(key), data=ldc)
+                del val, pol, ldc
+            # Compute landscapes for quaternions
+            for key in ['QUA_t', 'QUA_e'] :
+                val = [ele.transpose() for ele in dtb[key].value[:,1:4,:]]
+                pol = multiprocessing.Pool(processes=6)
+                ldc = pol.map(compute_landscapes, val)
+                pol.close()
+                pol.join()
+                dtb.create_dataset('R_L_{}'.format(key), data=ldc)
+                del val, pol, ldc
 
     # Preprocess the raw signals
-    def standardize(self) :
+    def standardize(self, output_path) :
 
-        # Prepares the data
-        self.load_signals()
-        self.sliding_extraction()
-
-        # Local function for processing
-        def process(img, scalers, fit=False) :
-
-            # Save and apply new adapted format
-            sz0, sz1 = img.shape[0], img.shape[1]*img.shape[2]/8
-            img = np.asarray([img[:, sig, :] for sig in range(img.shape[1])])
-            img = img.reshape(img.shape[0], img.shape[1]*img.shape[2])
-            # Rescale the data
-            for idx in range(img.shape[0]) : 
-                if idx in [6, 7] : 
-                    img[idx, :] = scalers[idx].fit_transform(np.log(img[idx, :]).reshape(-1, 1)).reshape(img.shape[1])
-                else : 
-                    img[idx, :] = scalers[idx].fit_transform(img[idx, :].reshape(-1, 1)).reshape(img.shape[1])
-            # Reshape as entry
-            img = np.asarray([img[idx, :].reshape(sz0, sz1) for idx in range(img.shape[0])])
-            img = np.asarray([[img[idx, ind, :] for idx in range(img.shape[0])] for ind in range(img.shape[1])])
-            del sz0, sz1
-
-            return img
-
-        # Defines the scalers
-        sca = [Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler(with_std=False))]) for i in range(8)]
-        # Fit the scalers
-        img = self.X_tr
-        img = np.asarray([img[:, sig, :] for sig in range(img.shape[1])])
-        img = img.reshape(img.shape[0], img.shape[1]*img.shape[2])
-        for idx in range(img.shape[0]) : 
-            if idx in [6, 7] : sca[idx].fit(np.log(img[idx, :]).reshape(-1, 1))
-            else : sca[idx].fit(img[idx, :].reshape(-1, 1))
-        # Save a attributes the preprocessed versions
-        self.X_tr = process(self.X_tr, sca)
-        self.X_va = process(self.X_va, sca)
-        # Memory efficiency
-        del img, sca
-        # Return object
-        return self
+        # Defines the output database
+        out = h5py.File(output_path, 'w')
+        # Standardize triaxial acceleration
+        with h5py.File(self.path, 'r') as dtb :
+            # Fitting
+            sca = [Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler(with_std=False))]) for i in range(3)]
+            acc = np.asarray([dtb['ACC_t'].value[:,sig,:] for sig in range(dtb['ACC_t'].shape[1])])
+            acc = acc.reshape(acc.shape[0], acc.shape[1]*acc.shape[2])
+            for idx in range(3) : acc[idx,:] = fit_transform(acc[idx,:].reshape(-1,1)).reshape(acc.shape[1])
+            acc = np.asarray([acc[idx,:].reshape(dtb['ACC_t'].shape[],dtb['ACC_t'].shape[1]*dtb['ACC_t'].shape[2]/3) for idx in range(acc.shape[0])])
+            acc = np.asarray([[acc[idx, ind, :] for idx in range(acc.shape[0])] for ind in range(acc.shape[1])])
+            out.create_dataset('ACC_t', data=acc)
+            # Spreading
+            acc = np.asarray([dtb['ACC_e'].value[:,sig,:] for sig in range(dtb['ACC_e'].shape[1])])
+            acc = acc.reshape(acc.shape[0], acc.shape[1]*acc.shape[2])
+            for idx in range(3) : acc[idx,:] = fit_transform(acc[idx,:].reshape(-1,1)).reshape(acc.shape[1])
+            acc = np.asarray([acc[idx,:].reshape(dtb['ACC_e'].shape[],dtb['ACC_e'].shape[1]*dtb['ACC_e'].shape[2]/3) for idx in range(acc.shape[0])])
+            acc = np.asarray([[acc[idx, ind, :] for idx in range(acc.shape[0])] for ind in range(acc.shape[1])])
+            out.create_dataset('ACC_e', data=acc)
+            # Memory efficiency
+            del sca, acc
+            print('! Triaxial acceleration scaled ...')
+        # Standardize triaxial rotation speed
+        with h5py.File(self.path, 'r') as dtb :
+            # Fitting
+            sca = [Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler(with_std=False))]) for i in range(3)]
+            gyr = np.asarray([dtb['GYR_t'].value[:,sig,:] for sig in range(dtb['GYR_t'].shape[1])])
+            gyr = gyr.reshape(gyr.shape[0], gyr.shape[1]*gyr.shape[2])
+            for idx in range(3) : gyr[idx,:] = fit_transform(gyr[idx,:].reshape(-1,1)).reshape(gyr.shape[1])
+            gyr = np.asarray([gyr[idx,:].reshape(dtb['GYR_t'].shape[],dtb['GYR_t'].shape[1]*dtb['GYR_t'].shape[2]/3) for idx in range(gyr.shape[0])])
+            gyr = np.asarray([[gyr[idx, ind, :] for idx in range(gyr.shape[0])] for ind in range(gyr.shape[1])])
+            out.create_dataset('GYR_t', data=gyr)
+            # Spreading
+            gyr = np.asarray([dtb['GYR_e'].value[:,sig,:] for sig in range(dtb['GYR_e'].shape[1])])
+            gyr = gyr.reshape(gyr.shape[0], gyr.shape[1]*gyr.shape[2])
+            for idx in range(3) : gyr[idx,:] = transform(gyr[idx,:].reshape(-1,1)).reshape(gyr.shape[1])
+            gyr = np.asarray([gyr[idx,:].reshape(dtb['GYR_e'].shape[],dtb['GYR_e'].shape[1]*dtb['GYR_e'].shape[2]/3) for idx in range(gyr.shape[0])])
+            gyr = np.asarray([[gyr[idx, ind, :] for idx in range(gyr.shape[0])] for ind in range(gyr.shape[1])])
+            out.create_dataset('GYR_e', data=gyr)
+            # Memory efficiency
+            del sca, gyr
+            print('! Triaxial rotation speed scaled ...')
+        # Standardize the quaternions
+        with h5py.File(self.path, 'r') as dtb :
+            # Fitting
+            sca = [Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler(with_std=False))]) for i in range(4)]
+            qua = np.asarray([dtb['QUA_t'].value[:,sig,:] for sig in range(dtb['QUA_t'].shape[1])])
+            qua = qua.reshape(qua.shape[0], qua.shape[1]*qua.shape[2])
+            for idx in range(4) : qua[idx,:] = fit_transform(qua[idx,:].reshape(-1,1)).reshape(qua.shape[1])
+            qua = np.asarray([qua[idx,:].reshape(dtb['QUA_t'].shape[],dtb['QUA_t'].shape[1]*dtb['qua_t'].shape[2]/3) for idx in range(qua.shape[0])])
+            qua = np.asarray([[qua[idx, ind, :] for idx in range(qua.shape[0])] for ind in range(qua.shape[1])])
+            out.create_dataset('QUA_t', data=qua)
+            # Spreading
+            qua = np.asarray([dtb['qua_e'].value[:,sig,:] for sig in range(dtb['qua_e'].shape[1])])
+            qua = qua.reshape(qua.shape[0], qua.shape[1]*qua.shape[2])
+            for idx in range(4) : qua[idx,:] = transform(qua[idx,:].reshape(-1,1)).reshape(qua.shape[1])
+            qua = np.asarray([qua[idx,:].reshape(dtb['QUA_e'].shape[],dtb['QUA_e'].shape[1]*dtb['QUA_e'].shape[2]/3) for idx in range(qua.shape[0])])
+            qua = np.asarray([[qua[idx, ind, :] for idx in range(qua.shape[0])] for ind in range(qua.shape[1])])
+            out.create_dataset('QUA_e', data=qua)
+            # Memory efficiency
+            del sca, qua
+            print('! Quaternions scaled ...')
+        # Standardize the normed acceleration
+        with h5py.File(self.path, 'r') as dtb : 
+            # Fitting
+            sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler(with_std=False))])
+            n_a = np.log(np.hstack(dtb['N_A_t'].value))
+            n_a = sca.fit_transform(n_a.reshape(-1,1)).reshape(n_a.shape[0])
+            n_a = n_a.reshape(dtb['N_A_t'].shape[0], dtb['N_A_t'].shape[1])
+            out.create_dataset('N_A_t', data=n_a)
+            # Spreading
+            n_a = np.log(np.hstack(dtb['N_A_e'].value))
+            n_a = sca.transform(n_a.reshape(-1,1)).reshape(n_a.shape[0])
+            n_a = n_a.reshape(dtb['N_A_e'].shape[0], dtb['N_A_e'].shape[1])
+            out.create_dataset('N_A_e', data=n_a)
+            # Memory efficiency
+            del sca, n_a
+            print('! Normed acceleration scaled ...')
+        # Standardize the normed rotation speed
+        with h5py.File(self.path, 'r') as dtb : 
+            # Fitting
+            sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler(with_std=False))])
+            n_g = np.log(np.hstack(dtb['N_G_t'].value))
+            n_g = sca.fit_transform(n_a.reshape(-1,1)).reshape(n_g.shape[0])
+            n_g = n_g.reshape(dtb['N_G_t'].shape[0], dtb['N_G_t'].shape[1])
+            out.create_dataset('N_G_t', data=n_g)
+            # Spreading
+            n_g = np.log(np.hstack(dtb['N_G_e'].value))
+            n_g = sca.transform(n_g.reshape(-1,1)).reshape(n_g.shape[0])
+            n_g = n_g.reshape(dtb['N_G_e'].shape[0], dtb['N_G_e'].shape[1])
+            out.create_dataset('N_G_e', data=n_g)
+            # Memory efficiency
+            del sca, n_g
+            print('! Normed rotation speed scaled ...')
+        # Standardize the features
+        with h5py.File(self.path, 'r') as dtb : 
+            # Fitting
+            sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler())])
+            fea = sca.fit_transform(dtb['FEA_t'].value)
+            out.create_dataset('FEA_t', data=fea)
+            # Spreading
+            fea = sca.transform(dtb['FEA_e'].value)
+            out.create_dataset('FEA_e', data=fea)
+            # Memory efficiency
+            del fea, sca
+            print('! Features scaled ...')
+        # Standardize the FFT transformation
+        with h5py.File(self.path, 'r') as dtb : 
+            # Fitting
+            sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler())])
+            fea = sca.fit_transform(dtb['FFT_t'].value)
+            out.create_dataset('FFT_t', data=fea)
+            # Spreading
+            fea = sca.transform(dtb['FFT_e'].value)
+            out.create_dataset('FFT_e', data=fea)
+            # Memory efficiency
+            del fea, sca
+            print('! FFT transformation scaled ...')
+        # Spread the rest fo the keys in the new database
+        with h5py.File(self.path, 'r') as dtb :
+            for key in dtb.keys() :
+                if key not in out.keys() :
+                    out.create_dataset(key, data=dtb[key].value)
+        # Avoid corruption
+        out.close()
 
     # Defines a loading instance caring about both features and raw signals
     def build_database(self) :
@@ -278,3 +384,4 @@ class Loader :
         self.load_raw()
         self.load_fft()
         self.load_qua()
+        self.load_relative_ldc()
