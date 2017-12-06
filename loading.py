@@ -299,14 +299,14 @@ class Loader :
             qua = np.asarray([dtb['QUA_t'].value[:,sig,:] for sig in range(dtb['QUA_t'].shape[1])])
             qua = qua.reshape(qua.shape[0], qua.shape[1]*qua.shape[2])
             for idx in range(4) : qua[idx,:] = sca[idx].fit_transform(qua[idx,:].reshape(-1,1)).reshape(qua.shape[1])
-            qua = np.asarray([qua[idx,:].reshape(dtb['QUA_t'].shape[0],dtb['QUA_t'].shape[1]*dtb['QUA_t'].shape[2]/3) for idx in range(qua.shape[0])])
+            qua = np.asarray([qua[idx,:].reshape(dtb['QUA_t'].shape[0],dtb['QUA_t'].shape[1]*dtb['QUA_t'].shape[2]/4) for idx in range(qua.shape[0])])
             qua = np.asarray([[qua[idx, ind, :] for idx in range(qua.shape[0])] for ind in range(qua.shape[1])])
             out.create_dataset('QUA_t', data=qua)
             # Spreading
             qua = np.asarray([dtb['QUA_e'].value[:,sig,:] for sig in range(dtb['qua_e'].shape[1])])
             qua = qua.reshape(qua.shape[0], qua.shape[1]*qua.shape[2])
             for idx in range(4) : qua[idx,:] = sca[idx].transform(qua[idx,:].reshape(-1,1)).reshape(qua.shape[1])
-            qua = np.asarray([qua[idx,:].reshape(dtb['QUA_e'].shape[0],dtb['QUA_e'].shape[1]*dtb['QUA_e'].shape[2]/3) for idx in range(qua.shape[0])])
+            qua = np.asarray([qua[idx,:].reshape(dtb['QUA_e'].shape[0],dtb['QUA_e'].shape[1]*dtb['QUA_e'].shape[2]/4) for idx in range(qua.shape[0])])
             qua = np.asarray([[qua[idx, ind, :] for idx in range(qua.shape[0])] for ind in range(qua.shape[1])])
             out.create_dataset('QUA_e', data=qua)
             # Memory efficiency
