@@ -1,6 +1,11 @@
 # Author : DINDIN Meryll
 # Date : 16/11/2017
 
+# If forced back to CPU
+import os
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
 from toolbox import *
 
 # Deep-learning models of mixed channels
