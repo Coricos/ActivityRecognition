@@ -357,23 +357,31 @@ class Loader :
             del fea, sca
             print('! Features scaled ...')
         # Standardize the FFT transformation
-        with h5py.File(self.path, 'r') as dtb : 
+        with h5py.File(self.path, 'r') as dtb :
             # Fitting
-            sca = StandardScaler()
-            fea = sca.fit_transform(dtb['FFT_A_t'].value)
-            out.create_dataset('FFT_A_t', data=fea)
+            sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler(with_std=False))])
+            fft = np.hstack(dtb['FFT_A_t'].value)
+            fft = sca.fit_transform(fft.reshape(-1,1)).reshape(fft.shape[0])
+            fft = fft.reshape(dtb['FFT_A_t'].shape[0], dtb['FFT_A_t'].shape[1])
+            out.create_dataset('FFT_A_t', data=fft)
             # Spreading
-            fea = sca.transform(dtb['FFT_A_e'].value)
-            out.create_dataset('FFT_A_e', data=fea)
+            fft = np.hstack(dtb['FFT_A_e'].value)
+            fft = sca.transform(fft.reshape(-1,1)).reshape(fft.shape[0])
+            fft = fft.reshape(dtb['FFT_A_e'].shape[0], dtb['FFT_A_e'].shape[1])
+            out.create_dataset('FFT_A_e', data=fft)
             # Fitting
-            sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler())])
-            fea = sca.fit_transform(dtb['FFT_G_t'].value)
-            out.create_dataset('FFT_G_t', data=fea)
+            sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler(with_std=False))])
+            fft = np.hstack(dtb['FFT_G_t'].value)
+            fft = sca.fit_transform(fft.reshape(-1,1)).reshape(fft.shape[0])
+            fft = fft.reshape(dtb['FFT_G_t'].shape[0], dtb['FFT_G_t'].shape[1])
+            out.create_dataset('FFT_G_t', data=fft)
             # Spreading
-            fea = sca.transform(dtb['FFT_G_e'].value)
-            out.create_dataset('FFT_G_e', data=fea)
+            fft = np.hstack(dtb['FFT_G_e'].value)
+            fft = sca.transform(fft.reshape(-1,1)).reshape(fft.shape[0])
+            fft = fft.reshape(dtb['FFT_G_e'].shape[0], dtb['FFT_G_e'].shape[1])
+            out.create_dataset('FFT_G_e', data=fft)
             # Memory efficiency
-            del fea, sca
+            del sca, fft
             print('! FFT transformation scaled ...')
         # Spread the rest fo the keys in the new database
         with h5py.File(self.path, 'r') as dtb :
