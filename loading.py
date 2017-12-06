@@ -231,7 +231,7 @@ class Loader :
             # Compute landscapes for acceleration and rotation speed
             for key in ['ACC_t', 'ACC_e', 'GYR_t', 'GYR_e'] :
                 val = [ele.transpose() for ele in dtb[key].value]
-                pol = multiprocessing.Pool(processes=6)
+                pol = multiprocessing.Pool(processes=self.njobs)
                 ldc = pol.map(compute_landscapes, val)
                 pol.close()
                 pol.join()
@@ -240,7 +240,7 @@ class Loader :
             # Compute landscapes for quaternions
             for key in ['QUA_t', 'QUA_e'] :
                 val = [ele.transpose() for ele in dtb[key].value[:,1:4,:]]
-                pol = multiprocessing.Pool(processes=6)
+                pol = multiprocessing.Pool(processes=self.njobs)
                 ldc = pol.map(compute_landscapes, val)
                 pol.close()
                 pol.join()
