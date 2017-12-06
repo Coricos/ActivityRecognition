@@ -360,11 +360,18 @@ class Loader :
         with h5py.File(self.path, 'r') as dtb : 
             # Fitting
             sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler())])
-            fea = sca.fit_transform(dtb['FFT_t'].value)
-            out.create_dataset('FFT_t', data=fea)
+            fea = sca.fit_transform(dtb['FFT_A_t'].value)
+            out.create_dataset('FFT_A_t', data=fea)
             # Spreading
-            fea = sca.transform(dtb['FFT_e'].value)
-            out.create_dataset('FFT_e', data=fea)
+            fea = sca.transform(dtb['FFT_A_e'].value)
+            out.create_dataset('FFT_A_e', data=fea)
+            # Fitting
+            sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler())])
+            fea = sca.fit_transform(dtb['FFT_G_t'].value)
+            out.create_dataset('FFT_G_t', data=fea)
+            # Spreading
+            fea = sca.transform(dtb['FFT_G_e'].value)
+            out.create_dataset('FFT_G_e', data=fea)
             # Memory efficiency
             del fea, sca
             print('! FFT transformation scaled ...')
