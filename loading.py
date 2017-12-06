@@ -359,7 +359,7 @@ class Loader :
         # Standardize the FFT transformation
         with h5py.File(self.path, 'r') as dtb : 
             # Fitting
-            sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler())])
+            sca = StandardScaler()
             fea = sca.fit_transform(dtb['FFT_A_t'].value)
             out.create_dataset('FFT_A_t', data=fea)
             # Spreading
