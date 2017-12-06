@@ -196,7 +196,7 @@ def multi_fft(vec) :
 def compute_landscapes(vec) :
 
     return Filtration(vec).create_landscapes()
-    
+
 # Multiprocessed computation of quaternions
 def compute_quaternion(sig):
 

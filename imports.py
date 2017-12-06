@@ -44,8 +44,5 @@ from keras.optimizers import SGD
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers.merge import concatenate
 
-sys.path.append('/home/mdindin/Project_Dyskinesia/Install/2017-10-02-10-19-30_GUDHI_2.0.1/build/cython/')
-import gudhi
-
-sys.path.append('/home/mdindin/Project_Dyskinesia/SN-Project')
+sys.path.append('../SN-Project')
 from topology import *

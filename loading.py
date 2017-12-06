@@ -226,6 +226,9 @@ class Loader :
 
     # Computes the landscapes out of given signals
     def load_relative_ldc(self) :
+        
+        sys.path.append('../Install/2017-10-02-10-19-30_GUDHI_2.0.1/build/cython/')
+        import gudhi
 
         with h5py.File(self.path, 'r+') as dtb :
             # Compute landscapes for acceleration and rotation speed
