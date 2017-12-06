@@ -53,8 +53,10 @@ class Creator :
                 self.name[3] = 'T'
             self.with_gyr = with_gyr
             if with_fft :
-                self.fft_t = dtb['FFT_t'].value[m_t]
-                self.fft_e = dtb['FFT_e'].value[m_e]
+                self.f_A_t = dtb['FFT_A_t'].value[m_t]
+                self.f_A_e = dtb['FFT_A_e'].value[m_e]
+                self.f_G_t = dtb['FFT_G_t'].value[m_t]
+                self.f_G_e = dtb['FFT_G_e'].value[m_e]
                 self.name[4] = 'T'
             self.with_fft = with_fft
             if with_fea :
@@ -172,15 +174,20 @@ class Creator :
 
         # Depends on the selected channel
         if channel == 'fea' : 
-            inp = Input(shape=(self.fea_t.shape[1], ))
+            inp = Input(shape=(self.f_t.shape[1], ))
             self.train.append(self.fea_t)
             self.valid.append(self.fea_e)
             del self.fea_t, self.fea_e
-        elif channel == 'fft' : 
-            inp = Input(shape=(self.fft_t.shape[1], ))
-            self.train.append(self.fft_t)
-            self.valid.append(self.fft_e)
-            del self.fft_t, self.fft_e
+        elif channel == 'fft_A' : 
+            inp = Input(shape=(self.f_A_t.shape[1], ))
+            self.train.append(self.f_A_t)
+            self.valid.append(self.f_A_e)
+            del self.f_A_t, self.f_A_e
+        elif channel == 'fft_G' :
+            inp = Input(shape=(self.f_G_t.shape[1], ))
+            self.train.append(self.f_G_t)
+            self.valid.append(self.f_G_e)
+            del self.f_G_t, self.f_G_e
 
         # Build the model
         mod = Dense(200)(inp)
@@ -246,7 +253,9 @@ class Creator :
         if self.with_fea : self.add_DENSE('fea')
         if self.with_acc : self.add_CONV_2D('acc')
         if self.with_gyr : self.add_CONV_2D('gyr')
-        if self.with_fft : self.add_DENSE('fft')
+        if self.with_fft : 
+            self.add_DENSE('fft_A')
+            self.add_DENSE('fft_G')
         if self.with_n_a : self.add_CONV_1D('n_a')
         if self.with_n_g : self.add_CONV_1D('n_g')
         if self.with_qua : self.add_CONV_2D('qua')
