@@ -320,7 +320,7 @@ class Creator :
         # Fit the model
         model.fit_generator(self.train_generator(batch_size=32), verbose=verbose, epochs=max_epochs,
                             steps_per_epoch=self.train[0].shape[0]/32, shuffle=True, callbacks=[early, check],
-                            validation_data=self.valid_generator(batch_size=32), validation_steps=self.test[0].shape[0]/32,
+                            validation_data=self.valid_generator(batch_size=32), validation_steps=self.valid[0].shape[0]/32,
                             class_weight=class_weight(self.l_t))
         # Save model as attribute
         model.save(pth)
