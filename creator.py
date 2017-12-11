@@ -341,4 +341,5 @@ class Creator :
         # Compute the predictions
         prd = [np.argmax(pbs) for pbs in self.model.predict(self.valid)]
         # Returns the corresponding dataframe
-        return score_verbose(self.l_e, prd)
+        # return score_verbose(self.l_e, prd)
+        return self.l_e, prd
