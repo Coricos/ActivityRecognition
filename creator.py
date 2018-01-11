@@ -92,11 +92,8 @@ class Creator :
                 self.a_l_qua_e = dtb['A_L_QUA_e'].value[m_e]
                 self.name[8] = 'T'
             self.with_A_l = with_A_l
-
         # Build real name
         self.name = ''.join(self.name)
-        # Avoid corruption
-        dtb.close()
 
     # Add convolution model
     def add_CONV_1D(self, channel, dropout) :
