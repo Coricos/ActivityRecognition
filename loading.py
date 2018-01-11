@@ -35,6 +35,7 @@ class HAPT_Loader :
             if tmp in lab : tmp = tmp.replace('1', '2')
             if tmp in lab : tmp = tmp.replace('2', '3')
             lab[ind] = tmp
+        print('!!! Labels have been corrected ...')
         # Training set
         X_tr = pd.read_csv('{}/X_train.txt'.format(self.fea_path), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
         X_tr.columns = lab
@@ -53,7 +54,9 @@ class HAPT_Loader :
         # Serialize the features in database
         with h5py.File(self.path, 'w') as dtb :
             dtb.create_dataset('FEA_t', data=remove_columns(self.train, ['Subjects', 'Labels']))
+            print(' -> Training features serialized ...')
             dtb.create_dataset('FEA_e', data=remove_columns(self.valid, ['Subjects', 'Labels']))
+            print(' -> Validation features serialized ...')
         # Memory efficiency
         del self.train, self.valid
         print('|-> Features serialized ...')
@@ -125,6 +128,7 @@ class HAPT_Loader :
         X_tr, y_tr, X_va, y_va = [], [], [], []
         # Deals with the training set
         for ids in self.usr_train :
+            print(' -> Getting rid of user {} ...'.format(ids))
             for exp in np.unique(self.description.query('User == {}'.format(ids))['Experience']) :
                 cut = self.description.query('Experience == {} & User == {}'.format(exp, ids))
                 for val in cut[['Label', 'Begin', 'End']].values :
@@ -132,10 +136,12 @@ class HAPT_Loader :
                     sig = slice_signal(remove_columns(tmp[val[1]:val[2]+1], ['Experience', 'User']))
                     y_tr += list(np.full(len(sig), val[0]))
                     X_tr += sig
+                    print('    {} samples have been extracted !'.format(len(sig)))
                     del tmp, sig
                 del cut
         # Deals with the validation set
         for ids in self.usr_valid :
+            print(' -> Getting rid of user {} ...'.format(ids))
             for exp in np.unique(self.description.query('User == {}'.format(ids))['Experience']) :
                 cut = self.description.query('Experience == {} & User == {}'.format(exp, ids))
                 for val in cut[['Label', 'Begin', 'End']].values :
@@ -143,6 +149,7 @@ class HAPT_Loader :
                     sig = slice_signal(remove_columns(tmp[val[1]:val[2]+1], ['Experience', 'User']))
                     y_va += list(np.full(len(sig), val[0]))
                     X_va += sig
+                    print('    {} samples have been extracted !'.format(len(sig)))
                     del tmp, sig
                 del cut
         # Serialize the features in database
