@@ -293,7 +293,7 @@ class Creator :
             ind += batch_size
 
     # Lauch the fit
-    def learn(self, dropout=0.5, verbose=1, max_epochs=100) :
+    def learn(self, output, dropout=0.5, verbose=1, max_epochs=100) :
 
         # Build the corresponding model
         self.build(dropout=dropout)
@@ -314,18 +314,16 @@ class Creator :
         # Compile the modelel
         model = Model(inputs=self.input, outputs=model)
         model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
-        # Implements the early stopping
-        if self.truncate : pth = './Truncates/clf_{}.h5'.format(self.name)
-        else : pth = './Classifiers/clf_{}.h5'.format(self.name)            
+        # Implements the early stopping    
         early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
-        check = ModelCheckpoint(pth, period=3, monitor='val_acc', save_best_only=True, mode='auto', save_weights_only=False)
+        check = ModelCheckpoint(output, period=3, monitor='val_acc', save_best_only=True, mode='auto', save_weights_only=False)
         # Fit the model
         model.fit_generator(self.train_generator(batch_size=32), verbose=verbose, epochs=max_epochs,
                             steps_per_epoch=self.train[0].shape[0]/32, shuffle=True, callbacks=[early, check],
                             validation_data=self.valid_generator(batch_size=32), validation_steps=self.valid[0].shape[0]/32,
                             class_weight=class_weight(self.l_t))
         # Save model as attribute
-        model.save(pth)
+        model.save(output)
         self.model = model
         # Memory efficiency
         del self.train, self.l_t, self.merge, self.input, early, check, model
