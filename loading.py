@@ -35,8 +35,6 @@ class Loader :
             if tmp in lab : tmp = tmp.replace('1', '2')
             if tmp in lab : tmp = tmp.replace('2', '3')
             lab[ind] = tmp
-        # Defines the scaler
-        sca = StandardScaler(with_std=False)
         # Training set
         X_tr = pd.read_csv('{}/X_train.txt'.format(self.fea_path), sep='\n', delimiter=' ', header=None, keep_default_na=False, dtype=np.float32)
         X_tr.columns = lab
@@ -47,15 +45,11 @@ class Loader :
         X_va.columns = lab
         l_va = read_text_file('{}/y_test.txt'.format(self.fea_path), 'Labels')
         i_va = read_text_file('{}/subject_id_test.txt'.format(self.fea_path), 'Subjects')
-        # Fit and rescaler
-        sca.fit(X_tr)
-        X_tr = pd.DataFrame(sca.transform(X_tr), columns=X_tr.columns, index=X_tr.index)
-        X_va = pd.DataFrame(sca.transform(X_va), columns=X_va.columns, index=X_va.index)
         # Save as attribute
         self.train = fast_concatenate([X_tr, l_tr, i_tr], axis=1)
         self.valid = fast_concatenate([X_va, l_va, i_va], axis=1)
         # Memory efficiency
-        del X_va, l_va, i_va, lab, sca, X_tr, l_tr, i_tr, raw
+        del X_va, l_va, i_va, lab, X_tr, l_tr, i_tr, raw
         # Serialize the features in database
         with h5py.File(self.path, 'w') as dtb :
             dtb.create_dataset('FEA_t', data=remove_columns(self.train, ['Subjects', 'Labels']))
@@ -386,7 +380,7 @@ class Loader :
             # Memory efficiency
             del sca, fft
             print('! FFT transformation scaled ...')
-        # Spread the rest fo the keys in the new database
+        # Spread the rest of the keys in the new database
         with h5py.File(self.path, 'r') as dtb :
             for key in dtb.keys() :
                 if key not in out.keys() :
@@ -403,6 +397,7 @@ class Loader :
         self.load_fft()
         self.load_qua()
         self.load_relative_ldc()
+        self.standardize()
 
     # Defines a visualisation given an index of the considered database
     def visual_compound(self, idx) :

@@ -10,7 +10,7 @@ import numpy as np
 import seaborn as sb
 import matplotlib.pyplot as plt
 import os, tqdm, h5py, pickle, multiprocessing
-import tensorflow, xgboost, itertools, math
+import tensorflow, itertools, math
 import matplotlib.gridspec as gridspec
 
 from functools import partial
@@ -43,6 +43,3 @@ from keras.layers.core import Dense, Dropout, Activation
 from keras.optimizers import SGD
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers.merge import concatenate
-
-sys.path.append('../SN-Project')
-from topology import *

@@ -79,7 +79,7 @@ def remove_columns(dtf, col) :
     
     # Defines the indexes to remove
     tmp = [ind for ind, ele in enumerate(dtf.columns) if ele in col]
-    idx = [ind for ind in xrange(len(dtf.columns)) if ind not in tmp]
+    idx = [ind for ind in range(len(dtf.columns)) if ind not in tmp]
     # Extract DataFrame
     val = dtf.values[:, idx]
     dtf = pd.DataFrame(val, index=dtf.index, columns=np.asarray(dtf.columns)[idx])

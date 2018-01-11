@@ -1,8 +1,7 @@
+*.pyc
+.ipynb_checkpoints/
 Raw_Data/
 Fea_Data/
-Classifiers/
-*.pyc
-activity_labels.txt
-data.h5
-.ipynb_checkpoints/
+Models/
 draft.ipynb
+database.h5
