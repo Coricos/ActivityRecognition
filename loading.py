@@ -4,16 +4,16 @@
 from toolbox import *
 
 # Build tool to match features with reconstituted raw signals
-class Loader :
+class HAPT_Loader :
 
     # Initialization
-    def __init__(self, path, max_jobs=multiprocessing.cpu_count()-1) :
+    def __init__(self, path, fea_path='./Fea_Data', raw_path='./Raw_Data', max_jobs=multiprocessing.cpu_count()) :
 
         # Cares about multiprocessing instances
         self.njobs = max_jobs
         # Root paths
-        self.raw_path = './Raw_Data'
-        self.fea_path = './Fea_Data'
+        self.fea_path = fea_path
+        self.raw_path = raw_path
         # Represents the 30% of validation subset
         self.usr_train = np.unique(read_text_file('{}/subject_id_train.txt'.format(self.fea_path), 'Subjects').values)
         self.usr_valid = np.unique(read_text_file('{}/subject_id_test.txt'.format(self.fea_path), 'Subjects').values)
@@ -29,7 +29,7 @@ class Loader :
     def load_fea(self) :
 
         # Load the features names
-        with open('./Fea_Data/features.txt') as raw : lab = raw.readlines()
+        with open('{}/features.txt'.format(self.fea_path)) as raw : lab = raw.readlines()
         for ind in range(len(lab)) : 
             tmp = str(lab[ind].replace('\n','').replace(' ',''))
             if tmp in lab : tmp = tmp.replace('1', '2')
@@ -396,8 +396,6 @@ class Loader :
         self.load_raw()
         self.load_fft()
         self.load_qua()
-        self.load_relative_ldc()
-        self.standardize()
 
     # Defines a visualisation given an index of the considered database
     def visual_compound(self, idx) :
