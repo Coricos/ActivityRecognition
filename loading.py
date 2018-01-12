@@ -179,7 +179,7 @@ class Constructor :
         # Defines where to serialize the new database
         self.output = output
         # Defines the pool size for multiprocessing
-        self.n_jobs = max_jobs
+        self.njobs = max_jobs
 
     # Computes the fft of each normed inertial signal
     def load_fft(self) :
