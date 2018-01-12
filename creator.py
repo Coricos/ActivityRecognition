@@ -29,7 +29,7 @@ class DynamicModel :
         self.input = []
         self.merge = []
         self.arg = args
-        self.pth = path
+        self.path = path
         # Labels and their respective masks
         with h5py.File(path, 'r') as dtb :
             # Load the labels and initialize training and testing sets
