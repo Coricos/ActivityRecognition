@@ -232,11 +232,11 @@ class Model :
         self.build(dropout=dropout)
         # Gather all the model in one dense network
         model = concatenate(self.merge)
-        model = Dense(int(0.5 * self.merge_size * len(self.train)))(model)
+        model = Dense(int(0.5 * self.merge_size * len(self.input)))(model)
         model = BatchNormalization()(model)
         model = Activation('tanh')(model)
         model = Dropout(dropout)(model)
-        model = Dense(int(0.25 * self.merge_size * len(self.train)))(model)
+        model = Dense(int(0.25 * self.merge_size * len(self.input)))(model)
         model = BatchNormalization()(model)
         model = Activation('tanh')(model)
         model = GaussianDropout(dropout)(model)
