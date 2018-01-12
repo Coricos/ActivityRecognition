@@ -11,8 +11,8 @@ from toolbox import *
 # Arguments format
 args = {'with_N_A' : (False, 'CONV_1D'), 
         'with_N_G' : (False, 'CONV_1D'), 
-        'with_ACC' : (False, 'CONV_2D'), 
-        'with_GYR' : (False, 'CONV_2D'), 
+        'with_ACC' : (True, 'CONV_2D'), 
+        'with_GYR' : (True, 'CONV_2D'), 
         'with_FFT_A' : (False, 'DENSE'), 
         'with_FFT_G' : (False, 'DENSE'),
         'with_QUA' : (False, 'CONV_2D'), 
@@ -72,7 +72,7 @@ class Model :
         # Depends on the selected channel
         with h5py.File(self.pth, 'r') as dtb :
             inp = Input(shape=(1, dtb['{}_t'.format(channel)][0].shape[0], dtb['{}_t'.format(channel)][0].shape[1]))
-            mod = Convolution2D(64, (self.acc_t.shape[2], 60), data_format='channels_first')(inp)
+            mod = Convolution2D(64, (dtb['{}_t'.format(channel)].shape[1], 60), data_format='channels_first')(inp)
 
         # Build model
         mod = Activation('tanh')(mod)
