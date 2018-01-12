@@ -9,14 +9,14 @@
 from toolbox import *
 
 # Arguments format
-args = {'with_N_A' = (False, 'CONV_1D'), 
-        'with_N_G' = (False, 'CONV_1D'), 
-        'with_ACC' = (False, 'CONV_2D'), 
-        'with_GYR' = (False, 'CONV_2D'), 
-        'with_FFT_A' = (False, 'DENSE'), 
-        'with_FFT_G' = (False, 'DENSE'),
-        'with_QUA' = (False, 'CONV_2D'), 
-        'with_FEA' = (False, 'DENSE')} 
+args = {'with_N_A' : (False, 'CONV_1D'), 
+        'with_N_G' : (False, 'CONV_1D'), 
+        'with_ACC' : (False, 'CONV_2D'), 
+        'with_GYR' : (False, 'CONV_2D'), 
+        'with_FFT_A' : (False, 'DENSE'), 
+        'with_FFT_G' : (False, 'DENSE'),
+        'with_QUA' : (False, 'CONV_2D'), 
+        'with_FEA' : (False, 'DENSE')} 
 
 # Deep-learning models of mixed channels
 class Model :
