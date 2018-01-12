@@ -153,7 +153,7 @@ def score_verbose(y_true, y_pred) :
     # Memory efficiency
     del acc, f1s, rec, pre, y_t, y_p
     # Return dataframe for score per class
-    return pd.DataFrame(np.asarray(dtf).transpose(), index=['Acc', 'Rec', 'Pre', 'F1S'], columns=['Main'] + ['Class_{}'.format(k) for k in range(len(np.unique(lab)))])
+    return pd.DataFrame(np.asarray(dtf).transpose(), index=['Acc', 'Rec', 'Pre', 'F1S'], columns=['Main'] + ['Class_{}'.format(k) for k in np.unique(lab)])
 
 # From vector to movement, on multiprocessed way
 def from_vec_to_mvt(vec, sampling_frequency=50) :

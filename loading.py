@@ -340,6 +340,7 @@ class Constructor :
                     if key[-1] == 't' : out.create_dataset(key, data=dtb[key].value[idt])
                     elif key[-1] == 'e' : out.create_dataset(key, data=dtb[key].value[ide])
                     else : out.create_dataset(key, data=dtb[key].value)
+                    print('> Added {} ...'.format(key))
         # Avoid corruption
         out.close()
         # Serialize the resulting scalers
