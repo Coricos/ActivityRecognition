@@ -43,7 +43,7 @@ class Model :
 
         # Depends on the selected channel
         with h5py.File(self.pth, 'r') as dtb :
-            inp = Input(shape=dtb['{}_t'.format(channel)][0].shape)
+            inp = Input(shape=(dtb['{}_t'.format(channel)][0].shape, 1))
 
         # Build the selected model
         mod = Conv1D(100, 50)(inp)
@@ -71,7 +71,7 @@ class Model :
 
         # Depends on the selected channel
         with h5py.File(self.pth, 'r') as dtb :
-            inp = Input(shape=dtb['{}_t'.format(channel)][0].shape)
+            inp = Input(shape=(1, dtb['{}_t'.format(channel)][0].shape[0], dtb['{}_t'.format(channel)][0].shape[1]))
             mod = Convolution2D(64, (self.acc_t.shape[2], 60), data_format='channels_first')(inp)
 
         # Build model
