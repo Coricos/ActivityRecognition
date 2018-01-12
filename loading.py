@@ -336,12 +336,12 @@ class Constructor :
         out.close()
 
     # Defines a loading instance caring about both features and raw signals
-    def build_database(self, standardize=True) :
+    def build_database(self, landscapes=False, standardize=True) :
 
         # Load signals
-        self.load_fea()
-        self.load_raw()
         self.load_fft()
         self.load_qua()
+        # Defines a tda boolean
+        if landscapes : self.load_relative_ldc()
         # Defines a standardization boolean
         if standardize : self.standardize()
