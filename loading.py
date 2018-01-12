@@ -270,7 +270,7 @@ class Constructor :
         # Defines the output database
         out = h5py.File(self.output, 'w')
         # Apply shuffling to the data
-        with h5py.File(self.path, 'r') as dtb : 
+        with h5py.File(self.path, 'r+') as dtb : 
             idt = shuffle(range(dtb['y_train'].shape[0]))
             dtb['y_train'][...] = dtb['y_train'].value[idt]
             ide = shuffle(range(dtb['y_valid'].shape[0]))
