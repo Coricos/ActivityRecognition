@@ -29,7 +29,7 @@ class DynamicModel :
         self.input = []
         self.merge = []
         self.arg = args
-        self.path = path
+        self.pth = path
         # Labels and their respective masks
         with h5py.File(path, 'r') as dtb :
             # Load the labels and initialize training and testing sets
@@ -129,7 +129,7 @@ class DynamicModel :
             return mod
 
         # Build the inputs 
-        with h5py.File(self.path, 'r') as dtb : 
+        with h5py.File(self.pth, 'r') as dtb : 
             inp = [Input(shape=(dtb[lab][0].shape)) for lab in ['{}_{}_t'.format(channel, idx) for idx in range(4)]]
         
         # Build the silhouettes
@@ -179,7 +179,7 @@ class DynamicModel :
                 # Define the concerned channel
                 channel, i_t = '_'.join(key.split('_')[1:]), np.where(self.m_t == True)[0]
                 # Adding part to vector
-                with h5py.File(self.path, 'r') as dtb :
+                with h5py.File(self.pth, 'r') as dtb :
                     if self.arg[key][0] and self.arg[key][1] == 'DENSE' :
                         vec.append(dtb['{}_t'.format(channel)][i_t[ind:ind+batch_size]])
                     if self.arg[key][0] and self.arg[key][1] == 'CONV_1D' :
@@ -210,7 +210,7 @@ class DynamicModel :
                 # Define the concerned channel
                 channel, i_e = '_'.join(key.split('_')[1:]), np.where(self.m_e == True)[0]
                 # Adding part to vector
-                with h5py.File(self.path, 'r') as dtb :
+                with h5py.File(self.pth, 'r') as dtb :
                     if self.arg[key][0] and self.arg[key][1] == 'DENSE' :
                         vec.append(dtb['{}_t'.format(channel)][i_e[ind:ind+batch_size]])
                     if self.arg[key][0] and self.arg[key][1] == 'CONV_1D' :
