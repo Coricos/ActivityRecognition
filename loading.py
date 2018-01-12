@@ -269,6 +269,12 @@ class Constructor :
 
         # Defines the output database
         out = h5py.File(self.output, 'w')
+        # Apply shuffling to the data
+        with h5py.File(self.path, 'r') as dtb : 
+            idt = shuffle(range(dtb['y_train'].shape[0]))
+            dtb['y_train'][...] = dtb['y_train'].value[idt]
+            ide = shuffle(range(dtb['y_valid'].shape[0]))
+            dtb['y_valid'][...] = dtb['y_valid'].value[ide]
         # Dict where to gather the scalers
         put = dict()
         # Standardize 2D raw signals
@@ -282,14 +288,14 @@ class Constructor :
                 for idx in range(3) : acc[idx,:] = sca[idx].fit_transform(acc[idx,:].reshape(-1,1)).reshape(acc.shape[1])
                 acc = np.asarray([acc[idx,:].reshape(dtb['{}_t'.format(typ)].shape[0], int(dtb['{}_t'.format(typ)].shape[1]*dtb['{}_t'.format(typ)].shape[2]/sze)) for idx in range(acc.shape[0])])
                 acc = np.asarray([[acc[idx, ind, :] for idx in range(acc.shape[0])] for ind in range(acc.shape[1])])
-                out.create_dataset('{}_t'.format(typ), data=acc)
+                out.create_dataset('{}_t'.format(typ), data=acc[idt])
                 # Spreading
                 acc = np.asarray([dtb['{}_e'.format(typ)].value[:,sig,:] for sig in range(sze)])
                 acc = acc.reshape(acc.shape[0], acc.shape[1]*acc.shape[2])
                 for idx in range(3) : acc[idx,:] = sca[idx].fit_transform(acc[idx,:].reshape(-1,1)).reshape(acc.shape[1])
                 acc = np.asarray([acc[idx,:].reshape(dtb['{}_e'.format(typ)].shape[0], int(dtb['{}_e'.format(typ)].shape[1]*dtb['{}_e'.format(typ)].shape[2]/sze)) for idx in range(acc.shape[0])])
                 acc = np.asarray([[acc[idx, ind, :] for idx in range(acc.shape[0])] for ind in range(acc.shape[1])])
-                out.create_dataset('{}_e'.format(typ), data=acc)
+                out.create_dataset('{}_e'.format(typ), data=acc[ide])
                 # Memory efficiency
                 put[typ] = sca
                 del sca, acc, sze
@@ -303,12 +309,12 @@ class Constructor :
                 else : n_a = np.hstack(dtb['{}_t'.format(typ)].value)
                 n_a = sca.fit_transform(n_a.reshape(-1,1)).reshape(n_a.shape[0])
                 n_a = n_a.reshape(dtb['{}_t'.format(typ)].shape[0], dtb['{}_t'.format(typ)].shape[1])
-                out.create_dataset('{}_t'.format(typ), data=n_a)
+                out.create_dataset('{}_t'.format(typ), data=n_a[idt])
                 # Spreading
                 n_a = np.log(np.hstack(dtb['{}_e'.format(typ)].value))
                 n_a = sca.transform(n_a.reshape(-1,1)).reshape(n_a.shape[0])
                 n_a = n_a.reshape(dtb['{}_e'.format(typ)].shape[0], dtb['{}_e'.format(typ)].shape[1])
-                out.create_dataset('{}_e'.format(typ), data=n_a)
+                out.create_dataset('{}_e'.format(typ), data=n_a[ide])
                 # Memory efficiency
                 put[typ] = sca
                 del sca, n_a
@@ -319,10 +325,10 @@ class Constructor :
                 # Fitting
                 sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler())])
                 fea = sca.fit_transform(dtb['{}_t'.format(typ)].value)
-                out.create_dataset('{}_t'.format(typ), data=fea)
+                out.create_dataset('{}_t'.format(typ), data=fea[idt])
                 # Spreading
                 fea = sca.transform(dtb['{}_e'.format(typ)].value)
-                out.create_dataset('{}_e'.format(typ), data=fea)
+                out.create_dataset('{}_e'.format(typ), data=fea[ide])
                 # Memory efficiency
                 put[typ] = sca
                 del fea, sca
@@ -331,7 +337,9 @@ class Constructor :
         with h5py.File(self.path, 'r') as dtb :
             for key in dtb.keys() :
                 if key not in out.keys() :
-                    out.create_dataset(key, data=dtb[key].value)
+                    if key[-1] == 't' : out.create_dataset(key, data=dtb[key].value[idt])
+                    elif key[-1] == 'e' : out.create_dataset(key, data=dtb[key].value[ide])
+                    else : out.create_dataset(key, data=dtb[key].value)
         # Avoid corruption
         out.close()
         # Serialize the resulting scalers
