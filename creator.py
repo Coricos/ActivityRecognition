@@ -197,14 +197,14 @@ class DynamicModel :
                 # Adding part to vector
                 with h5py.File(self.pth, 'r') as dtb :
                     if self.arg[key][0] and self.arg[key][1] == 'DENSE' :
-                        vec.append(dtb['{}_t'.format(channel)][list(i_e[ind:ind+batch_size])])
+                        vec.append(dtb['{}_e'.format(channel)][list(i_e[ind:ind+batch_size])])
                     if self.arg[key][0] and self.arg[key][1] == 'CONV_1D' :
-                        vec.append(reformat(dtb['{}_t'.format(channel)][list(i_e[ind:ind+batch_size])], '1D'))
+                        vec.append(reformat(dtb['{}_e'.format(channel)][list(i_e[ind:ind+batch_size])], '1D'))
                     if self.arg[key][0] and self.arg[key][1] == 'CONV_2D' :
-                        vec.append(reformat(dtb['{}_t'.format(channel)][list(i_e[ind:ind+batch_size])], '2D'))
+                        vec.append(reformat(dtb['{}_e'.format(channel)][list(i_e[ind:ind+batch_size])], '2D'))
                     if self.arg[key][0] and self.arg[key][1] == 'SILHOUETTE' :
                         for idx in range(4) :
-                            vec.append(dtb['{}_{}_t'.format(channel, idx)][list(i_e[ind:ind+batch_size])])
+                            vec.append(dtb['{}_{}_e'.format(channel, idx)][list(i_e[ind:ind+batch_size])])
             # Yield the resulting vector
             yield(vec, np_utils.to_categorical(self.l_e[ind:ind+batch_size], num_classes=len(np.unique(self.l_t))))
             # Increments over the batch
