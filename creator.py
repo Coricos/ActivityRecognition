@@ -19,7 +19,7 @@ args = {'with_N_A' : (False, 'CONV_1D'),
         'with_FEA' : (False, 'DENSE')} 
 
 # Deep-learning models of mixed channels
-class Model :
+class DynamicModel :
     
     # Initialization
     def __init__(self, path, args, merge_size=20, msk_labels=[]) :
