@@ -1,3 +1,4 @@
+*.pk
 *.pyc
 .ipynb_checkpoints/
 Raw_Data/
