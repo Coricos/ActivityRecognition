@@ -34,7 +34,7 @@ class Model :
         with h5py.File(path, 'r') as dtb :
             # Load the labels and initialize training and testing sets
             self.m_t = get_mask(dtb['y_train'].value, msk_labels)
-            self.m_e = get_mask(dtb['y_train'].value, msk_labels)
+            self.m_e = get_mask(dtb['y_valid'].value, msk_labels)
             self.l_t = dtb['y_train'].value[self.m_t]
             self.l_e = dtb['y_valid'].value[self.m_e]
 
