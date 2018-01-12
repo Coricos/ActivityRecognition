@@ -28,7 +28,7 @@ class DynamicModel :
 
         # Depends on the selected channel
         with h5py.File(self.pth, 'r') as dtb :
-            inp = Input(shape=(dtb['{}_t'.format(channel)][0].shape, 1))
+            inp = Input(shape=(dtb['{}_t'.format(channel)].shape[1], 1))
 
         # Build the selected model
         mod = Conv1D(100, 50)(inp)
