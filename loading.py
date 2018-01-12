@@ -334,6 +334,11 @@ class Constructor :
                     out.create_dataset(key, data=dtb[key].value)
         # Avoid corruption
         out.close()
+        # Serialize the resulting scalers
+        raw = open('/'.join(self.output.split('/')[:-1]) + '/scalers.pk', 'wb')
+        pickle.dump(put, raw)
+        raw.close()
+        del put, raw
 
     # Defines a loading instance caring about both features and raw signals
     def build_database(self, landscapes=False, standardize=True) :
