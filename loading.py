@@ -280,14 +280,14 @@ class Constructor :
                 acc = np.asarray([dtb['{}_t'.format(typ)].value[:,sig,:] for sig in range(sze)])
                 acc = acc.reshape(acc.shape[0], acc.shape[1]*acc.shape[2])
                 for idx in range(3) : acc[idx,:] = sca[idx].fit_transform(acc[idx,:].reshape(-1,1)).reshape(acc.shape[1])
-                acc = np.asarray([acc[idx,:].reshape(dtb['{}_t'.format(typ)].shape[0], int(dtb['{}_t'.format(typ)].shape[1]*dtb['{}_t'.format(typ)].shape[2]/3)) for idx in range(acc.shape[0])])
+                acc = np.asarray([acc[idx,:].reshape(dtb['{}_t'.format(typ)].shape[0], int(dtb['{}_t'.format(typ)].shape[1]*dtb['{}_t'.format(typ)].shape[2]/sze)) for idx in range(acc.shape[0])])
                 acc = np.asarray([[acc[idx, ind, :] for idx in range(acc.shape[0])] for ind in range(acc.shape[1])])
                 out.create_dataset('{}_t'.format(typ), data=acc)
                 # Spreading
                 acc = np.asarray([dtb['{}_e'.format(typ)].value[:,sig,:] for sig in range(sze)])
                 acc = acc.reshape(acc.shape[0], acc.shape[1]*acc.shape[2])
                 for idx in range(3) : acc[idx,:] = sca[idx].fit_transform(acc[idx,:].reshape(-1,1)).reshape(acc.shape[1])
-                acc = np.asarray([acc[idx,:].reshape(dtb['{}_e'.format(typ)].shape[0], int(dtb['{}_e'.format(typ)].shape[1]*dtb['{}_e'.format(typ)].shape[2]/3)) for idx in range(acc.shape[0])])
+                acc = np.asarray([acc[idx,:].reshape(dtb['{}_e'.format(typ)].shape[0], int(dtb['{}_e'.format(typ)].shape[1]*dtb['{}_e'.format(typ)].shape[2]/sze)) for idx in range(acc.shape[0])])
                 acc = np.asarray([[acc[idx, ind, :] for idx in range(acc.shape[0])] for ind in range(acc.shape[1])])
                 out.create_dataset('{}_e'.format(typ), data=acc)
                 # Memory efficiency
