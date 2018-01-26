@@ -116,7 +116,7 @@ class HAPT_Loader :
                     srt += int(self.overlap_rto * self.time_window)
                 # Launch multiprocessing
                 pol = multiprocessing.Pool(processes=min(len(tme), self.njobs))
-                mvs = pol.map(partial(extract, data=sig), tme)
+                mvs = pol.map(partial(extract_napt, data=sig), tme)
                 pol.close()
                 pol.join()
                 # Memory efficiency
@@ -167,6 +167,90 @@ class HAPT_Loader :
         print('|-> Signals serialized ...')
         # Memory efficiency
         del X_tr, X_va, y_tr, y_va, self.raw_signals, self.description
+
+# Build a specific loader for the SHL Dataset
+class SHL_Loader :
+
+    # Initialization
+    def __init__(self, path, time_window, overlap, anatomy) :
+
+        # Serialization path
+        self.path = path
+        # Attributes relative to slicing
+        self.time_window = time_window
+        self.overlap = overlap
+        self.anatomy = anatomy
+
+    # Load the raw signals as dataframe
+    def load_raw(self) :
+
+    	# Local function for slicing
+        def slice_signal(sig) :
+
+            if len(sig) < self.time_window : return []
+            else :
+                # Init variables
+                tme, srt, top = [], 0, len(sig)
+                # Prepares multiprocessing
+                while srt <= top - self.time_window :
+                    tme.append((srt, srt + self.time_window))
+                    srt += int(self.overlap_rto * self.time_window)
+                # Launch multiprocessing
+                pol = multiprocessing.Pool(processes=min(len(tme), self.njobs))
+                mvs = pol.map(partial(extract_shl, data=sig), tme)
+                pol.close()
+                pol.join()
+                # Memory efficiency
+                del tme, srt, top, pol
+                # Return the sliced signals
+                return mvs
+
+        # Defines the main directory gathering the data
+        root_path = '/home/ubuntu/HackATon/Data/TrainingData/SHLDataset_preview_v1/'
+        # Launch the scrapping
+        mvs, lbl = [], []
+        for usr in ['User1', 'User2', 'User3'] :
+            for dry in [ele for ele in os.listdir(root_path + usr) if os.path.isdir(ele)] :
+            	print('|-> Dealing with {} : File {}/{}_Motion.txt'.format(usr, dry, self.anatomy))
+                pth = root_path + '{}/{}/'.format(usr, dry)
+                # Retrieve the values corresponding to the anatomy
+                dtf = pd.read_csv(pth + '{}_Motion.txt'.format(self.anatomy), sep='\n', delimiter=' ', header=None, keep_default_na=True)
+                dtf = dtf[[0,1,2,3,4,5,6]]
+				dtf.fillna(method='pad', limit=3)
+				dtf[0] = np.round(dtf[0].values).astype('int64')
+                dtf = dtf.values[:,:7].astype('float')
+                dtf = np.nan_to_num(dtf)
+                # Load the corresponding labels                
+                lab = pd.read_csv(pth + 'Label.txt', sep='\n', delimiter=' ', header=None, keep_default_na=True)
+                lab = lab.values[:,:2]
+                # Slice the signals according to the labels
+                idx = np.split(range(lab.shape[0]), np.where(np.diff(lab[1].values) != 0)[0] + 1)
+                print('|-> Signal may be split into {} events'.format(len(idx)))
+                for ind, ele in enumerate(idx) :
+                	if np.unique(lab[:,1][ele])[0] == 0 : pass
+                	else : 
+                		tmp = slice_signal(dtf[ele,1:7])
+                		mvs += tmp
+                		lbl += list(np.full(len(tmp), np.unique(lab[:,1][ele])[0]))
+                		del tmp
+                # Memory efficiency
+                del idx, lab, dtf, pth
+        # Separates training from testing
+        X_tr, X_va, y_tr, y_va = train_test_split(np.asarray(mvs), np.asarray(lbl))
+        del mvs, lbl
+        # Serialize the results
+        with h5py.File(self.path, 'r+') as dtb :
+            dtb.create_dataset('ACC_t', data=np.asarray(X_tr)[:,0:3,:])
+            dtb.create_dataset('ACC_e', data=np.asarray(X_va)[:,0:3,:])
+            dtb.create_dataset('GYR_t', data=np.asarray(X_tr)[:,3:6,:])
+            dtb.create_dataset('GYR_e', data=np.asarray(X_va)[:,3:6,:])
+            dtb.create_dataset('N_A_t', data=np.asarray(X_tr)[:,6,:])
+            dtb.create_dataset('N_A_e', data=np.asarray(X_va)[:,6,:])
+            dtb.create_dataset('N_G_t', data=np.asarray(X_tr)[:,7,:])
+            dtb.create_dataset('N_G_e', data=np.asarray(X_va)[:,7,:])
+            dtb.create_dataset('y_train', data=np.asarray(y_tr).astype(int) - 1)
+            dtb.create_dataset('y_valid', data=np.asarray(y_va).astype(int) - 1)
+        print('|-> Signals serialized ...')
 
 # Build a way to add features vectors
 class Constructor :
@@ -279,60 +363,69 @@ class Constructor :
         put = dict()
         # Standardize 2D raw signals
         for typ in ['ACC', 'GYR', 'QUA'] :
-            with h5py.File(self.path, 'r') as dtb :
-                # Fitting
-                sze = dtb['{}_t'.format(typ)].shape[1]
-                sca = [Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler(with_std=False))]) for i in range(sze)]
-                acc = np.asarray([dtb['{}_t'.format(typ)].value[:,sig,:] for sig in range(sze)])
-                acc = acc.reshape(acc.shape[0], acc.shape[1]*acc.shape[2])
-                for idx in range(3) : acc[idx,:] = sca[idx].fit_transform(acc[idx,:].reshape(-1,1)).reshape(acc.shape[1])
-                acc = np.asarray([acc[idx,:].reshape(dtb['{}_t'.format(typ)].shape[0], int(dtb['{}_t'.format(typ)].shape[1]*dtb['{}_t'.format(typ)].shape[2]/sze)) for idx in range(acc.shape[0])])
-                acc = np.asarray([[acc[idx, ind, :] for idx in range(acc.shape[0])] for ind in range(acc.shape[1])])
-                out.create_dataset('{}_t'.format(typ), data=acc[idt])
-                # Spreading
-                acc = np.asarray([dtb['{}_e'.format(typ)].value[:,sig,:] for sig in range(sze)])
-                acc = acc.reshape(acc.shape[0], acc.shape[1]*acc.shape[2])
-                for idx in range(3) : acc[idx,:] = sca[idx].fit_transform(acc[idx,:].reshape(-1,1)).reshape(acc.shape[1])
-                acc = np.asarray([acc[idx,:].reshape(dtb['{}_e'.format(typ)].shape[0], int(dtb['{}_e'.format(typ)].shape[1]*dtb['{}_e'.format(typ)].shape[2]/sze)) for idx in range(acc.shape[0])])
-                acc = np.asarray([[acc[idx, ind, :] for idx in range(acc.shape[0])] for ind in range(acc.shape[1])])
-                out.create_dataset('{}_e'.format(typ), data=acc[ide])
-                # Memory efficiency
-                put[typ] = sca
-                del sca, acc, sze
-                print('! Multi-axial {} signal scaled ...'.format(typ))
+            try :
+                with h5py.File(self.path, 'r') as dtb :
+                    # Fitting
+                    sze = dtb['{}_t'.format(typ)].shape[1]
+                    sca = [Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler(with_std=False))]) for i in range(sze)]
+                    acc = np.asarray([dtb['{}_t'.format(typ)].value[:,sig,:] for sig in range(sze)])
+                    acc = acc.reshape(acc.shape[0], acc.shape[1]*acc.shape[2])
+                    for idx in range(3) : acc[idx,:] = sca[idx].fit_transform(acc[idx,:].reshape(-1,1)).reshape(acc.shape[1])
+                    acc = np.asarray([acc[idx,:].reshape(dtb['{}_t'.format(typ)].shape[0], int(dtb['{}_t'.format(typ)].shape[1]*dtb['{}_t'.format(typ)].shape[2]/sze)) for idx in range(acc.shape[0])])
+                    acc = np.asarray([[acc[idx, ind, :] for idx in range(acc.shape[0])] for ind in range(acc.shape[1])])
+                    out.create_dataset('{}_t'.format(typ), data=acc[idt])
+                    # Spreading
+                    acc = np.asarray([dtb['{}_e'.format(typ)].value[:,sig,:] for sig in range(sze)])
+                    acc = acc.reshape(acc.shape[0], acc.shape[1]*acc.shape[2])
+                    for idx in range(3) : acc[idx,:] = sca[idx].fit_transform(acc[idx,:].reshape(-1,1)).reshape(acc.shape[1])
+                    acc = np.asarray([acc[idx,:].reshape(dtb['{}_e'.format(typ)].shape[0], int(dtb['{}_e'.format(typ)].shape[1]*dtb['{}_e'.format(typ)].shape[2]/sze)) for idx in range(acc.shape[0])])
+                    acc = np.asarray([[acc[idx, ind, :] for idx in range(acc.shape[0])] for ind in range(acc.shape[1])])
+                    out.create_dataset('{}_e'.format(typ), data=acc[ide])
+                    # Memory efficiency
+                    put[typ] = sca
+                    del sca, acc, sze
+                    print('! Multi-axial {} signal scaled ...'.format(typ))
+            except :
+                print('! No {} key recognized ...')
         # Standardize 1D raw signals, boolean for logarithmic transform
         for typ, log in [('N_A', True), ('N_G', True)] :
-            with h5py.File(self.path, 'r') as dtb : 
-                # Fitting
-                sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler(with_std=False))])
-                if log : n_a = np.log(np.hstack(dtb['{}_t'.format(typ)].value))
-                else : n_a = np.hstack(dtb['{}_t'.format(typ)].value)
-                n_a = sca.fit_transform(n_a.reshape(-1,1)).reshape(n_a.shape[0])
-                n_a = n_a.reshape(dtb['{}_t'.format(typ)].shape[0], dtb['{}_t'.format(typ)].shape[1])
-                out.create_dataset('{}_t'.format(typ), data=n_a[idt])
-                # Spreading
-                n_a = np.log(np.hstack(dtb['{}_e'.format(typ)].value))
-                n_a = sca.transform(n_a.reshape(-1,1)).reshape(n_a.shape[0])
-                n_a = n_a.reshape(dtb['{}_e'.format(typ)].shape[0], dtb['{}_e'.format(typ)].shape[1])
-                out.create_dataset('{}_e'.format(typ), data=n_a[ide])
-                # Memory efficiency
-                put[typ] = sca
-                del sca, n_a
-                print('! Single-axial {} signal scaled ...'.format(typ))
+            try : 
+                with h5py.File(self.path, 'r') as dtb : 
+                    # Fitting
+                    sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler(with_std=False))])
+                    if log : n_a = np.log(np.hstack(dtb['{}_t'.format(typ)].value))
+                    else : n_a = np.hstack(dtb['{}_t'.format(typ)].value)
+                    n_a = sca.fit_transform(n_a.reshape(-1,1)).reshape(n_a.shape[0])
+                    n_a = n_a.reshape(dtb['{}_t'.format(typ)].shape[0], dtb['{}_t'.format(typ)].shape[1])
+                    out.create_dataset('{}_t'.format(typ), data=n_a[idt])
+                    # Spreading
+                    n_a = np.log(np.hstack(dtb['{}_e'.format(typ)].value))
+                    n_a = sca.transform(n_a.reshape(-1,1)).reshape(n_a.shape[0])
+                    n_a = n_a.reshape(dtb['{}_e'.format(typ)].shape[0], dtb['{}_e'.format(typ)].shape[1])
+                    out.create_dataset('{}_e'.format(typ), data=n_a[ide])
+                    # Memory efficiency
+                    put[typ] = sca
+                    del sca, n_a
+                    print('! Single-axial {} signal scaled ...'.format(typ))
+            except :
+                print('! No {} key recognized ...')
         # Standardize features
         for typ in ['FEA', 'FFT_A', 'FFT_G'] :
-            with h5py.File(self.path, 'r') as dtb : 
-                # Fitting
-                sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler())])
-                fea = sca.fit_transform(dtb['{}_t'.format(typ)].value)
-                out.create_dataset('{}_t'.format(typ), data=fea[idt])
-                # Spreading
-                fea = sca.transform(dtb['{}_e'.format(typ)].value)
-                out.create_dataset('{}_e'.format(typ), data=fea[ide])
-                # Memory efficiency
-                put[typ] = sca
-                del fea, sca
-                print('! Features {} scaled ...'.format(typ))
+            try : 
+                with h5py.File(self.path, 'r') as dtb : 
+                    # Fitting
+                    sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler())])
+                    fea = sca.fit_transform(dtb['{}_t'.format(typ)].value)
+                    out.create_dataset('{}_t'.format(typ), data=fea[idt])
+                    # Spreading
+                    fea = sca.transform(dtb['{}_e'.format(typ)].value)
+                    out.create_dataset('{}_e'.format(typ), data=fea[ide])
+                    # Memory efficiency
+                    put[typ] = sca
+                    del fea, sca
+                    print('! Features {} scaled ...'.format(typ))
+            except :
+                print('! No {} key recognized ...')
         # Spread the rest of the keys in the new database
         with h5py.File(self.path, 'r') as dtb :
             for key in dtb.keys() :

@@ -125,9 +125,18 @@ def fast_concatenate(list_dtf, axis=1) :
         return pd.DataFrame(np.concatenate(tuple([dtf.values for dtf in list_dtf]), axis=axis), columns=np.asarray(col), index=np.asarray(idx))
 
 # Multiprocessed extraction
-def extract(couple_index, data) : 
+def extract_hapt(couple_index, data) : 
 
     return data[couple_index[0]:couple_index[1]].values.transpose()
+
+# Multiprocessed extraction
+def extract_shl(couple_index, data) :
+
+    tmp = data[couple_indx[0]:couple_index[1]].transpose()
+    n_a = np.sqrt(np.square(tmp[0]) + np.square(tmp[1]) + np.square(tmp[2]))
+    n_g = np.sqrt(np.square(tmp[3]) + np.square(tmp[4]) + np.square(tmp[5]))
+
+    return np.asarray(list(tmp) + [n_a] + [n_g])
 
 # Function aiming at displaying scores
 def score_verbose(y_true, y_pred) :
@@ -154,18 +163,6 @@ def score_verbose(y_true, y_pred) :
     del acc, f1s, rec, pre, y_t, y_p
     # Return dataframe for score per class
     return pd.DataFrame(np.asarray(dtf).transpose(), index=['Acc', 'Rec', 'Pre', 'F1S'], columns=['Main'] + ['Class_{}'.format(k) for k in np.unique(lab)])
-
-# From vector to movement, on multiprocessed way
-def from_vec_to_mvt(vec, sampling_frequency=50) :
-    
-    col = ['Time', 'Battery', 'Temp', 'Altitude', 'Ga1', 'Ga2', 'Ga3', 'Om1', 'Om2', 'Om3', 'Ma1', 'Ma2', 'Ma3']
-    tmp = np.random.rand(vec.shape[1]).reshape(1, vec.shape[1])
-    vec = np.vstack([tmp, tmp, tmp, tmp, vec[:6], tmp, tmp, tmp])
-    dtf = pd.DataFrame(vec.transpose(), columns=col)
-    sam = Sample('None', dtf=dtf)
-    sam.sampling_frequency = 50
-    
-    return Movement(sam)
 
 # Defines a way to truncate the given problematic
 def truncate_data(vec, lab, lab_to_del=[6, 7, 8, 9, 10, 11]) :
