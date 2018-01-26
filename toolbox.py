@@ -132,7 +132,7 @@ def extract_hapt(couple_index, data) :
 # Multiprocessed extraction
 def extract_shl(couple_index, data) :
 
-    tmp = data[couple_indx[0]:couple_index[1]].transpose()
+    tmp = data[couple_index[0]:couple_index[1]].transpose()
     n_a = np.sqrt(np.square(tmp[0]) + np.square(tmp[1]) + np.square(tmp[2]))
     n_g = np.sqrt(np.square(tmp[3]) + np.square(tmp[4]) + np.square(tmp[5]))
 
