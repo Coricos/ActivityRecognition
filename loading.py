@@ -210,9 +210,7 @@ class SHL_Loader :
         # Launch the scrapping
         mvs, lbl = [], []
         for usr in ['User1', 'User2', 'User3'] :
-            print(usr)
-            print([ele for ele in os.listdir(root_path + usr) if os.path.isdir(ele)])
-            for dry in [ele for ele in os.listdir(root_path + usr) if os.path.isdir(ele)] :
+            for dry in [ele for ele in os.listdir(root_path + usr) if os.path.isdir('{}/{}'.format(root_path + usr, ele))] :
                 print('|-> Dealing with {} : File {}/{}_Motion.txt'.format(usr, dry, self.anatomy))
                 pth = root_path + '{}/{}/'.format(usr, dry)
                 # Retrieve the values corresponding to the anatomy
