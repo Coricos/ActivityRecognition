@@ -194,7 +194,7 @@ class SHL_Loader :
                 # Prepares multiprocessing
                 while srt <= top - self.time_window :
                     tme.append((srt, srt + self.time_window))
-                    srt += int(self.overlap_rto * self.time_window)
+                    srt += int(self.overlap * self.time_window)
                 # Launch multiprocessing
                 pol = multiprocessing.Pool(processes=min(len(tme), self.njobs))
                 mvs = pol.map(partial(extract_shl, data=sig), tme)
