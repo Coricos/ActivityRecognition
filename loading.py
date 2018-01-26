@@ -184,7 +184,7 @@ class SHL_Loader :
     # Load the raw signals as dataframe
     def load_raw(self) :
 
-    	# Local function for slicing
+        # Local function for slicing
         def slice_signal(sig) :
 
             if len(sig) < self.time_window : return []
@@ -211,13 +211,13 @@ class SHL_Loader :
         mvs, lbl = [], []
         for usr in ['User1', 'User2', 'User3'] :
             for dry in [ele for ele in os.listdir(root_path + usr) if os.path.isdir(ele)] :
-            	print('|-> Dealing with {} : File {}/{}_Motion.txt'.format(usr, dry, self.anatomy))
+                print('|-> Dealing with {} : File {}/{}_Motion.txt'.format(usr, dry, self.anatomy))
                 pth = root_path + '{}/{}/'.format(usr, dry)
                 # Retrieve the values corresponding to the anatomy
                 dtf = pd.read_csv(pth + '{}_Motion.txt'.format(self.anatomy), sep='\n', delimiter=' ', header=None, keep_default_na=True)
                 dtf = dtf[[0,1,2,3,4,5,6]]
-				dtf.fillna(method='pad', limit=3)
-				dtf[0] = np.round(dtf[0].values).astype('int64')
+                dtf.fillna(method='pad', limit=3)
+                dtf[0] = np.round(dtf[0].values).astype('int64')
                 dtf = dtf.values[:,:7].astype('float')
                 dtf = np.nan_to_num(dtf)
                 # Load the corresponding labels                
@@ -227,12 +227,12 @@ class SHL_Loader :
                 idx = np.split(range(lab.shape[0]), np.where(np.diff(lab[1].values) != 0)[0] + 1)
                 print('|-> Signal may be split into {} events'.format(len(idx)))
                 for ind, ele in enumerate(idx) :
-                	if np.unique(lab[:,1][ele])[0] == 0 : pass
-                	else : 
-                		tmp = slice_signal(dtf[ele,1:7])
-                		mvs += tmp
-                		lbl += list(np.full(len(tmp), np.unique(lab[:,1][ele])[0]))
-                		del tmp
+                    if np.unique(lab[:,1][ele])[0] == 0 : pass
+                    else : 
+                        tmp = slice_signal(dtf[ele,1:7])
+                        mvs += tmp
+                        lbl += list(np.full(len(tmp), np.unique(lab[:,1][ele])[0]))
+                        del tmp
                 # Memory efficiency
                 del idx, lab, dtf, pth
         # Separates training from testing
