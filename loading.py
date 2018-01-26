@@ -224,7 +224,7 @@ class SHL_Loader :
                 lab = pd.read_csv(pth + 'Label.txt', sep='\n', delimiter=' ', header=None, keep_default_na=True)
                 lab = lab.values[:,:2]
                 # Slice the signals according to the labels
-                idx = np.split(range(lab.shape[0]), np.where(np.diff(lab[1].values) != 0)[0] + 1)
+                idx = np.split(range(lab.shape[0]), np.where(np.diff(lab[:,1]) != 0)[0] + 1)
                 print('|-> Signal may be split into {} events'.format(len(idx)))
                 for ind, ele in enumerate(idx) :
                     if np.unique(lab[:,1][ele])[0] == 0 : pass
