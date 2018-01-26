@@ -239,7 +239,7 @@ class SHL_Loader :
         X_tr, X_va, y_tr, y_va = train_test_split(np.asarray(mvs), np.asarray(lbl), test_size=0.2)
         del mvs, lbl
         # Serialize the results
-        with h5py.File(self.path, 'r+') as dtb :
+        with h5py.File(self.path, 'w') as dtb :
             dtb.create_dataset('ACC_t', data=np.asarray(X_tr)[:,0:3,:])
             dtb.create_dataset('ACC_e', data=np.asarray(X_va)[:,0:3,:])
             dtb.create_dataset('GYR_t', data=np.asarray(X_tr)[:,3:6,:])
