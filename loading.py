@@ -180,6 +180,7 @@ class SHL_Loader :
         self.time_window = time_window
         self.overlap = overlap
         self.anatomy = anatomy
+        self.njobs = multiprocessing.cpu_count()
 
     # Load the raw signals as dataframe
     def load_raw(self) :
