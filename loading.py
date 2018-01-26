@@ -236,7 +236,7 @@ class SHL_Loader :
                 # Memory efficiency
                 del idx, lab, dtf, pth
         # Separates training from testing
-        X_tr, X_va, y_tr, y_va = train_test_split(np.asarray(mvs), np.asarray(lbl))
+        X_tr, X_va, y_tr, y_va = train_test_split(np.asarray(mvs), np.asarray(lbl), test_size=0.2)
         del mvs, lbl
         # Serialize the results
         with h5py.File(self.path, 'r+') as dtb :
