@@ -183,7 +183,7 @@ class SHL_Loader :
         self.njobs = multiprocessing.cpu_count()
 
     # Load the raw signals as dataframe
-    def load_raw(self) :
+    def load_signals(self) :
 
         # Local function for slicing
         def slice_signal(sig) :
@@ -247,9 +247,51 @@ class SHL_Loader :
                 dtb[usr].create_dataset('GYR', data=np.asarray(mvs)[:,3:6,:])
                 dtb[usr].create_dataset('N_A', data=np.asarray(mvs)[:,6,:])
                 dtb[usr].create_dataset('N_G', data=np.asarray(mvs)[:,7,:])
-                dtb[usr].create_dataset('y', data=np.asarray(lbl).astype(int) - 1)
+                dtb[usr].create_dataset('y', data=np.asarray(lbl).astype(int))
             print('  > Serialized movements for {}'.format(usr))
         print('|-> Signals serialized ...')
+
+    # Defines the testing set
+    def define_test(self, events_per_label=2) :
+
+        # Refers to the created database
+        with h5py.File(self.path, 'a') as dtb :
+            # Extract an amount of events for each user
+            for usr in dtb.keys() :
+                print('| > Working on {}'.format(usr))
+                # Get the labels
+                lab = dtb[usr]['y'].value
+                # Split the labels
+                idx = np.split(range(lab.shape[0]), np.where(np.diff(lab[:,1]) != 0)[0] + 1)
+                msk = np.ones(lab.shape[0], dtype=bool)
+                lbl = np.asarray([np.unique(lab[ele]) for ele in idx])
+                print('|-> {} events are considered'.format(len(lbl)))
+                print('  > Among them : {}'.format(np.unique(lbl)))
+                # Extraction through mask
+                for val in np.unique(lbl) :
+                    for ele in np.random.choice(np.where(lbl == val)[0], size=events_per_label, replace=False) :
+                        msk[idx[ele]] = False
+                # Memory efficiency
+                del lab, idx, lbl
+                # Serializing new results
+                for key in ['ACC', 'GYR', 'N_A', 'N_G', 'y'] :
+                    tmp = dtb[usr][key].value
+                    dtb[usr].create_dataset(key + '_t', data=tmp[msk])
+                    dtb[usr].create_dataset(key + '_e', data=tmp[np.invert(msk)])
+                    del dtb[usr][key]
+                    print('|-> Split occured for key : {}'.format(key))
+        # Gathers the results
+        with h5py.File(self.path, 'a') as dtb :
+            # Extract an amount of events for each user
+            for key in ['ACC', 'GYR', 'N_A', 'N_G'] :
+                print('| > Working on key : {}'.format(key))
+                dtb.create_dataset(key + '_t', data=np.vstack([dtb[usr][key + '_t'] for usr in ['User1', 'User2', 'User3']]))
+                dtb.create_dataset(key + '_e', data=np.vstack([dtb[usr][key + '_e'] for usr in ['User1', 'User2', 'User3']]))
+            # Handling labels
+            dtb.create_dataset('y_train', data=np.concatenate([dtb[usr]['y_t'] for usr in ['User1', 'User2', 'User3']]))
+            dtb.create_dataset('y_valid', data=np.concatenate([dtb[usr]['y_e'] for usr in ['User1', 'User2', 'User3']]))
+            # Memory efficiency
+            for usr in ['User1', 'User2', 'User3'] : del dtb[usr]
 
 # Build a way to add features vectors
 class Constructor :
