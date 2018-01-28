@@ -241,13 +241,14 @@ class SHL_Loader :
             # Change format
             mvs, lbl = np.asarray(mvs), np.asarray(lbl)
             # Serialize the results for the given user
-            with h5py.File(self.path, 'w') as dtb :
+            with h5py.File(self.path, 'a') as dtb :
                 dtb.create_group(usr)
                 dtb[usr].create_dataset('ACC', data=np.asarray(mvs)[:,0:3,:])
                 dtb[usr].create_dataset('GYR', data=np.asarray(mvs)[:,3:6,:])
                 dtb[usr].create_dataset('N_A', data=np.asarray(mvs)[:,6,:])
                 dtb[usr].create_dataset('N_G', data=np.asarray(mvs)[:,7,:])
                 dtb[usr].create_dataset('y', data=np.asarray(lbl).astype(int) - 1)
+            print('  > Serialized movements for {}'.format(usr))
         print('|-> Signals serialized ...')
 
 # Build a way to add features vectors
