@@ -262,7 +262,7 @@ class SHL_Loader :
                 # Get the labels
                 lab = dtb[usr]['y'].value
                 # Split the labels
-                idx = np.split(range(lab.shape[0]), np.where(np.diff(lab[:,1]) != 0)[0] + 1)
+                idx = np.split(range(lab.shape[0]), np.where(np.diff(lab) != 0)[0] + 1)
                 msk = np.ones(lab.shape[0], dtype=bool)
                 lbl = np.asarray([np.unique(lab[ele]) for ele in idx])
                 print('|-> {} events are considered'.format(len(lbl)))
