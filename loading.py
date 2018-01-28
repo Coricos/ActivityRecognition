@@ -209,8 +209,10 @@ class SHL_Loader :
         # Defines the main directory gathering the data
         root_path = '/home/ubuntu/HackATon/Data/TrainingData/SHLDataset_preview_v1/'
         # Launch the scrapping
-        mvs, lbl = [], []
         for usr in ['User1', 'User2', 'User3'] :
+            # Where to temporary gather the data
+            mvs, lbl = [], []
+            # Loop over dates
             for dry in [ele for ele in os.listdir(root_path + usr) if os.path.isdir('{}/{}'.format(root_path + usr, ele))] :
                 print('|-> Dealing with {} : File {}/{}_Motion.txt'.format(usr, dry, self.anatomy))
                 pth = root_path + '{}/{}/'.format(usr, dry)
@@ -236,21 +238,16 @@ class SHL_Loader :
                         del tmp
                 # Memory efficiency
                 del idx, lab, dtf, pth
-        # Separates training from testing
-        X_tr, X_va, y_tr, y_va = train_test_split(np.asarray(mvs), np.asarray(lbl), test_size=0.2)
-        del mvs, lbl
-        # Serialize the results
-        with h5py.File(self.path, 'w') as dtb :
-            dtb.create_dataset('ACC_t', data=np.asarray(X_tr)[:,0:3,:])
-            dtb.create_dataset('ACC_e', data=np.asarray(X_va)[:,0:3,:])
-            dtb.create_dataset('GYR_t', data=np.asarray(X_tr)[:,3:6,:])
-            dtb.create_dataset('GYR_e', data=np.asarray(X_va)[:,3:6,:])
-            dtb.create_dataset('N_A_t', data=np.asarray(X_tr)[:,6,:])
-            dtb.create_dataset('N_A_e', data=np.asarray(X_va)[:,6,:])
-            dtb.create_dataset('N_G_t', data=np.asarray(X_tr)[:,7,:])
-            dtb.create_dataset('N_G_e', data=np.asarray(X_va)[:,7,:])
-            dtb.create_dataset('y_train', data=np.asarray(y_tr).astype(int) - 1)
-            dtb.create_dataset('y_valid', data=np.asarray(y_va).astype(int) - 1)
+            # Change format
+            mvs, lbl = np.asarray(mvs), np.asarray(lbl)
+            # Serialize the results for the given user
+            with h5py.File(self.path, 'w') as dtb :
+                dtb.create_group(usr)
+                dtb[usr].create_dataset('ACC', data=np.asarray(mvs)[:,0:3,:])
+                dtb[usr].create_dataset('GYR', data=np.asarray(mvs)[:,3:6,:])
+                dtb[usr].create_dataset('N_A', data=np.asarray(mvs)[:,6,:])
+                dtb[usr].create_dataset('N_G', data=np.asarray(mvs)[:,7,:])
+                dtb[usr].create_dataset('y', data=np.asarray(lbl).astype(int) - 1)
         print('|-> Signals serialized ...')
 
 # Build a way to add features vectors
