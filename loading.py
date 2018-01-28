@@ -252,7 +252,7 @@ class SHL_Loader :
         print('|-> Signals serialized ...')
 
     # Defines the testing set
-    def define_test(self, events_per_label=2) :
+    def define_test(self, events_per_label=1) :
 
         # Refers to the created database
         with h5py.File(self.path, 'a') as dtb :
