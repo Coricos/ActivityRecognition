@@ -269,7 +269,7 @@ class SHL_Loader :
                 print('  > Among them : {}'.format(np.unique(lbl)))
                 # Extraction through mask
                 for val in np.unique(lbl) :
-                    for ele in np.random.choice(np.where(lbl == val)[0], size=events_per_label, replace=False) :
+                    for ele in np.random.choice(np.where(lbl == val)[0], size=min(events_per_label, len(np.where(lbl == val)[0])), replace=False) :
                         msk[idx[ele]] = False
                 # Memory efficiency
                 del lab, idx, lbl
