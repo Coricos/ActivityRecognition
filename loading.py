@@ -430,8 +430,9 @@ class Constructor :
                 print('! No {} key recognized ...'.format(typ))
         # Standardize 1D raw signals, boolean for logarithmic transform
         for ele in [('N_A', True), ('N_G', True)] :
+            # Using the right arguments
+            typ, log = ele[0], ele[1]
             try :
-                typ, log = ele[0], ele[1]
                 with h5py.File(self.path, 'r') as dtb : 
                     # Fitting
                     sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler(with_std=False))])
