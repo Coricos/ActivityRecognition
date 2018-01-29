@@ -429,7 +429,7 @@ class Constructor :
             except :
                 print('! No {} key recognized ...'.format(typ))
         # Standardize 1D raw signals, boolean for logarithmic transform
-        for ele in [('N_A', True), ('N_G', True)] :
+        for ele in [('N_A', True), ('N_G', False)] :
             # Using the right arguments
             typ, log = ele[0], ele[1]
             # try :
