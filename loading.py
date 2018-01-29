@@ -429,29 +429,29 @@ class Constructor :
             except :
                 print('! No {} key recognized ...'.format(typ))
         # Standardize 1D raw signals, boolean for logarithmic transform
-        for ele in [('N_A', True), ('N_G', False)] :
+        for ele in [('N_A', True), ('N_G', True)] :
             # Using the right arguments
             typ, log = ele[0], ele[1]
-            # try :
-            with h5py.File(self.path, 'r') as dtb : 
-                # Fitting
-                sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler(with_std=False))])
-                if log : n_a = clear_array(np.log(np.hstack(dtb['{}_t'.format(typ)].value)))
-                else : n_a = clear_array(np.hstack(dtb['{}_t'.format(typ)].value))
-                n_a = sca.fit_transform(n_a.reshape(-1,1)).reshape(n_a.shape[0])
-                n_a = n_a.reshape(dtb['{}_t'.format(typ)].shape[0], dtb['{}_t'.format(typ)].shape[1])
-                out.create_dataset('{}_t'.format(typ), data=n_a[idt])
-                # Spreading
-                n_a = np.log(np.hstack(dtb['{}_e'.format(typ)].value))
-                n_a = sca.transform(n_a.reshape(-1,1)).reshape(n_a.shape[0])
-                n_a = n_a.reshape(dtb['{}_e'.format(typ)].shape[0], dtb['{}_e'.format(typ)].shape[1])
-                out.create_dataset('{}_e'.format(typ), data=n_a[ide])
-                # Memory efficiency
-                put[typ] = sca
-                del sca, n_a
-                print('! Single-axial {} signal scaled ...'.format(typ))
-            # except :
-            #     print('! No {} key recognized ...'.format(typ))
+            try :
+                with h5py.File(self.path, 'r') as dtb : 
+                    # Fitting
+                    sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler(with_std=False))])
+                    if log : n_a = clear_array(np.log(np.hstack(dtb['{}_t'.format(typ)].value)))
+                    else : n_a = clear_array(np.hstack(dtb['{}_t'.format(typ)].value))
+                    n_a = sca.fit_transform(n_a.reshape(-1,1)).reshape(n_a.shape[0])
+                    n_a = n_a.reshape(dtb['{}_t'.format(typ)].shape[0], dtb['{}_t'.format(typ)].shape[1])
+                    out.create_dataset('{}_t'.format(typ), data=n_a[idt])
+                    # Spreading
+                    n_a = np.log(np.hstack(dtb['{}_e'.format(typ)].value))
+                    n_a = sca.transform(n_a.reshape(-1,1)).reshape(n_a.shape[0])
+                    n_a = n_a.reshape(dtb['{}_e'.format(typ)].shape[0], dtb['{}_e'.format(typ)].shape[1])
+                    out.create_dataset('{}_e'.format(typ), data=n_a[ide])
+                    # Memory efficiency
+                    put[typ] = sca
+                    del sca, n_a
+                    print('! Single-axial {} signal scaled ...'.format(typ))
+            except :
+                print('! No {} key recognized ...'.format(typ))
         # Standardize features
         for typ in ['FEA', 'FFT_A', 'FFT_G'] :
             try : 
