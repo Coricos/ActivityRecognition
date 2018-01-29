@@ -1,16 +1,31 @@
 # Author : DINDIN Meryll
 # Date : 12/01/2017
 
-# Launching test on performances
+from loading import *
 from creator import *
 
 # Main instructions
-if __name__ == '__main__' : 
+if __name__ == '__main__' :
 
-	# Load the arguments
-	with open('arguments.pk', 'rb') as raw :
-		args = pickle.load(raw)
-	# Defines the model and make it learn
-	mod = DynamicModel('../data_hapt/database.h5', args)
-	mod.learn('../clfs_hapt/test.h5', max_epochs=5)
-	print(mod.evaluate())
+    # Create all databases
+    for ana in ['Hips', 'Hand', 'Torso'] :
+        # Define the loader
+        loa = SHL_Loader('../data_huawei/Safe_Keeper/dtb_{}.h5'.format(ana), 250, 0.25, ana)
+        loa.load_signals()
+        loa.define_test()
+        del loa
+
+    # Standardize databases
+    for ana in ['Hips', 'Hand', 'Torso'] :
+        # Define the constructor
+        inp = '../data_huawei/Safe_Keeper/dtb_{}.h5'.format(ana)
+        out = '../data_huawei/dtb_{}.h5'.format(ana)
+        Constructor(inp, out).build_database(quaternions=False, standardize=True)
+
+    # Launch the learning tasks
+    with open('arguments.pk', 'rb') as raw : args = pickle.load(raw)
+    for ana in ['Hips', 'Hand', 'Torso'] :
+        # Defines the model and make it learn
+        mod = DynamicModel('../data_huawei/dtb_{}.h5', args)
+        mod.learn('../clfs_hapt/model_{}.h5'.format(ana), max_epochs=50)
+        del mod

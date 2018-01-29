@@ -478,7 +478,7 @@ class Constructor :
         # Avoid corruption
         out.close()
         # Serialize the resulting scalers
-        raw = open('/'.join(self.output.split('/')[:-1]) + '/scalers.pk', 'wb')
+        raw = open(self.output[:-2] + '_scalers.pk', 'wb')
         pickle.dump(put, raw)
         raw.close()
         del put, raw
