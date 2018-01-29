@@ -427,10 +427,11 @@ class Constructor :
                     del sca, acc, sze
                     print('! Multi-axial {} signal scaled ...'.format(typ))
             except :
-                print('! No {} key recognized ...')
+                print('! No {} key recognized ...'.format(typ))
         # Standardize 1D raw signals, boolean for logarithmic transform
-        for typ, log in [('N_A', True), ('N_G', True)] :
-            try : 
+        for ele in [('N_A', True), ('N_G', True)] :
+            try :
+                typ, log = ele[0], ele[1]
                 with h5py.File(self.path, 'r') as dtb : 
                     # Fitting
                     sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler(with_std=False))])
@@ -449,7 +450,7 @@ class Constructor :
                     del sca, n_a
                     print('! Single-axial {} signal scaled ...'.format(typ))
             except :
-                print('! No {} key recognized ...')
+                print('! No {} key recognized ...'.format(typ))
         # Standardize features
         for typ in ['FEA', 'FFT_A', 'FFT_G'] :
             try : 
@@ -466,7 +467,7 @@ class Constructor :
                     del fea, sca
                     print('! Features {} scaled ...'.format(typ))
             except :
-                print('! No {} key recognized ...')
+                print('! No {} key recognized ...'.format(typ))
         # Spread the rest of the keys in the new database
         with h5py.File(self.path, 'r') as dtb :
             for key in dtb.keys() :
@@ -478,7 +479,7 @@ class Constructor :
         # Avoid corruption
         out.close()
         # Serialize the resulting scalers
-        raw = open(self.output[:-2] + '_scalers.pk', 'wb')
+        raw = open(self.output[:-3] + '_scalers.pk', 'wb')
         pickle.dump(put, raw)
         raw.close()
         del put, raw
