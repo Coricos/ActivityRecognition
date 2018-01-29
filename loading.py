@@ -436,8 +436,8 @@ class Constructor :
             with h5py.File(self.path, 'r') as dtb : 
                 # Fitting
                 sca = Pipeline([('mms', MinMaxScaler(feature_range=(-1,1))), ('std', StandardScaler(with_std=False))])
-                if log : n_a = np.log(np.hstack(dtb['{}_t'.format(typ)].value))
-                else : n_a = np.hstack(dtb['{}_t'.format(typ)].value)
+                if log : n_a = clear_array(np.log(np.hstack(dtb['{}_t'.format(typ)].value)))
+                else : n_a = clear_array(np.hstack(dtb['{}_t'.format(typ)].value))
                 n_a = sca.fit_transform(n_a.reshape(-1,1)).reshape(n_a.shape[0])
                 n_a = n_a.reshape(dtb['{}_t'.format(typ)].shape[0], dtb['{}_t'.format(typ)].shape[1])
                 out.create_dataset('{}_t'.format(typ), data=n_a[idt])
