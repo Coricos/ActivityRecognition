@@ -22,6 +22,11 @@ class DynamicModel :
             self.m_e = get_mask(dtb['y_valid'].value, msk_labels)
             self.l_t = dtb['y_train'].value[self.m_t]
             self.l_e = dtb['y_valid'].value[self.m_e]
+        # Translate the labels for categorical learning
+        lbe = LabelEncoder()
+        self.l_t = lbe.fit_transform(self.l_t)
+        self.l_e = lbe.transform(self.l_e)
+        del lbe
 
     # Add convolution model
     def add_CONV_1D(self, channel, dropout) :

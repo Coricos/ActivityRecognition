@@ -20,7 +20,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from sklearn import preprocessing
 from sklearn.neighbors import KDTree
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, LabelEncoder
 from sklearn.pipeline import Pipeline
 from sklearn.externals import joblib
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
