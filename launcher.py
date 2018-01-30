@@ -16,11 +16,11 @@ if __name__ == '__main__' :
     #     del loa
 
     # Standardize databases
-    for ana in ['Hips', 'Hand', 'Torso'] :
-        # Define the constructor
-        inp = '../data_huawei/Safe_Keeper/dtb_{}.h5'.format(ana)
-        out = '../data_huawei/dtb_{}.h5'.format(ana)
-        Constructor(inp, out).standardize()
+    # for ana in ['Hips', 'Hand', 'Torso'] :
+    #     # Define the constructor
+    #     inp = '../data_huawei/Safe_Keeper/dtb_{}.h5'.format(ana)
+    #     out = '../data_huawei/dtb_{}.h5'.format(ana)
+    #     Constructor(inp, out).standardize()
 
     # Launch the learning tasks
     with open('arguments.pk', 'rb') as raw : args = pickle.load(raw)
