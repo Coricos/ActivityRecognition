@@ -397,9 +397,9 @@ class Constructor :
         # Apply shuffling to the data
         with h5py.File(self.path, 'r') as dtb : 
             idt = shuffle(range(dtb['y_train'].shape[0]))
-            out.create_dataset('y_train', data=dtb['y_train'].value[idt])
+            out.create_dataset('y_train', data=dtb['y_train'].value[idt]-1)
             ide = shuffle(range(dtb['y_valid'].shape[0]))
-            out.create_dataset('y_valid', data=dtb['y_valid'].value[ide])
+            out.create_dataset('y_valid', data=dtb['y_valid'].value[ide]-1)
         # Dict where to gather the scalers
         put = dict()
         # Standardize 2D raw signals
