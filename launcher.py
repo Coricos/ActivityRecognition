@@ -26,6 +26,6 @@ if __name__ == '__main__' :
     with open('arguments.pk', 'rb') as raw : args = pickle.load(raw)
     for ana in ['Hips', 'Hand', 'Torso'] :
         # Defines the model and make it learn
-        mod = DynamicModel('../data_huawei/dtb_{}.h5'.format(ana), args)
+        mod = DynamicModel('../data_huawei/dtb_{}.h5'.format(ana), args, msk_labels=[0,5,6,7,8])
         mod.learn('../clfs_hapt/model_{}.h5'.format(ana), max_epochs=50)
         del mod
