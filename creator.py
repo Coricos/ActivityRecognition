@@ -28,6 +28,11 @@ class DynamicModel :
         self.l_e = lbe.transform(self.l_e)
         del lbe
 
+    # Ability to load an existing model
+    def load_model(self, path) :
+
+        self.model = load_model(path)
+
     # Add convolution model
     def add_CONV_1D(self, channel, dropout) :
 
@@ -259,7 +264,7 @@ class DynamicModel :
         # Gather predictions
         prd = []
         # Use the validation generator to determine the performances
-        for ind in range(int(self.l_e / 100) + 1) :
+        for ind in range(int(len(self.l_e) / 100) + 1) :
             vec, _ = self.valid_generator(batch_size=100)
             prd += [np.argmax(pbs) for pbs in self.model.predict(vec)]
         # Returns the corresponding dataframe
