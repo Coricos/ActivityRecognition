@@ -256,7 +256,11 @@ class DynamicModel :
     # Observe its performance
     def evaluate(self) :
 
-        # Compute the predictions
-        prd = [np.argmax(pbs) for pbs in self.model.predict(self.valid)]
+        # Gather predictions
+        prd = []
+        # Use the validation generator to determine the performances
+        for ind in range(int(self.l_e / 100) + 1) :
+            vec, _ = self.valid_generator(batch_size=100)
+            prd += [np.argmax(pbs) for pbs in self.model.predict(vec)]
         # Returns the corresponding dataframe
         return score_verbose(self.l_e, prd)
