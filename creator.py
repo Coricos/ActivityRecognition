@@ -259,16 +259,17 @@ class DynamicModel :
         return self
 
     # Observe its performance
-    def evaluate(self) :
+    def evaluate(self, batch_size=100) :
 
         # Gather predictions
         prd, ind = [], 0
         # Use the validation generator to determine the performances
-        gen = self.valid_generator(batch_size=100)
+        gen = self.valid_generator(batch_size=batch_size)
         for vec in gen :
-            if ind < int(len(self.l_e) / 100) : 
+            if ind < int(len(self.l_e) / batch_size) : 
                 vec = vec[0]
                 prd += [np.argmax(pbs) for pbs in self.model.predict(vec)]
+                ind += 1
             else : 
                 break
         print(len(self.l_e))
