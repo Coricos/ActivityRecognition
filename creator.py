@@ -262,10 +262,16 @@ class DynamicModel :
     def evaluate(self) :
 
         # Gather predictions
-        prd = []
+        prd, ind = [], 0
         # Use the validation generator to determine the performances
-        for ind in range(int(len(self.l_e) / 100) + 1) :
-            vec, _ = self.valid_generator(batch_size=100)
-            prd += [np.argmax(pbs) for pbs in self.model.predict(vec)]
+        gen = self.valid_generator(batch_size=100)
+        for vec in gen :
+            if ind < int(len(self.l_e) / 100) : 
+                vec = vec[0]
+                prd += [np.argmax(pbs) for pbs in self.model.predict(vec)]
+            else : 
+                break
+        print(len(self.l_e))
+        print(len(prd))
         # Returns the corresponding dataframe
         return score_verbose(self.l_e, prd)
