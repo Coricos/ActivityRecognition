@@ -190,14 +190,15 @@ class DynamicModel :
             ind += batch_size
 
     # Defines a GPU-oriented fit_generator
-    def valid_generator(self, batch_size=32) :
+    def valid_generator(self, batch_size=32, evaluate=False) :
 
         # Initialization
         ind = 0
         # Infinite generator
         while True :
             # Reinitialize when going too far
-            if ind + batch_size >= len(np.where(self.m_e == True)[0]) : ind = 0
+            if evaluate and ind > len(np.where(self.m_e == True)[0]) : ind = 0
+            elif ind + batch_size >= len(np.where(self.m_e == True)[0]) : ind = 0
             # Initialization of data vector
             vec = []
             # Creating batch
@@ -264,7 +265,7 @@ class DynamicModel :
         # Gather predictions
         prd, ind = [], 0
         # Use the validation generator to determine the performances
-        gen = self.valid_generator(batch_size=batch_size)
+        gen = self.valid_generator(batch_size=batch_size, evaluate=True)
         for vec in gen :
             if ind < int(len(self.l_e) / batch_size) : 
                 vec = vec[0]
