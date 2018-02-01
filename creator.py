@@ -197,8 +197,10 @@ class DynamicModel :
         # Infinite generator
         while True :
             # Reinitialize when going too far
-            if evaluate and ind > len(np.where(self.m_e == True)[0]) : ind = 0
-            elif ind + batch_size >= len(np.where(self.m_e == True)[0]) : ind = 0
+            if evaluate : 
+                if ind > len(np.where(self.m_e == True)[0]) : ind = 0
+            else :
+                if ind + batch_size >= len(np.where(self.m_e == True)[0]) : ind = 0
             # Initialization of data vector
             vec = []
             # Creating batch
