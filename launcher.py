@@ -24,10 +24,20 @@ if __name__ == '__main__' :
 
     # Launch the learning tasks
     with open('arguments.pk', 'rb') as raw : args = pickle.load(raw)
-    # for ana in ['Hips', 'Hand', 'Torso'] :
-        # Defines the model and make it learn
+    # Defines the model and make it learn
     ana = 'Hips'
-    mod = DynamicModel('../data_huawei/dtb_{}.h5'.format(ana), args, msk_labels=[0,5,6,7])
-    mod.load_model('../clfs_hapt/model_{}.h5'.format(ana))
+    mod = DynamicModel('../data_huawei/dtb_{}.h5'.format(ana), args, msk_labels=[4,5,6,7])
+    mod.load_model('../clfs_huawei/model_{}_basic.h5'.format(ana))
     dtf = mod.evaluate()
-    print(dtf)
+    dtf.to_pickle('../clfs_huawei/score_{}_basic.h5'.format(ana))
+    del mod, dtf
+    mod = DynamicModel('../data_huawei/dtb_{}.h5'.format(ana), args, msk_labels=[0,1,2,3])
+    mod.load_model('../clfs_huawei/model_{}_transport.h5'.format(ana))
+    dtf = mod.evaluate()
+    dtf.to_pickle('../clfs_huawei/score_{}_transport.h5'.format(ana))
+    del mod, dtf
+    mod = DynamicModel('../data_huawei/dtb_{}.h5'.format(ana), args)
+    mod.load_model('../clfs_huawei/model_{}.h5'.format(ana))
+    dtf = mod.evaluate()
+    dtf.to_pickle('../clfs_huawei/score_{}.h5'.format(ana))
+    del mod, dtf

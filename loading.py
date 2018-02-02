@@ -230,6 +230,7 @@ class SHL_Loader :
                 idx = np.split(range(lab.shape[0]), np.where(np.diff(lab[:,1]) != 0)[0] + 1)
                 print('|-> Signal may be split into {} events'.format(len(idx)))
                 for ind, ele in enumerate(idx) :
+                    # Delete the weird phases in between activities
                     if np.unique(lab[:,1][ele])[0] == 0 : pass
                     else : 
                         tmp = slice_signal(dtf[ele,1:7])
