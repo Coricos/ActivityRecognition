@@ -28,6 +28,6 @@ if __name__ == '__main__' :
         # Defines the model and make it learn
     ana = 'Hips'
     mod = DynamicModel('../data_huawei/dtb_{}.h5'.format(ana), args, msk_labels=[0,5,6,7])
-    mod.load_model('../clfs_hapt/model_{}.h5'.format(ana), max_epochs=50)
+    mod.load_model('../clfs_hapt/model_{}.h5'.format(ana))
     dtf = mod.evaluate()
     print(dtf)
