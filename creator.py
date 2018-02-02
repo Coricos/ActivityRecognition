@@ -269,7 +269,7 @@ class DynamicModel :
         # Use the validation generator to determine the performances
         gen = self.valid_generator(batch_size=batch_size, evaluate=True)
         for vec in gen :
-            if ind < int(len(self.l_e) / batch_size) : 
+            if ind <= int(len(self.l_e) / batch_size) : 
                 vec = vec[0]
                 prd += [np.argmax(pbs) for pbs in self.model.predict(vec)]
                 ind += 1
