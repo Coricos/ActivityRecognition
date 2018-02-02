@@ -22,6 +22,8 @@ class DynamicModel :
             self.m_e = get_mask(dtb['y_valid'].value, msk_labels)
             self.l_t = dtb['y_train'].value[self.m_t]
             self.l_e = dtb['y_valid'].value[self.m_e]
+        # Define the number of classes
+        self.num_classes = len(np.unique(list(self.l_t) + list(self.l_e)))
         # Translate the labels for categorical learning
         lbe = LabelEncoder()
         self.l_t = lbe.fit_transform(self.l_t)
@@ -185,7 +187,7 @@ class DynamicModel :
                         for idx in range(4) :
                             vec.append(dtb['{}_{}_t'.format(channel, idx)][list(i_t[ind:ind+batch_size])])
             # Yield the resulting vector
-            yield(vec, np_utils.to_categorical(self.l_t[ind:ind+batch_size], num_classes=len(np.unique(self.l_t))))
+            yield(vec, np_utils.to_categorical(self.l_t[ind:ind+batch_size], num_classes=self.num_classes))
             # Increments over the batch
             ind += batch_size
 
@@ -219,7 +221,7 @@ class DynamicModel :
                         for idx in range(4) :
                             vec.append(dtb['{}_{}_e'.format(channel, idx)][list(i_e[ind:ind+batch_size])])
             # Yield the resulting vector
-            yield(vec, np_utils.to_categorical(self.l_e[ind:ind+batch_size], num_classes=len(np.unique(self.l_t))))
+            yield(vec, np_utils.to_categorical(self.l_e[ind:ind+batch_size], num_classes=self.num_classes))
             # Increments over the batch
             ind += batch_size
 
