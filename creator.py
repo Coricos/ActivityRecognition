@@ -224,7 +224,7 @@ class DynamicModel :
             ind += batch_size
 
     # Lauch the fit
-    def learn(self, output, dropout=0.33, verbose=1, max_epochs=100) :
+    def learn(self, output, dropout=0.33, patience=10, verbose=1, max_epochs=100) :
 
         # Build the corresponding model
         self.build(dropout=dropout)
@@ -243,8 +243,8 @@ class DynamicModel :
         model = Model(inputs=self.input, outputs=model)
         model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
         # Implements the early stopping    
-        early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=20, verbose=0, mode='auto')
-        check = ModelCheckpoint(output, period=3, monitor='val_acc', save_best_only=True, mode='auto', save_weights_only=False)
+        early = EarlyStopping(monitor='val_acc', min_delta=1e-5, patience=patience, verbose=0, mode='auto')
+        check = ModelCheckpoint(output, period=2, monitor='val_acc', save_best_only=True, mode='auto', save_weights_only=False)
         # Fit the model
         model.fit_generator(self.train_generator(batch_size=32),
                             verbose=verbose, epochs=max_epochs,
@@ -254,7 +254,6 @@ class DynamicModel :
                             validation_steps=int(len(np.where(self.m_e == True)[0])/32),
                             class_weight=class_weight(self.l_t))
         # Save model as attribute
-        model.save(output)
         self.model = model
         # Memory efficiency
         del self.l_t, self.merge, self.input, early, check, model
