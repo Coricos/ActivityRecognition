@@ -1,7 +1,7 @@
 # Author : DINDIN Meryll
 # Date : 12/01/2017
 
-from loading import *
+# from loading import *
 from creator import *
 
 # Main instructions
@@ -24,8 +24,10 @@ if __name__ == '__main__' :
 
     # Launch the learning tasks
     with open('arguments.pk', 'rb') as raw : args = pickle.load(raw)
-    for ana in ['Hips', 'Hand', 'Torso'] :
+    # for ana in ['Hips', 'Hand', 'Torso'] :
         # Defines the model and make it learn
-        mod = DynamicModel('../data_huawei/dtb_{}.h5'.format(ana), args, msk_labels=[0,5,6,7,8])
-        mod.learn('../clfs_hapt/model_{}.h5'.format(ana), max_epochs=50)
-        del mod
+    ana = 'Hips'
+    mod = DynamicModel('../data_huawei/dtb_{}.h5'.format(ana), args, msk_labels=[0,5,6,7])
+    mod.load_model('../clfs_hapt/model_{}.h5'.format(ana), max_epochs=50)
+    dtf = mod.evaluate()
+    print(dtf)
