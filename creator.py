@@ -224,7 +224,7 @@ class DynamicModel :
             ind += batch_size
 
     # Lauch the fit
-    def learn(self, output, dropout=0.5, verbose=1, max_epochs=100) :
+    def learn(self, output, dropout=0.33, verbose=1, max_epochs=100) :
 
         # Build the corresponding model
         self.build(dropout=dropout)
