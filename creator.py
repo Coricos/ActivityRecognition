@@ -275,7 +275,5 @@ class DynamicModel :
                 ind += 1
             else : 
                 break
-        print(len(self.l_e))
-        print(len(prd))
         # Returns the corresponding dataframe
         return score_verbose(self.l_e, prd)
