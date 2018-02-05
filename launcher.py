@@ -1,8 +1,8 @@
 # Author : DINDIN Meryll
 # Date : 12/01/2017
 
-# from loading import *
-from creator import *
+# from database import *
+from model import *
 
 # Main instructions
 if __name__ == '__main__' :
@@ -26,17 +26,17 @@ if __name__ == '__main__' :
     with open('arguments.pk', 'rb') as raw : args = pickle.load(raw)
     # Defines the model and make it learn
     ana = 'Hips'
-    mod = DynamicModel('../data_huawei/dtb_{}.h5'.format(ana), args, msk_labels=[4,5,6,7])
+    mod = DModel('../data_huawei/dtb_{}.h5'.format(ana), args, msk_labels=[4,5,6,7])
     mod.learn('../clfs_huawei/model_{}_basic.h5'.format(ana))
     dtf = mod.evaluate()
     dtf.to_pickle('../clfs_huawei/score_{}_basic.h5'.format(ana))
     del mod, dtf
-    mod = DynamicModel('../data_huawei/dtb_{}.h5'.format(ana), args, msk_labels=[0,1,2,3])
+    mod = DModel('../data_huawei/dtb_{}.h5'.format(ana), args, msk_labels=[1,2,3])
     mod.learn('../clfs_huawei/model_{}_transport.h5'.format(ana))
     dtf = mod.evaluate()
     dtf.to_pickle('../clfs_huawei/score_{}_transport.h5'.format(ana))
     del mod, dtf
-    mod = DynamicModel('../data_huawei/dtb_{}.h5'.format(ana), args)
+    mod = DModel('../data_huawei/dtb_{}.h5'.format(ana), args)
     mod.learn('../clfs_huawei/model_{}.h5'.format(ana))
     dtf = mod.evaluate()
     dtf.to_pickle('../clfs_huawei/score_{}.h5'.format(ana))
