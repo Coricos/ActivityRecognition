@@ -25,10 +25,10 @@ if __name__ == '__main__' :
     # Launch the learning tasks
     with open('arguments.pk', 'rb') as raw : args = pickle.load(raw)
     # Defines the model and make it learn
-    for ana in ['Hips', 'Hand'] :
-        for typ in ['', '_basic', '_transport'] :
-            mod = DModel('../data_huawei/dtb_{}.h5'.format(ana), args, msk_labels=[4,5,6,7])
-            mod.load_model('../clfs_huawei/model_{}{}.h5'.format(ana, typ))
+    for ana in ['Torso'] :
+        for typ, msk in zip(['', '_basic', '_transport'], [[4,5,6,7], [0,1,2,3], []]) :
+            mod = DModel('../data_huawei/dtb_{}.h5'.format(ana), args, msk_labels=msk)
+            mod.learn('../clfs_huawei/model_{}{}.h5'.format(ana, typ))
             dtf = mod.evaluate()
             dtf.to_pickle('../clfs_huawei/score_{}{}.h5'.format(ana, typ))
             del mod, dtf
