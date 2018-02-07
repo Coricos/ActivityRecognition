@@ -28,7 +28,7 @@ if __name__ == '__main__' :
     for ana in ['Hips', 'Hand'] :
         for typ in ['', '_basic', '_transport'] :
             mod = DModel('../data_huawei/dtb_{}.h5'.format(ana), args, msk_labels=[4,5,6,7])
-            mod.load_model('../clfs_huawei/clf_{}{}.h5'.format(ana, typ))
+            mod.load_model('../clfs_huawei/model_{}{}.h5'.format(ana, typ))
             dtf = mod.evaluate()
             dtf.to_pickle('../clfs_huawei/score_{}{}.h5'.format(ana, typ))
             del mod, dtf
