@@ -25,19 +25,10 @@ if __name__ == '__main__' :
     # Launch the learning tasks
     with open('arguments.pk', 'rb') as raw : args = pickle.load(raw)
     # Defines the model and make it learn
-    ana = 'Hips'
-    mod = DModel('../data_huawei/dtb_{}.h5'.format(ana), args, msk_labels=[4,5,6,7])
-    mod.learn('../clfs_huawei/model_{}_basic.h5'.format(ana))
-    dtf = mod.evaluate()
-    dtf.to_pickle('../clfs_huawei/score_{}_basic.h5'.format(ana))
-    del mod, dtf
-    mod = DModel('../data_huawei/dtb_{}.h5'.format(ana), args, msk_labels=[1,2,3])
-    mod.learn('../clfs_huawei/model_{}_transport.h5'.format(ana))
-    dtf = mod.evaluate()
-    dtf.to_pickle('../clfs_huawei/score_{}_transport.h5'.format(ana))
-    del mod, dtf
-    mod = DModel('../data_huawei/dtb_{}.h5'.format(ana), args)
-    mod.learn('../clfs_huawei/model_{}.h5'.format(ana))
-    dtf = mod.evaluate()
-    dtf.to_pickle('../clfs_huawei/score_{}.h5'.format(ana))
-    del mod, dtf
+    for ana in ['Hips', 'Hand'] :
+        for typ in ['', '_basic', '_transport'] :
+            mod = DModel('../data_huawei/dtb_{}.h5'.format(ana), args, msk_labels=[4,5,6,7])
+            mod.load_model('../clfs_huawei/clf_{}{}.h5'.format(ana, typ))
+            dtf = mod.evaluate()
+            dtf.to_pickle('../clfs_huawei/score_{}{}.h5'.format(ana, typ))
+            del mod, dtf
