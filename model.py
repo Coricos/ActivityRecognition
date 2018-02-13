@@ -265,17 +265,21 @@ class DModel :
     # Observe its performance
     def evaluate(self, batch_size=100) :
 
-        print(len(self.l_e))
         # Gather predictions
         prd, ind = [], 0
         # Use the validation generator to determine the performances
         gen = self.valid_generator(batch_size=batch_size, evaluate=True)
         for vec in gen :
-            if ind <= int(len(self.l_e) / batch_size) : 
+            # Defines the right stop according to the batch_size
+            if (len(self.l_e) / batch_size) - int(len(self.l_e) / batch_size) == 0 : 
+                end = int(len(self.l_e) / batch_size) - 1
+            else :
+                end = int(len(self.l_e) / batch_size)
+            # Iterate according to the right stopping point
+            if ind <= end : 
                 vec = vec[0]
                 prd += [np.argmax(pbs) for pbs in self.model.predict(vec)]
                 ind += 1
-                print(ind*batch_size)
             else : 
                 break
         # Returns the corresponding dataframe
