@@ -265,6 +265,7 @@ class DModel :
     # Observe its performance
     def evaluate(self, batch_size=100) :
 
+        print(len(self.l_e))
         # Gather predictions
         prd, ind = [], 0
         # Use the validation generator to determine the performances
@@ -274,6 +275,7 @@ class DModel :
                 vec = vec[0]
                 prd += [np.argmax(pbs) for pbs in self.model.predict(vec)]
                 ind += 1
+                print(ind*batch_size)
             else : 
                 break
         # Returns the corresponding dataframe
