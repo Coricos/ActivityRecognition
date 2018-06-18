@@ -16,21 +16,14 @@ class ML_Model:
         # Attributes
         self.input = path
         self.njobs = threads
-        # Clearer definition
-        msk_labels = list(np.unique(msk_labels))
 
         # Apply on the data
         with h5py.File(self.inp, 'r') as dtb:
             # Load the labels and initialize training and testing sets
-            self.m_t = get_mask(dtb['label_t'].value, lab_to_del=msk_labels)
-            self.l_t = dtb['label_t'].value[self.m_t]
-            self.m_e = get_mask(dtb['label_e'].value, lab_to_del=msk_labels)            
-            self.l_e = dtb['label_e'].value[self.m_e]
-            try: 
-                self.m_v = get_mask(dtb['label_v'].value, lab_to_del=msk_labels)
-                self.l_v = dtb['label_v'].value[self.m_v]
-            except: 
-                pass
+            self.l_t = dtb['label_t'].value           
+            self.l_e = dtb['label_e'].value
+            try: self.l_v = dtb['label_v'].value
+            except: pass
             # Memory efficiency
             del msk_labels
 
@@ -49,10 +42,8 @@ class ML_Model:
 
         # Load the data
         with h5py.File(self.inp, 'r') as dtb:
-            tmp = np.hstack((dtb['fea_t'].value, dtb['fft_a_t'].value, dtb['fft_g_t'].value))
-            self.train = tmp[self.m_t]
-            tmp = np.hstack((dtb['fea_e'].value, dtb['fft_a_e'].value, dtb['fft_g_e'].value))
-            self.valid = tmp[self.m_e]
+            self.train = np.hstack((dtb['fea_t'].value, dtb['fft_a_t'].value, dtb['fft_g_t'].value))
+            self.valid = np.hstack((dtb['fea_e'].value, dtb['fft_a_e'].value, dtb['fft_g_e'].value))
 
         # Defines the different folds on which to apply the Hyperband
         self.folds = KFold(n_splits=5, shuffle=True)
@@ -144,7 +135,6 @@ class ML_Model:
             # Compute the predictions for validation set
             with h5py.File(self.inp, 'r') as dtb:
                 val = np.hstack((dtb['fea_v'].value, dtb['fft_a_v'].value, dtb['fft_g_v'].value))
-                val = val[self.m_v]
             prd = clf.predict(val)
             build_matrix(prd, self.l_v, 'VALID')
             del val, prd

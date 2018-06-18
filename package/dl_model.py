@@ -401,3 +401,125 @@ class DL_Model :
         with open(self.his, 'wb') as raw: pickle.dump(his.history, raw)
         # Memory efficiency
         del model, arg, early, check, shuff, his
+
+    # Generates figure of training history
+    def generate_figure(self):
+
+        # Load model history
+        with open(self.his, 'rb') as raw: dic = pickle.load(raw)
+
+        # Generates the plot
+        plt.figure(figsize=(18,4))        
+        fig = gd.GridSpec(2,2)
+
+        plt.subplot(fig[:,0])
+        acc, val = dic['acc'], dic['val_acc']
+        plt.title('Accuracy Evolution - Classification')
+        plt.plot(range(len(acc)), acc, c='orange', label='Train')
+        plt.scatter(range(len(val)), val, marker='x', s=50, c='grey', label='Test')
+        plt.legend(loc='best')
+        plt.grid()
+        plt.xlabel('Epochs')
+        plt.ylabel('Accuracy')
+
+        plt.subplot(fig[:,1])
+        plt.title('Losses Evolution')
+        plt.plot(dic['loss'], c='orange', label='Train Loss')
+        plt.plot(dic['val_loss'], c='grey', label='Test Loss')
+
+        plt.legend(loc='best')
+        plt.grid()
+        plt.xlabel('Epochs')
+        plt.ylabel('Loss')
+
+        plt.tight_layout()
+        plt.show()
+
+    # Rebuild the model from the saved weights
+    # n_tail refers to the amount of layers to merge the channels
+    def reconstruct(self, n_tail=5):
+      
+        # Build the model
+        model = self.build(0.3, n_tail)
+        # Build and compile the model
+        model = Model(inputs=self.inputs, outputs=model)
+        # Load the appropriate weights
+        model.load_weights(self.mod)
+        # Save as attriubte
+        self.clf = model
+
+    # Validate on the unseen samples
+    # fmt refers to whether apply it for testing or validation
+    # n_tail refers to the marker for the model reconstruction
+    # batch refers to the batch size
+    def predict(self, fmt, n_tail=5, batch=512):
+
+        # Load the best model saved
+        if not hasattr(self, 'clf'): self.reconstruct(n_tail=n_tail)
+
+        # Defines the size of the validation set
+        if fmt == 'e': 
+            sze = len(self.l_e)
+        if fmt == 'v': 
+            with h5py.File(self.inp, 'r') as dtb: 
+                sze = dtb['label_v'].shape[0]
+
+        # Defines the tools for prediction
+        gen, ind, prd = self.valid_generator(fmt, batch=batch), 0, []
+
+        for vec in gen:
+            # Defines the right stop according to the batch_size
+            if (sze / batch) - int(sze / batch) == 0 : end = int(sze / batch) - 1
+            else : end = int(sze / batch)
+            # Iterate according to the right stopping point
+            if ind <= end :
+                prd += [np.argmax(pbs) for pbs in self.clf.predict(vec)]
+                ind += 1
+            else : 
+                break
+
+        return np.asarray(prd)
+
+    # Generates the confusion matrixes for train, test and validation sets
+    # n_tail refers to the amount of layers to merge the channels
+    # on_test and on_validation are both booleans for confusion matrix display
+    def confusion_matrix(self, n_tail=5, on_test=True, on_validation=True):
+
+        # Avoid unnecessary logs
+        warnings.simplefilter('ignore')
+
+        # Method to build and display the confusion matrix
+        def build_matrix(prd, true, title):
+
+            lab = np.unique(list(prd) + list(true))
+            cfm = confusion_matrix(true, prd)
+            cfm = pd.DataFrame(cfm, index=lab, columns=lab)
+
+            fig = plt.figure(figsize=(18,6))
+            htp = sns.heatmap(cfm, annot=True, fmt='d', linewidths=1.)
+            pth = self.out.split('/')[-1]
+            acc = accuracy_score(true, prd)
+            kap = kappa_score(true, prd)
+            tle = '{} | {} | Accuracy: {:.2%} | Kappa: {:.2%}'
+            plt.title(tle.format(title, pth, acc, kap))
+            htp.yaxis.set_ticklabels(htp.yaxis.get_ticklabels(), 
+                rotation=0, ha='right', fontsize=12)
+            htp.xaxis.set_ticklabels(htp.xaxis.get_ticklabels(), 
+                rotation=45, ha='right', fontsize=12)
+            plt.ylabel('True label') 
+            plt.xlabel('Predicted label')
+            plt.show()
+
+        if on_test:
+            # Compute the predictions for test set
+            prd = self.predict('e', n_tail=n_tail)
+            build_matrix(prd, self.l_e, 'TEST')
+            del prd
+
+        if on_validation:
+            # Compute the predictions for validation set
+            with h5py.File(self.inp, 'r') as dtb:
+                prd = self.predict('v', n_tail=n_tail)
+                build_matrix(prd, self.l_v, 'VALID')
+                del val, prd
+
