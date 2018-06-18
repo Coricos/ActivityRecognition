@@ -64,7 +64,7 @@ class ML_Model:
         # Defines the random search through cross-validation
         hyp = Hyperband(get_params, try_params, max_iter=max_iter, n_jobs=self.threads)
         res = hyp.run(nme, val, skip_last=1)
-        res = sorted(res, key = lambda x: x[key])[0]
+        res = sorted(res, key = lambda x: x['acc'])[0]
 
         # Extract the best estimator
         if nme == 'RFS':
