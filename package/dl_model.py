@@ -22,6 +22,8 @@ class DL_Model :
             # Load the labels and initialize training and testing sets
             self.l_t = dtb['label_t'].value
             self.l_e = dtb['label_e'].value
+            try: self.l_v = dtb['label_v'].value
+            except: pass
         # Define the number of classes
         self.classes = np.unique(list(self.l_t) + list(self.l_e))
         # Translate the labels for categorical learning
@@ -29,6 +31,8 @@ class DL_Model :
         self.lbe.fit(self.classes)
         self.l_t = self.lbe.transform(self.l_t)
         self.l_e = self.lbe.transform(self.l_e)
+        try: self.l_v = self.lbe.transform(self.l_v)
+        except: pass
         # Prepares the path for storage
         if marker: 
             self.mod = './models/MOD_{}.weights'.format(marker)
