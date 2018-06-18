@@ -41,7 +41,7 @@ class Hyperband:
     # key refers to the name of the regressor used
     # data is a dictionnary whose keys points towards the data used by the models
     # skip_last for quicker bandit selection
-    def run(self, key, data, strategy, skip_last=0):
+    def run(self, key, data, skip_last=0):
         
         for s in reversed(range(self.s_max + 1)):
             
@@ -59,7 +59,7 @@ class Hyperband:
                 n_configs = n * self.eta ** (-i)
 
                 # Defines the partial function relative to evaluation
-                fun = partial(self.try_params, key=key, data=data, objective=strategy)
+                fun = partial(self.try_params, key=key, data=data)
 
                 # Multiprocessed bandit branches if needed
                 pol = multiprocessing.Pool(processes=self.n_jobs)

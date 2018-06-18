@@ -15,7 +15,7 @@ class ML_Model:
 
         # Attributes
         self.inp = path
-        self.njobs = threads
+        self.threads = threads
 
         # Apply on the data
         with h5py.File(self.inp, 'r') as dtb:
