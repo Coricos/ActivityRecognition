@@ -171,7 +171,7 @@ class DL_Model :
             if self.cls['with_n_a_cv1']:
 
                 with h5py.File(self.inp, 'r') as dtb:
-                    vec.append(dtb['n_acc_{}'.format(idx, fmt)][ind:ind+batch])
+                    vec.append(dtb['n_acc_{}'.format(fmt)][ind:ind+batch])
 
             if self.cls['with_gyr_cv1']:
 
@@ -193,7 +193,7 @@ class DL_Model :
             if self.cls['with_n_g_cv1']:
 
                 with h5py.File(self.inp, 'r') as dtb:
-                    vec.append(dtb['n_gyr_{}'.format(idx, fmt)][ind:ind+batch])
+                    vec.append(dtb['n_gyr_{}'.format(fmt)][ind:ind+batch])
 
             if self.cls['with_qua_cv2']:
 
@@ -209,13 +209,13 @@ class DL_Model :
             if self.cls['with_fea']:
 
                 with h5py.File(self.inp, 'r') as dtb:
-                    vec.append(dtb['fea_{}'.format(idx, fmt)][ind:ind+batch])
+                    vec.append(dtb['fea_{}'.format(fmt)][ind:ind+batch])
 
             if self.cls['with_fft']:
 
                 with h5py.File(self.inp, 'r') as dtb:
-                    vec.append(dtb['fft_a_{}'.format(idx, fmt)][ind:ind+batch])
-                    vec.append(dtb['fft_g_{}'.format(idx, fmt)][ind:ind+batch])
+                    vec.append(dtb['fft_a_{}'.format(fmt)][ind:ind+batch])
+                    vec.append(dtb['fft_g_{}'.format(fmt)][ind:ind+batch])
 
             yield(vec)
 
@@ -392,7 +392,7 @@ class DL_Model :
                     steps_per_epoch=len(self.l_t)//batch, verbose=1, 
                     epochs=max_epochs, callbacks=[self.drp, early, check, shuff],
                     shuffle=True, validation_steps=len(self.l_e)//batch,
-                    validation_data=self.valid_generator('e', batch=batch), 
+                    validation_data=self.train_generator('e', batch=batch), 
                     class_weight=class_weight(self.l_t))
 
         # Serialize the training history
