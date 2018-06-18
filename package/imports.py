@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sb
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
+import matplotlib.gridspec as gd
 
 import os, tqdm, h5py, pickle, multiprocessing
 import tensorflow, itertools, math, glob
