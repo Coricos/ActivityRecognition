@@ -276,10 +276,6 @@ class DL_Model :
         mod = Convolution2D(128, (1, 10), data_format='channels_first', **arg)(mod)
         mod = BatchNormalization(axis=1)(mod)
         mod = PReLU()(mod)
-        mod = AdaptiveDropout(callback.prb, callback)(mod)
-        mod = Convolution2D(128, (1, 10), data_format='channels_first', **arg)(mod)
-        mod = BatchNormalization(axis=1)(mod)
-        mod = PReLU()(mod)
         mod = GlobalAveragePooling2D()(mod)
         mod = AdaptiveDropout(callback.prb, callback)(mod)
 
