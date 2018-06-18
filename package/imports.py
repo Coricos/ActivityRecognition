@@ -22,6 +22,9 @@ from functools import partial
 from scipy.stats import randint, moment, kurtosis, skew
 from mpl_toolkits.mplot3d import Axes3D
 
+import xgboost as xgb
+import lightgbm as lgb
+
 from sklearn import preprocessing
 from sklearn.neighbors import KDTree
 from sklearn.ensemble import RandomForestClassifier
