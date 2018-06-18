@@ -497,10 +497,9 @@ class DL_Model :
 
             fig = plt.figure(figsize=(18,6))
             htp = sns.heatmap(cfm, annot=True, fmt='d', linewidths=1.)
-            pth = self.out.split('/')[-1]
+            pth = self.mod.split('/')[-1]
             acc = accuracy_score(true, prd)
-            kap = kappa_score(true, prd)
-            tle = '{} | {} | Accuracy: {:.2%} | Kappa: {:.2%}'
+            tle = '{} | {} | Accuracy: {:.2%}'
             plt.title(tle.format(title, pth, acc, kap))
             htp.yaxis.set_ticklabels(htp.yaxis.get_ticklabels(), 
                 rotation=0, ha='right', fontsize=12)
