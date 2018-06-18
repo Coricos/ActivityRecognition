@@ -1,10 +1,8 @@
-*.pk
-*.pyc
-.ipynb_checkpoints/
-Raw_Data/
-Fea_Data/
-SHL_Data/
-Models/
-draft.ipynb
-database.h5
-nohup.out
+# Unnecessary repositories
+./dataset/*
+./__pycache__/*
+./SHL/*
+./HAPT/*
+
+# Notebooks
+./draft.ipynb
