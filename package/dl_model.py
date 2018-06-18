@@ -396,6 +396,6 @@ class DL_Model :
                     class_weight=class_weight(self.l_t))
 
         # Serialize the training history
-        with open(self.his, 'wb') as raw: pickle.dump(his, raw)
+        with open(self.his, 'wb') as raw: pickle.dump(his.history, raw)
         # Memory efficiency
         del model, arg, early, check, shuff, his
