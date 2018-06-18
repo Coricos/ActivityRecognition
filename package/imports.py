@@ -11,6 +11,10 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gd
 
+from math import log, ceil
+from hyperopt import hp
+from hyperopt.pyll.stochastic import sample
+
 import os, tqdm, h5py, pickle, multiprocessing
 import tensorflow, itertools, math, glob
 
