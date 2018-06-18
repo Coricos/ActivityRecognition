@@ -112,9 +112,8 @@ class ML_Model:
             htp = sns.heatmap(cfm, annot=True, fmt='d', linewidths=1.)
             pth = self.mod.split('/')[-1]
             acc = accuracy_score(true, prd)
-            kap = kappa_score(true, prd)
-            tle = '{} | {} | Accuracy: {:.2%} | Kappa: {:.2%}'
-            plt.title(tle.format(title, pth, acc, kap))
+            tle = '{} | {} | Accuracy: {:.2%}'
+            plt.title(tle.format(title, pth, acc))
             htp.yaxis.set_ticklabels(htp.yaxis.get_ticklabels(), 
                 rotation=0, ha='right', fontsize=12)
             htp.xaxis.set_ticklabels(htp.xaxis.get_ticklabels(), 
