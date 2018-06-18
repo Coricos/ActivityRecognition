@@ -14,7 +14,7 @@ class ML_Model:
     def __init__(self, path, threads=multiprocessing.cpu_count()):
 
         # Attributes
-        self.input = path
+        self.inp = path
         self.njobs = threads
 
         # Apply on the data
