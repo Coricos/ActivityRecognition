@@ -24,8 +24,6 @@ class ML_Model:
             self.l_e = dtb['label_e'].value
             try: self.l_v = dtb['label_v'].value
             except: pass
-            # Memory efficiency
-            del msk_labels
 
         # Suppress the missing labels for categorical learning
         self.lbe = LabelEncoder()

@@ -28,7 +28,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, LabelEncoder
 from sklearn.pipeline import Pipeline
 from sklearn.externals import joblib
-from sklearn.model_selection import train_test_split, RandomizedSearchCV
+from sklearn.model_selection import train_test_split, KFold
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.metrics import roc_curve, auc, f1_score, recall_score, precision_score, accuracy_score
 from sklearn.metrics import confusion_matrix, mean_squared_error, roc_auc_score
