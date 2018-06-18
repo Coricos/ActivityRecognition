@@ -309,8 +309,9 @@ class DL_Model :
 
         if self.cls['with_acc_cv1']:
             with h5py.File(self.inp, 'r') as dtb:
-                inp = Input(shape=(dtb['acc_x_t'].shape[1],))
-            for idx in range(3): self.build_CONV1D(inp, self.drp, arg)
+                for idx in range(3):
+                    inp = Input(shape=(dtb['acc_x_t'].shape[1],))
+                    self.build_CONV1D(inp, self.drp, arg)
 
         if self.cls['with_acc_cv2']:
             with h5py.File(self.inp, 'r') as dtb:
@@ -324,8 +325,9 @@ class DL_Model :
 
         if self.cls['with_gyr_cv1']:
             with h5py.File(self.inp, 'r') as dtb:
-                inp = Input(shape=(dtb['gyr_x_t'].shape[1],))
-            for idx in range(3): self.build_CONV1D(inp, self.drp, arg)
+                for idx in range(3):
+                    inp = Input(shape=(dtb['gyr_x_t'].shape[1],))
+                    self.build_CONV1D(inp, self.drp, arg)
 
         if self.cls['with_gyr_cv2']:
             with h5py.File(self.inp, 'r') as dtb:
