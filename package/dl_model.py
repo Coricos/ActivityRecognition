@@ -304,7 +304,7 @@ class DL_Model :
         self.inputs, self.models = [], []
 
         # Initializers
-        self.drp = DecreaseDropout(ini_dropout, 100)
+        self.drp = DecreaseDropout(ini_dropout, 50)
         arg = {'kernel_initializer': 'he_uniform'}
 
         if self.cls['with_acc_cv1']:
