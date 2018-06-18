@@ -524,5 +524,5 @@ class DL_Model :
             with h5py.File(self.inp, 'r') as dtb:
                 prd = self.predict('v', n_tail=n_tail)
                 build_matrix(prd, self.l_v, 'VALID')
-                del val, prd
+                del prd
 
