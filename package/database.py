@@ -356,6 +356,31 @@ class Constructor:
             # Memory efficiency
             del out, val, shp, pol, qua
 
+    # Built the betti curves out of the norms of the signals
+    def build_betti_curves(self):
+
+        for typ in ['acc', 'gyr']:
+            for knd in ['t', 'v']:
+
+                inp = 'n_{}_{}'.format(typ, knd)
+                
+                with h5py.File(self.path, 'r') as dtb: val = dtb[inp].value
+                # Multiprocessed computation
+                pol = multiprocessing.Pool(processes=self.njobs)
+                tda = np.asarray(pol.map(compute_betti_curves, val))
+                pol.close()
+                pol.join()
+                # Serialize the output
+                with h5py.File(self.path, 'a') as dtb :
+                    out = 'bup_{}_{}'.format(typ[0], knd)
+                    if dtb.get(out): del dtb[out]
+                    dtb.create_dataset(out, data=tda[:,0,:])
+                    out = 'bdw_{}_{}'.format(typ[0], knd)
+                    if dtb.get(out): del dtb[out]
+                    dtb.create_dataset(out, data=tda[:,1,:])
+                # Memory efficiency
+                del inp, out, val, pol, tda
+
     # Preprocess the raw signals
     # out_dtb refers to the output database
     # test_ratio refers to the amount of vectors kept for test

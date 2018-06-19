@@ -50,3 +50,17 @@ from keras.layers.core import Dense, Dropout, Activation
 from keras.optimizers import SGD
 from keras.callbacks import EarlyStopping, ModelCheckpoint, Callback
 from keras.layers.merge import concatenate
+
+try:
+    # Add gudhi to the environment path
+    gpath = '2018-01-31-09-25-53_GUDHI_2.1.0/build/cython'
+    build = '/home/intern/Downloads/{}'.format(gpath)
+    sys.path.append(build)
+    build = '/home/meryll/Documents/Environment/{}'.format(gpath)
+    sys.path.append(build)
+    del build, gpath
+
+    import gudhi
+
+except:
+    pass

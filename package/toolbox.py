@@ -205,3 +205,12 @@ def compute_quaternion(sig):
         quaternion[3,j] = (r[0]*q[3] - r[1]*q[2] + r[2]*q[1] + r[3]*q[0])
                 
     return quaternion
+
+# Multiprocessed computation of the betti curves
+def compute_betti_curves(sig):
+
+    from package.topology import Levels
+
+    fil = Levels(sig)
+
+    return fil.betti_curves()

@@ -1,8 +1,10 @@
 # Unnecessary repositories
-./dataset/*
-./__pycache__/*
-./SHL/*
-./HAPT/*
+./.ipynb_checkpoints
+./dataset
+./package/__pycache__
+./__pycache__
+./SHL
+./HAPT
 
 # Notebooks
 ./draft.ipynb
