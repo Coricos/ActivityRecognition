@@ -79,6 +79,11 @@ class DL_Model :
                 with h5py.File(self.inp, 'r') as dtb:
                     vec.append(dtb['n_acc_{}'.format(fmt)][ind:ind+batch])
 
+            if self.cls['with_n_a_tda']:
+
+                with h5py.File(self.inp, 'r') as dtb:
+                    vec.append(dtb['bup_a_{}'.format(fmt)][ind:ind+batch])
+
             if self.cls['with_gyr_cv1']:
 
                 with h5py.File(self.inp, 'r') as dtb:
@@ -100,6 +105,11 @@ class DL_Model :
 
                 with h5py.File(self.inp, 'r') as dtb:
                     vec.append(dtb['n_gyr_{}'.format(fmt)][ind:ind+batch])
+
+            if self.cls['with_n_g_tda']:
+
+                with h5py.File(self.inp, 'r') as dtb:
+                    vec.append(dtb['bup_g_{}'.format(fmt)][ind:ind+batch])
 
             if self.cls['with_qua_cv2']:
 
@@ -177,6 +187,11 @@ class DL_Model :
                 with h5py.File(self.inp, 'r') as dtb:
                     vec.append(dtb['n_acc_{}'.format(fmt)][ind:ind+batch])
 
+            if self.cls['with_n_a_tda']:
+
+                with h5py.File(self.inp, 'r') as dtb:
+                    vec.append(dtb['bup_a_{}'.format(fmt)][ind:ind+batch])
+
             if self.cls['with_gyr_cv1']:
 
                 with h5py.File(self.inp, 'r') as dtb:
@@ -198,6 +213,11 @@ class DL_Model :
 
                 with h5py.File(self.inp, 'r') as dtb:
                     vec.append(dtb['n_gyr_{}'.format(fmt)][ind:ind+batch])
+
+            if self.cls['with_n_g_tda']:
+
+                with h5py.File(self.inp, 'r') as dtb:
+                    vec.append(dtb['bup_g_{}'.format(fmt)][ind:ind+batch])
 
             if self.cls['with_qua_cv2']:
 
@@ -252,6 +272,36 @@ class DL_Model :
         mod = PReLU()(mod)
         mod = GlobalAveragePooling1D()(mod)
         mod = AdaptiveDropout(callback.prb, callback)(mod)
+
+        self.models.append(mod)
+        if inp not in self.inputs: self.inputs.append(inp) 
+
+    # 1D CNN channel designed for the TDA betti curves
+    # inp refers to a Keras input
+    # callback refers to the adaptive dropout callback
+    # arg refers the layers arguments
+    def build_CV_TDA(self, inp, callback, arg):
+
+        # Build the selected model
+        mod = Reshape((inp._keras_shape[1], 1))(inp)
+        mod = Conv1D(64, 10, kernel_initializer='he_normal')(mod)
+        mod = BatchNormalization()(mod)
+        mod = PReLU()(mod)
+        mod = AdaptiveDropout(callback.prb, callback)(mod)
+        mod = Conv1D(128, 4, kernel_initializer='he_normal')(mod)
+        mod = BatchNormalization()(mod)
+        mod = PReLU()(mod)
+        mod = AdaptiveDropout(callback.prb, callback)(mod)
+        mod = Conv1D(128, 4, kernel_initializer='he_normal')(mod)
+        mod = BatchNormalization()(mod)
+        mod = PReLU()(mod)
+        mod = AdaptiveDropout(callback.prb, callback)(mod)
+        mod = Conv1D(128, 4, kernel_initializer='he_normal')(mod)
+        mod = BatchNormalization()(mod)
+        mod = PReLU()(mod)
+        mod = AdaptiveDropout(callback.prb, callback)(mod)
+        mod = AveragePooling1D(pool_size=2)(mod)
+        mod = GlobalAveragePooling1D()(mod)
 
         self.models.append(mod)
         if inp not in self.inputs: self.inputs.append(inp) 
@@ -335,6 +385,11 @@ class DL_Model :
                 inp = Input(shape=(dtb['n_acc_t'].shape[1],))
             self.build_CONV1D(inp, self.drp, arg)
 
+        if self.cls['with_n_a_tda']:
+            with h5py.File(self.inp, 'r') as dtb:
+                inp = Input(shape=(dtb['bup_a_t'].shape[1],))
+            self.build_CV_TDA(inp, self.drp, arg)
+
         if self.cls['with_gyr_cv1']:
             with h5py.File(self.inp, 'r') as dtb:
                 for idx in range(3):
@@ -350,6 +405,11 @@ class DL_Model :
             with h5py.File(self.inp, 'r') as dtb:
                 inp = Input(shape=(dtb['n_gyr_t'].shape[1],))
             self.build_CONV1D(inp, self.drp, arg)
+
+        if self.cls['with_n_g_tda']:
+            with h5py.File(self.inp, 'r') as dtb:
+                inp = Input(shape=(dtb['bup_g_t'].shape[1],))
+            self.build_CV_TDA(inp, self.drp, arg)
 
         if self.cls['with_qua_cv2']:
             with h5py.File(self.inp, 'r') as dtb:
