@@ -74,7 +74,7 @@ class DataShuffler(Callback):
 
             with h5py.File(self.pth, 'a') as dtb:
 
-                i_t = shuffle(np.arange(dtb['lab_t'].shape[0]))
+                i_t = shuffle(np.arange(dtb['label_t'].shape[0]))
                 for key in [ele for ele in dtb.keys() if ele[-1] == 't']:
                     dtb[key][...] = dtb[key].value[i_t]
 
