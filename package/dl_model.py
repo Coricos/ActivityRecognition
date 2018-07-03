@@ -138,6 +138,7 @@ class DL_Model :
                 # Defines the labels
                 lab = dtb['label_{}'.format(fmt)][ind:ind+batch]
                 lab = np_utils.to_categorical(lab, num_classes=len(self.classes))
+                lab = [lab, np.zeros((len(lab), self.mrg_size))]
             
             yield(vec, lab)
             # Memory efficiency
@@ -357,8 +358,7 @@ class DL_Model :
 
     # Build the whole model
     # ini_dropout refers to the initial dropout rate
-    # n_tail refers to the amount of layers to deal with concatenated feature map
-    def build(self, ini_dropout, n_tail) :
+    def build(self, ini_dropout) :
 
         warnings.simplefilter('ignore')
 
@@ -428,38 +428,66 @@ class DL_Model :
                 inp = Input(shape=(dtb['fft_g_t'].shape[1], ))
                 self.build_NDENSE(inp, self.drp, arg)
 
-        # Merge all the feature maps
-        model = concatenate(self.models)
-        sizes = np.linspace(2*len(self.classes), model._keras_shape[1], num=n_tail).astype('int')
-        for ele in sizes[::-1]:
-            model = Dense(ele, **arg)(model)
-            model = BatchNormalization()(model)
-            model = PReLU()(model)
-            model = AdaptiveDropout(self.drp.prb, self.drp)(model)
-        # Fusion in last softmax layer
-        model = Dense(len(self.classes), activation='softmax', **arg)(model)
+        # Gather all the model in one dense network
+        print('# Ns Channels:', len(self.models))
+        if len(self.models) > 1: merge = concatenate(self.models)
+        else: merge = self.models[0]
+        print('# Merge Layer:', merge._keras_shape[1])
+        self.mrg_size = merge._keras_shape[1]
 
-        return model           
+        # Defines the feature encoder part
+        model = Dense(merge._keras_shape[1] // 3, **arg)(merge)
+        model = BatchNormalization()(model)
+        model = PReLU()(model)
+        model = AdaptiveDropout(self.drp.prb, self.drp)(model)
+        enc_0 = GaussianNoise(1e-2)(model)
+        model = Dense(model._keras_shape[1] // 3, **arg)(model)
+        model = BatchNormalization()(model)
+        model = PReLU()(model)
+        enc_1 = AdaptiveDropout(self.drp.prb, self.drp)(model)
+        print('# Latent Space:', enc_1._keras_shape[1])
+
+        # Defines the decoder part
+        model = Dense(enc_0._keras_shape[1], **arg)(enc_1)
+        model = BatchNormalization()(model)
+        model = PReLU()(model)
+        model = AdaptiveDropout(self.drp.prb, self.drp)(model)
+        model = Dense(merge._keras_shape[1], activation='linear', **arg)(model)
+        decod = Subtract(name='decode')([merge, model])
+
+        # Defines the output part
+        new = {'activation': 'softmax', 'name': 'output'}
+        model = Dense(len(self.classes), **arg, **new)(enc_1)
+       
+        return decod, model      
 
     # Lauch the fit
     # ini_dropout refers to the initial dropout rate
     # patience refers to the early stopping round
     # max_epochs refers to the maximum amount of epochs
     # batch refers to the batch_size
-    # n_tail refers to the amount of layers to deal with concatenated feature map
-    def learn(self, ini_dropout=0.5, patience=7, max_epochs=100, batch=32, n_tail=5) :
+    def learn(self, ini_dropout=0.5, patience=7, max_epochs=100, batch=64) :
 
-        # Build the corresponding model
-        model = self.build(ini_dropout, n_tail)
         # Compile the model
-        model = Model(inputs=self.inputs, outputs=model)
-        model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+        decod, model = self.build(ini_dropout)
+
+        # Defines the losses depending on the case
+        loss = {'output': 'categorical_crossentropy', 'decode': 'mean_squared_error'}
+        loss_weights = {'output': 1.0, 'decode': 10.0}
+        metrics = {'output': 'accuracy', 'decode': 'mean_absolute_error'}
+        monitor = 'val_output_acc'
 
         # Implements the early stopping    
-        arg = {'monitor': 'val_acc', 'mode': 'max'}
+        arg = {'monitor': monitor, 'mode': 'max'}
         early = EarlyStopping(min_delta=1e-5, patience=patience, **arg)
         check = ModelCheckpoint(self.mod, period=1, save_best_only=True, save_weights_only=True, **arg)
-        shuff = DataShuffler(self.inp)
+        shuff = DataShuffler(self.inp, 3)
+
+        # Build and compile the model
+        model = Model(inputs=self.inputs, outputs=[model, decod])
+        optim = Adadelta(clipnorm=1.0)
+        arg = {'loss': loss, 'optimizer': optim}
+        model.compile(metrics=metrics, loss_weights=loss_weights, **arg)
 
         # Fit the model
         his = model.fit_generator(self.train_generator('t', batch=batch),
@@ -484,9 +512,9 @@ class DL_Model :
         plt.figure(figsize=(18,4))        
         fig = gd.GridSpec(2,2)
 
-        plt.subplot(fig[:,0])
-        acc, val = dic['acc'], dic['val_acc']
-        plt.title('Accuracy Evolution - Classification')
+        plt.subplot(fig[0,0])
+        acc, val = dic['output_acc'], dic['val_output_acc']
+        plt.title('Accuracy Evolution')
         plt.plot(range(len(acc)), acc, c='orange', label='Train')
         plt.scatter(range(len(val)), val, marker='x', s=50, c='grey', label='Test')
         plt.legend(loc='best')
@@ -494,11 +522,28 @@ class DL_Model :
         plt.xlabel('Epochs')
         plt.ylabel('Accuracy')
 
-        plt.subplot(fig[:,1])
-        plt.title('Losses Evolution')
-        plt.plot(dic['loss'], c='orange', label='Train Loss')
-        plt.plot(dic['val_loss'], c='grey', label='Test Loss')
+        plt.subplot(fig[0,1])
+        plt.title('Output Losses Evolution')
+        plt.plot(dic['output_loss'], c='orange', label='Train Output Loss')
+        plt.scatter(range(len(acc)), dic['val_output_loss'], c='grey', label='Valid Output Loss')
+        plt.legend(loc='best')
+        plt.grid()
+        plt.xlabel('Epochs')
+        plt.ylabel('Loss')
 
+        plt.subplot(fig[1,0])
+        plt.title('MAE Evolution')
+        plt.plot(dic['decode_mean_absolute_error'], c='orange', label='Train Decode MAE')
+        plt.scatter(range(len(acc)), dic['val_decode_mean_absolute_error'], c='grey', label='Valid Decode MAE')
+        plt.legend(loc='best')
+        plt.grid()
+        plt.xlabel('Epochs')
+        plt.ylabel('Loss')
+
+        plt.subplot(fig[1,1])
+        plt.title('Losses Evolution')
+        plt.plot(dic['decode_loss'], c='orange', label='Train Decode Loss')
+        plt.scatter(range(len(acc)), dic['val_decode_loss'], c='grey', label='Valid Decode Loss')
         plt.legend(loc='best')
         plt.grid()
         plt.xlabel('Epochs')
@@ -508,26 +553,26 @@ class DL_Model :
         plt.show()
 
     # Rebuild the model from the saved weights
-    # n_tail refers to the amount of layers to merge the channels
-    def reconstruct(self, n_tail=5):
+    def reconstruct(self):
       
+        self.inputs, self.models = [], []
         # Build the model
-        model = self.build(0.3, n_tail)
+        decod, model = self.build(0.5)
         # Build and compile the model
-        model = Model(inputs=self.inputs, outputs=model)
+        model = Model(inputs=self.inputs, outputs=[model, decod])
         # Load the appropriate weights
         model.load_weights(self.mod)
         # Save as attriubte
         self.clf = model
+        del model
 
     # Validate on the unseen samples
     # fmt refers to whether apply it for testing or validation
-    # n_tail refers to the marker for the model reconstruction
     # batch refers to the batch size
-    def predict(self, fmt, n_tail=5, batch=512):
+    def predict(self, fmt, batch=512):
 
         # Load the best model saved
-        if not hasattr(self, 'clf'): self.reconstruct(n_tail=n_tail)
+        if not hasattr(self, 'clf'): self.reconstruct()
 
         # Defines the size of the validation set
         if fmt == 'e': 
@@ -545,7 +590,7 @@ class DL_Model :
             else : end = int(sze / batch)
             # Iterate according to the right stopping point
             if ind <= end :
-                prd += [np.argmax(pbs) for pbs in self.clf.predict(vec)]
+                prd += [np.argmax(pbs) for pbs in self.clf.predict(vec)[0]]
                 ind += 1
             else : 
                 break
@@ -553,9 +598,8 @@ class DL_Model :
         return np.asarray(prd)
 
     # Generates the confusion matrixes for train, test and validation sets
-    # n_tail refers to the amount of layers to merge the channels
     # on_test and on_validation are both booleans for confusion matrix display
-    def confusion_matrix(self, n_tail=5, on_test=True, on_validation=True):
+    def confusion_matrix(self, on_test=True, on_validation=True):
 
         # Avoid unnecessary logs
         warnings.simplefilter('ignore')
@@ -583,14 +627,14 @@ class DL_Model :
 
         if on_test:
             # Compute the predictions for test set
-            prd = self.predict('e', n_tail=n_tail)
+            prd = self.predict('e')
             build_matrix(prd, self.l_e, 'TEST')
             del prd
 
         if on_validation:
             # Compute the predictions for validation set
             with h5py.File(self.inp, 'r') as dtb:
-                prd = self.predict('v', n_tail=n_tail)
+                prd = self.predict('v')
                 build_matrix(prd, self.l_v, 'VALID')
                 del prd
 
