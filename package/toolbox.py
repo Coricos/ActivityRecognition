@@ -214,3 +214,25 @@ def compute_betti_curves(sig):
     fil = Levels(sig)
 
     return fil.betti_curves()
+
+# Easier to call and recreate the channel array
+# turn_on refers to the list of channels to turn-on
+def generate_channels(turn_on):
+
+    dic = {
+           'with_acc_cv2': False,
+           'with_acc_cv1': False,
+           'with_n_a_cv1': False,
+           'with_n_a_tda': False,
+           'with_gyr_cv2': False,
+           'with_gyr_cv1': False,
+           'with_n_g_cv1': False,
+           'with_n_g_tda': False,
+           'with_qua_cv2': False,
+           'with_fea': False,
+           'with_fft': False
+           }
+    
+    for key in turn_on: dic[key] = True
+    
+    return dic
