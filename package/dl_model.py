@@ -668,9 +668,8 @@ class CV_DL_Model:
         self.storage = storage
 
     # CV Launcher definition
-    # out refers to the output prediction file
     # log_file refers to the scoring files logger
-    def launch(self, out=None, log_file='./results/DL_SCORING.log'):
+    def launch(self, log_file='./results/DL_SCORING.log'):
 
         kys, prd = [], []
         for key in list(self.cls.keys()):
@@ -686,7 +685,7 @@ class CV_DL_Model:
             if self.msk: marker = 'ITER_MSK_{}'.format(idx)
             else: marker = 'ITER_{}'.format(idx)
             mod = DL_Model(path, self.cls, marker=marker)
-            mod.learn(patience=10, dropout=0.5, decrease=150, batch=32, max_epochs=100)
+            mod.learn(patience=10, ini_dropout=0.5, batch=32, max_epochs=100)
             prd.append(mod.predict('v'))
 
             # Save experiment characteristics
