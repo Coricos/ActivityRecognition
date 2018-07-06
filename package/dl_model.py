@@ -366,7 +366,7 @@ class DL_Model :
         self.inputs, self.models = [], []
 
         # Initializers
-        self.drp = DecreaseDropout(ini_dropout, 50)
+        self.drp = DecreaseDropout(ini_dropout, 100)
         arg = {'kernel_initializer': 'he_uniform'}
 
         if self.cls['with_acc_cv1']:
@@ -466,7 +466,7 @@ class DL_Model :
     # patience refers to the early stopping round
     # max_epochs refers to the maximum amount of epochs
     # batch refers to the batch_size
-    def learn(self, ini_dropout=0.5, patience=7, max_epochs=100, batch=64) :
+    def learn(self, ini_dropout=0.5, patience=7, max_epochs=100, batch=32) :
 
         # Compile the model
         decod, model = self.build(ini_dropout)
@@ -509,7 +509,7 @@ class DL_Model :
         with open(self.his, 'rb') as raw: dic = pickle.load(raw)
 
         # Generates the plot
-        plt.figure(figsize=(18,4))        
+        plt.figure(figsize=(18,6))        
         fig = gd.GridSpec(2,2)
 
         plt.subplot(fig[0,0])
@@ -638,3 +638,89 @@ class DL_Model :
                 build_matrix(prd, self.l_v, 'VALID')
                 del prd
 
+    # Defines a way to get the validation scores
+    def get_score(self):
+
+        # Compute the predictions for validation set
+        with h5py.File(self.inp, 'r') as dtb:
+            prd = self.predict('v')
+
+        acc = accuracy_score(self.l_v, prd)
+        f1s = f1_score(self.l_v, prd, average='weighted')
+
+        return acc, f1s
+
+# Defines a structure for a cross_validation
+
+class CV_DL_Model:
+
+    # Initialization
+    # channels refers to what channels to use
+    # msk_transitions is a boolean depending of the situation
+    # storage refers to the absolute path towards the datasets
+    def __init__(self, channels, msk_transitions=False, storage='./dataset'):
+
+        # Attributes
+        self.cls = channels
+        self.msk = msk_transitions
+        if msk_transitions: self.n_iter = sorted(glob.glob('{}/CV_ITER_MSK_*.h5'.format(storage)))
+        else: self.n_iter = sorted([ele for ele in glob.glob('{}/CV_ITER_*.h5'.format(storage)) if len(ele.split('_')) == 3])
+        self.storage = storage
+
+    # CV Launcher definition
+    # out refers to the output prediction file
+    # log_file refers to the scoring files logger
+    def launch(self, out=None, log_file='./results/DL_SCORING.log'):
+
+        kys, prd = [], []
+        for key in list(self.cls.keys()):
+            if self.cls[key]: kys.append(key[5:])
+        # Serialize the channels for log purpose
+        with open(log_file, 'a') as raw:
+            raw.write('# CHANNELS: {} \n'.format(' | '.join(kys)))
+            raw.write('\n')
+
+        for idx, path in enumerate(self.n_iter):
+
+            # Launch the model scoring for each iteration
+            if self.msk: marker = 'ITER_MSK_{}'.format(idx)
+            else: marker = 'ITER_{}'.format(idx)
+            mod = DL_Model(path, self.cls, marker=marker)
+            mod.learn(patience=10, dropout=0.5, decrease=150, batch=32, max_epochs=100)
+            prd.append(mod.predict('v'))
+
+            # Save experiment characteristics
+            acc, f1s = mod.get_score()
+            
+            # LOG file for those scores
+            with open(log_file, 'a') as raw:
+                raw.write('# CV_ROUND {} | Accuracy {:3f} | F1Score {:3f} \n'.format(idx, acc, f1s))
+
+            # Memory efficiency
+            del mod, acc, f1s
+
+        # Write new line for next call
+        with open(log_file, 'a') as raw: raw.write('\n')
+
+    # Plots the training history of all models
+    def generate_figures(self):
+
+        # Get the list of all the histories
+        lst = sorted(glob.glob('./models/HIS_ITER_*.history'))
+
+        # Plot the multiple training histories
+        plt.figure(figsize=(18, int(1.5*len(lst))))
+        fig = gd.GridSpec(len(lst)//2, 2)
+        for idx, pth in enumerate(lst):
+            plt.subplot(fig[idx // 2, idx % 2])
+            with open(pth, 'rb') as raw: dic = pickle.load(raw)
+            acc, val = dic['output_acc'], dic['val_output_acc']
+            plt.title('Accuracy Evolution | ITER {}'.format(idx))
+            plt.plot(range(len(acc)), acc, c='orange', label='Train')
+            plt.scatter(range(len(val)), val, marker='x', s=50, c='grey', label='Test')
+            plt.legend(loc='best')
+            plt.grid()
+            plt.xlabel('Epochs')
+            plt.ylabel('Accuracy')
+        plt.tight_layout()
+        plt.show()
