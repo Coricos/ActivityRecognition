@@ -383,8 +383,7 @@ class Constructor:
 
     # Preprocess the raw signals
     # out_dtb refers to the output database
-    # test_ratio refers to the amount of vectors kept for test
-    def standardize(self, out_dtb, test_ratio=0.3):
+    def standardize(self, out_dtb):
 
         with h5py.File(self.path, 'r') as dtb:
             lst = remove_doublon([key[:-2] for key in list(dtb.keys()) if key[-1] == 't'])
@@ -418,7 +417,7 @@ class Constructor:
 
             else:
                 # Build the scaler
-                mms = MinMaxScaler(feature_range=(0, 1))
+                mms = MinMaxScaler(feature_range=(0, 2))
                 sts = StandardScaler(with_std=False)
                 pip = Pipeline([('mms', mms), ('sts', sts)])
                 # Stack the data for scaling
@@ -433,17 +432,58 @@ class Constructor:
                 # Memory efficiency
                 del mms, sts, pip, val
 
-        # Split the indexes for both train and test
-        arg = {'test_size': test_ratio, 'shuffle': True}
-        i_t, i_e, _, _ = train_test_split(np.arange(sze), np.arange(sze), **arg)
-        i_t = shuffle(i_t)
+    # Build the datasets for cross-validation
+    # inp_dtb points to the scaled database
+    # folds refers to the amount of cross-validation rounds
+    # msk_labels refers to whether mask data or not
+    def cross_validation(self, inp_dtb, folds, msk_transitions=False):
 
-        for key in tqdm.tqdm(lst):
+        if msk_transitions: msk_labels = np.arange(6, 12)
+        else: msk_labels = []
 
-            with h5py.File(out_dtb, 'a') as dtb:
-                val = dtb[key + '_t'].value
-                del dtb[key + '_t']
-                dtb.create_dataset(key + '_t', data=val[i_t])
-                if dtb.get(key + '_e'): del dtb[key + '_e']
-                dtb.create_dataset(key + '_e', data=val[i_e])
-                del val
+        # Prepares the mask relative to the labels
+        with h5py.File(inp_dtb, 'r') as dtb: 
+            lab = dtb['label_t'].value
+            msk = get_mask(lab, lab_to_del=msk_labels)
+            lab = lab[msk]
+            l_v = dtb['label_v'].value
+            m_v = get_mask(l_v, lab_to_del=msk_labels)
+
+        # Defines the cross-validation splits
+        kfs = StratifiedKFold(n_splits=folds, shuffle=True)
+
+        # For each round, creates a new dataset
+        for idx, (i_t, i_e) in enumerate(kfs.split(lab, lab)):
+
+            if msk_transitions: output = './dataset/CV_ITER_MSK_{}.h5'.format(idx)
+            else: output = './dataset/CV_ITER_{}.h5'.format(idx)            
+            print('\n# Building {}'.format(output))
+
+            # Split the training set into both training and testing
+            with h5py.File(inp_dtb, 'r') as dtb:
+
+                print('# Train and Test ...')
+                time.sleep(0.5)
+                lst = [key[:-2] for key in dtb.keys() if key[-1] == 't']
+                lsv = [key for key in dtb.keys() if key[-1] == 'v']
+
+                for key in tqdm.tqdm(lst):
+
+                    with h5py.File(output, 'a') as out:
+
+                        key_t = '{}_t'.format(key)
+                        key_e = '{}_e'.format(key)
+                        val = dtb[key_t].value[msk]
+
+                        if out.get(key_t): del out[key_t]
+                        out.create_dataset(key_t, data=val[i_t])
+                        if dtb.get(key_e): del out[key_e]
+                        out.create_dataset(key_e, data=val[i_e])
+                        del val
+
+                for key in tqdm.tqdm(lsv):
+
+                    with h5py.File(output, 'a') as out:
+
+                        if out.get(key): del out[key]
+                        out.create_dataset(key, data=dtb[key].value[m_v])
