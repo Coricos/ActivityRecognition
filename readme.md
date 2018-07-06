@@ -6,11 +6,7 @@ My whole project is based on the [dataset](https://www.kaggle.com/uciml/human-ac
 
 ## Model tested 
 
-* XGBoost
-* RandomForest
-* 1D Convolution
-* 2D Convolution
-* Mixed Neural Networks
+Different approaches have been undertaken: From the classic beginning with the Stochastic Gradient Classifier (optimized through hyperband with k-fold cross-validation) to the Multi-Channel Neural Newtorks (whose results are obtained through cross-validation). Some have advantages that others do not have, and the idea was here, in the end, to test new inputs that may end descriptive in the task of activity identification.
 
 ## Features
 
