@@ -355,21 +355,72 @@ class Constructor:
 
             # Memory efficiency
             del out, val, shp, pol, qua
+    
+    # Compute the persistence limits for each EEG channel
+    def get_persistence_limits(self):
 
-    # Built the betti curves out of the norms of the signals
-    def build_betti_curves(self):
+        tda_lmt = './dataset/TDA_limits.pk'
+        # Limitations of persistence diagrams
+        if os.path.exists(tda_lmt):
 
+            # Load the existing thresholds
+            with open(tda_lmt, 'rb') as raw: dic = pickle.load(raw)
+
+        else:
+
+            lmt = []
+
+            for typ in ['acc', 'gyr']:
+                for knd in ['t', 'v']:
+
+                    # Load the corresponding values
+                    with h5py.File(self.path, 'r') as dtb: 
+                        val = dtb['n_{}_{}'.format(typ, knd)].value
+
+                    # Computes the persistent limits for the relative patient
+                    pol = multiprocessing.Pool(processes=self.threads)
+                    lmt.append(np.asarray(pol.map(persistent_limits, val)))
+                    pol.close()
+                    pol.join()
+                    # Memory efficiency
+                    del val, pol
+
+            # Extracts the main limits
+            lmt = np.vstack(tuple(lmt))
+            mnu, mxu = min(lmt[:,0]), max(lmt[:,1]) 
+            mnd, mxd = min(lmt[:,2]), max(lmt[:,3])
+            # Memory efficiency
+            del lmt
+
+            # Serialize the obtained threshold
+            with open(tda_lmt, 'wb') as raw:
+                dic = {'min_up': mnu, 'max_up': mxu, 'min_dw': mnd, 'max_dw': mxd}
+                pickle.dump(dic, raw)
+
+        return dic
+
+    # Build the corresponding Betti curves
+    def add_betti_curves(self):
+
+        # Retrieve the persistence limits
+        dic = self.get_persistence_limits()
+
+        # Build the betti curves
         for typ in ['acc', 'gyr']:
             for knd in ['t', 'v']:
 
-                inp = 'n_{}_{}'.format(typ, knd)
+                # Load the corresponding values
+                with h5py.File(self.path, 'r') as dtb: 
+                    val = dtb['n_{}_{}'.format(typ, knd)].value
                 
-                with h5py.File(self.path, 'r') as dtb: val = dtb[inp].value
                 # Multiprocessed computation
                 pol = multiprocessing.Pool(processes=self.njobs)
-                tda = np.asarray(pol.map(compute_betti_curves, val))
+                arg = {'mnu': dic['min_up'], 'mxu': dic['max_up'], 'mnd': dic['min_dw'], 'mxd': dic['max_dw']}
+                fun = partial(compute_betti_curves, **arg)
+                tda = np.asarray(pol.map(fun, val))
                 pol.close()
                 pol.join()
+                
                 # Serialize the output
                 with h5py.File(self.path, 'a') as dtb :
                     out = 'bup_{}_{}'.format(typ[0], knd)
@@ -378,8 +429,43 @@ class Constructor:
                     out = 'bdw_{}_{}'.format(typ[0], knd)
                     if dtb.get(out): del dtb[out]
                     dtb.create_dataset(out, data=tda[:,1,:])
+
                 # Memory efficiency
-                del inp, out, val, pol, tda
+                del val, pol, arg, fun, tda
+
+    # Build the corresponding landscapes
+    def add_landscapes(self):
+
+        # Retrieve the persistence limits
+        dic = self.get_persistence_limits()
+
+        # Build the betti curves
+        for typ in ['acc', 'gyr']:
+            for knd in ['t', 'v']:
+
+                # Load the corresponding values
+                with h5py.File(self.path, 'r') as dtb: 
+                    val = dtb['n_{}_{}'.format(typ, knd)].value
+                
+                # Multiprocessed computation
+                pol = multiprocessing.Pool(processes=self.njobs)
+                arg = {'mnu': dic['min_up'], 'mxu': dic['max_up'], 'mnd': dic['min_dw'], 'mxd': dic['max_dw']}
+                fun = partial(compute_landscapes, **arg)
+                tda = np.asarray(pol.map(fun, val))
+                pol.close()
+                pol.join()
+                
+                # Serialize the output
+                with h5py.File(self.path, 'a') as dtb :
+                    out = 'l_0_{}_{}'.format(typ[0], knd)
+                    if dtb.get(out): del dtb[out]
+                    dtb.create_dataset(out, data=tda[:,:10,:])
+                    out = 'l_1_{}_{}'.format(typ[0], knd)
+                    if dtb.get(out): del dtb[out]
+                    dtb.create_dataset(out, data=tda[:,10:,:])
+
+                # Memory efficiency
+                del val, pol, arg, fun, tda
 
     # Preprocess the raw signals
     # out_dtb refers to the output database

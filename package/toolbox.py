@@ -236,3 +236,34 @@ def generate_channels(turn_on):
     for key in turn_on: dic[key] = True
     
     return dic
+
+# Multiprocessed way of computing the limits of a persistent diagrams
+# vec refers to a 1D numpy array
+def persistent_limits(vec):
+    
+    lvl = Levels(vec)
+    u,d = lvl.get_persistence()
+    
+    return np.asarray([min(u[:,0]), max(u[:,1]), min(d[:,0]), max(d[:,1])])
+
+# Compute the Betti curves
+# vec refers to a 1D array
+def compute_betti_curves(vec, mnu, mxu, mnd, mxd):
+
+    fil = Levels(vec)
+    try: v,w =  lvl.betti_curves(mnu, mxu, mnd, mxd, num_points=100)
+    except: v,w = np.zeros(100), np.zeros(100)
+    del fil
+    
+    return np.vstack((v,w))
+
+# Compute the landscapes
+# vec refers to a 1D array
+def compute_landscapes(vec, mnu, mxu, mnd, mxd):
+
+    fil = Levels(vec)
+    try: p,q = fil.landscapes(mnu, mxu, mnd, mxd, num_points=100)
+    except: p,q = np.zeros((10,100)), np.zeros((10,100))
+    del fil
+    
+    return np.vstack((p,q))
