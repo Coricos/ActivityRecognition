@@ -1,9 +1,10 @@
 # Unnecessary repositories
 .ipynb_checkpoints
 dataset/
+hyperband/__pycache__/
 package/__pycache__/
 SHL/
 HAPT/
 
 # Notebooks
-draft.ipynb
+draft_activity.ipynb
