@@ -258,7 +258,10 @@ class DL_Model :
         mod = Conv1D(32, 32, **arg)(mod)
         mod = BatchNormalization()(mod)
         mod = PReLU()(mod)
-        mod = MaxPooling1D(pool_size=2)(mod)
+        mod = AdaptiveDropout(callback.prb, callback)(mod)
+        mod = Conv1D(64, 8, **arg)(mod)
+        mod = BatchNormalization()(mod)
+        mod = PReLU()(mod)
         mod = AdaptiveDropout(callback.prb, callback)(mod)
         mod = Conv1D(64, 8, **arg)(mod)
         mod = BatchNormalization()(mod)
@@ -487,13 +490,13 @@ class DL_Model :
         redlr = ReduceLROnPlateau(patience=patience, min_delta=1e-5, **arg)
 
         # Build and compile the model
-        model = Model(inputs=self.inputs, outputs=[model, decod])
+        mod = Model(inputs=self.inputs, outputs=[model, decod])
         optim = Adadelta(clipnorm=1.0, lr=1e-2)
         arg = {'loss': loss, 'optimizer': optim}
-        model.compile(metrics=metrics, loss_weights=loss_weights, **arg)
+        mod.compile(metrics=metrics, loss_weights=loss_weights, **arg)
 
         # Fit the model
-        his_0 = model.fit_generator(self.train_generator('t', batch=batch),
+        his_0 = mod.fit_generator(self.train_generator('t', batch=batch),
                     steps_per_epoch=len(self.l_t)//batch, verbose=1, 
                     callbacks=[self.drp, early, check, shuff, redlr],
                     shuffle=True, validation_steps=len(self.l_e)//batch,
@@ -514,14 +517,14 @@ class DL_Model :
         if refine_sgd:
 
             # Build and compile the model
-            model = Model(inputs=self.inputs, outputs=[model, decod])
-            model.load_weights(self.mod)
+            mod = Model(inputs=self.inputs, outputs=[model, decod])
+            mod.load_weights(self.mod)
             optim = SGD(clipnorm=1.0, lr=K.get_value(optim), momentum=0.9)
             arg = {'loss': loss, 'optimizer': optim}
-            model.compile(metrics=metrics, loss_weights=loss_weights, **arg)
+            mod.compile(metrics=metrics, loss_weights=loss_weights, **arg)
 
             # Fit the model
-            his_1 = model.fit_generator(self.train_generator('t', batch=batch),
+            his_1 = mod.fit_generator(self.train_generator('t', batch=batch),
                         steps_per_epoch=len(self.l_t)//batch, verbose=1, 
                         callbacks=[self.drp, early, check, shuff, redlr],
                         shuffle=True, validation_steps=len(self.l_e)//batch,
