@@ -51,7 +51,7 @@ from keras.layers import Subtract, GaussianNoise, Flatten, Dense
 from keras.layers import GlobalMaxPooling1D, GaussianDropout, Reshape, PReLU, AveragePooling1D
 from keras.layers.core import Dense, Dropout, Activation
 from keras.optimizers import SGD, Adadelta
-from keras.callbacks import EarlyStopping, ModelCheckpoint, Callback
+from keras.callbacks import EarlyStopping, ModelCheckpoint, Callback, ReduceLROnPlateau
 from keras.layers.merge import concatenate
 
 try:

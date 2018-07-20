@@ -255,20 +255,20 @@ class DL_Model :
 
         # Build the selected model
         mod = Reshape((inp._keras_shape[1], 1))(inp)
-        mod = Conv1D(64, 32, **arg)(mod)
+        mod = Conv1D(128, 32, **arg)(mod)
         mod = BatchNormalization()(mod)
         mod = PReLU()(mod)
         mod = MaxPooling1D(pool_size=2)(mod)
         mod = AdaptiveDropout(callback.prb, callback)(mod)
-        mod = Conv1D(128, 8, **arg)(mod)
+        mod = Conv1D(256, 8, **arg)(mod)
         mod = BatchNormalization()(mod)
         mod = PReLU()(mod)
         mod = AdaptiveDropout(callback.prb, callback)(mod)
-        mod = Conv1D(128, 8, **arg)(mod)
+        mod = Conv1D(256, 8, **arg)(mod)
         mod = BatchNormalization()(mod)
         mod = PReLU()(mod)
         mod = AdaptiveDropout(callback.prb, callback)(mod)
-        mod = Conv1D(128, 8, **arg)(mod)
+        mod = Conv1D(256, 8, **arg)(mod)
         mod = BatchNormalization()(mod)
         mod = PReLU()(mod)
         mod = GlobalAveragePooling1D()(mod)
@@ -315,16 +315,16 @@ class DL_Model :
 
         # Build model
         mod = Reshape((1, inp._keras_shape[1], inp._keras_shape[2]))(inp)
-        mod = Convolution2D(64, (mod._keras_shape[1], 32), data_format='channels_first', **arg)(mod)
+        mod = Convolution2D(128, (mod._keras_shape[1], 32), data_format='channels_first', **arg)(mod)
         mod = BatchNormalization(axis=1)(mod)
         mod = PReLU()(mod)
         mod = MaxPooling2D(pool_size=(1, 2), data_format='channels_first')(mod)
         mod = AdaptiveDropout(callback.prb, callback)(mod)
-        mod = Convolution2D(128, (1, 8), data_format='channels_first', **arg)(mod)
+        mod = Convolution2D(256, (1, 8), data_format='channels_first', **arg)(mod)
         mod = BatchNormalization(axis=1)(mod)
         mod = PReLU()(mod)
         mod = AdaptiveDropout(callback.prb, callback)(mod)
-        mod = Convolution2D(128, (1, 8), data_format='channels_first', **arg)(mod)
+        mod = Convolution2D(256, (1, 8), data_format='channels_first', **arg)(mod)
         mod = BatchNormalization(axis=1)(mod)
         mod = PReLU()(mod)
         mod = GlobalAveragePooling2D()(mod)
@@ -445,10 +445,18 @@ class DL_Model :
         model = BatchNormalization()(model)
         model = PReLU()(model)
         enc_2 = AdaptiveDropout(self.drp.prb, self.drp)(model)
-        print('# Latent Space:', enc_1._keras_shape[1])
+        model = Dense(model._keras_shape[1] // 3, **arg)(enc_2)
+        model = BatchNormalization()(model)
+        model = PReLU()(model)
+        enc_3 = AdaptiveDropout(self.drp.prb, self.drp)(model)
+        print('# Latent Space:', enc_3._keras_shape[1])
 
         # Defines the decoder part
-        model = Dense(enc_1._keras_shape[1], **arg)(enc_2)
+        model = Dense(enc_2._keras_shape[1], **arg)(enc_3)
+        model = BatchNormalization()(model)
+        model = PReLU()(model)
+        model = AdaptiveDropout(self.drp.prb, self.drp)(model)
+        model = Dense(enc_1._keras_shape[1], **arg)(model)
         model = BatchNormalization()(model)
         model = PReLU()(model)
         model = AdaptiveDropout(self.drp.prb, self.drp)(model)
@@ -461,7 +469,7 @@ class DL_Model :
 
         # Defines the output part
         new = {'activation': 'softmax', 'name': 'output'}
-        model = Dense(len(self.classes), **arg, **new)(enc_1)
+        model = Dense(len(self.classes), **arg, **new)(enc_3)
        
         return decod, model      
 
@@ -487,7 +495,7 @@ class DL_Model :
         check = ModelCheckpoint(self.mod, period=1, save_best_only=True, save_weights_only=True, **arg)
         shuff = DataShuffler(self.inp, 3)
         arg = {'monitor': monitor, 'mode': 'max', 'factor': 0.1, 'min_lr': 0.0}
-        redlr = ReduceLROnPlateau(monitor=monitor, patience=patience, min_delta=1e-5, **arg)
+        redlr = ReduceLROnPlateau(patience=patience, min_delta=1e-5, **arg)
 
         # Build and compile the model
         model = Model(inputs=self.inputs, outputs=[model, decod])
