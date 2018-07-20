@@ -255,20 +255,20 @@ class DL_Model :
 
         # Build the selected model
         mod = Reshape((inp._keras_shape[1], 1))(inp)
-        mod = Conv1D(100, 50, **arg)(mod)
+        mod = Conv1D(64, 32, **arg)(mod)
         mod = BatchNormalization()(mod)
         mod = PReLU()(mod)
         mod = MaxPooling1D(pool_size=2)(mod)
         mod = AdaptiveDropout(callback.prb, callback)(mod)
-        mod = Conv1D(50, 20, **arg)(mod)
+        mod = Conv1D(128, 8, **arg)(mod)
         mod = BatchNormalization()(mod)
         mod = PReLU()(mod)
         mod = AdaptiveDropout(callback.prb, callback)(mod)
-        mod = Conv1D(50, 10, **arg)(mod)
+        mod = Conv1D(128, 8, **arg)(mod)
         mod = BatchNormalization()(mod)
         mod = PReLU()(mod)
         mod = AdaptiveDropout(callback.prb, callback)(mod)
-        mod = Conv1D(50, 10, **arg)(mod)
+        mod = Conv1D(128, 8, **arg)(mod)
         mod = BatchNormalization()(mod)
         mod = PReLU()(mod)
         mod = GlobalAveragePooling1D()(mod)
@@ -315,16 +315,16 @@ class DL_Model :
 
         # Build model
         mod = Reshape((1, inp._keras_shape[1], inp._keras_shape[2]))(inp)
-        mod = Convolution2D(64, (mod._keras_shape[1], 60), data_format='channels_first', **arg)(mod)
+        mod = Convolution2D(64, (mod._keras_shape[1], 32), data_format='channels_first', **arg)(mod)
         mod = BatchNormalization(axis=1)(mod)
         mod = PReLU()(mod)
         mod = MaxPooling2D(pool_size=(1, 2), data_format='channels_first')(mod)
         mod = AdaptiveDropout(callback.prb, callback)(mod)
-        mod = Convolution2D(128, (1, 20), data_format='channels_first', **arg)(mod)
+        mod = Convolution2D(128, (1, 8), data_format='channels_first', **arg)(mod)
         mod = BatchNormalization(axis=1)(mod)
         mod = PReLU()(mod)
         mod = AdaptiveDropout(callback.prb, callback)(mod)
-        mod = Convolution2D(128, (1, 10), data_format='channels_first', **arg)(mod)
+        mod = Convolution2D(128, (1, 8), data_format='channels_first', **arg)(mod)
         mod = BatchNormalization(axis=1)(mod)
         mod = PReLU()(mod)
         mod = GlobalAveragePooling2D()(mod)
@@ -340,11 +340,7 @@ class DL_Model :
     def build_NDENSE(self, inp, callback, arg) :
 
         # Build the model
-        mod = Dense(inp._keras_shape[1])(inp)
-        mod = BatchNormalization()(mod)
-        mod = PReLU()(mod)
-        mod = AdaptiveDropout(callback.prb, callback)(mod)
-        mod = Dense(mod._keras_shape[1] // 2)(mod)
+        mod = Dense(mod._keras_shape[1] // 2)(inp)
         mod = BatchNormalization()(mod)
         mod = PReLU()(mod)
         mod = AdaptiveDropout(callback.prb, callback)(mod)
@@ -436,19 +432,27 @@ class DL_Model :
         self.mrg_size = merge._keras_shape[1]
 
         # Defines the feature encoder part
-        model = Dense(merge._keras_shape[1] // 3, **arg)(merge)
+        model = Dense(merge._keras_shape[1] // 2, **arg)(merge)
         model = BatchNormalization()(model)
         model = PReLU()(model)
         model = AdaptiveDropout(self.drp.prb, self.drp)(model)
         enc_0 = GaussianNoise(1e-2)(model)
-        model = Dense(model._keras_shape[1] // 3, **arg)(model)
+        model = Dense(model._keras_shape[1] // 2, **arg)(enc_0)
         model = BatchNormalization()(model)
         model = PReLU()(model)
         enc_1 = AdaptiveDropout(self.drp.prb, self.drp)(model)
+        model = Dense(model._keras_shape[1] // 2, **arg)(enc_1)
+        model = BatchNormalization()(model)
+        model = PReLU()(model)
+        enc_2 = AdaptiveDropout(self.drp.prb, self.drp)(model)
         print('# Latent Space:', enc_1._keras_shape[1])
 
         # Defines the decoder part
-        model = Dense(enc_0._keras_shape[1], **arg)(enc_1)
+        model = Dense(enc_1._keras_shape[1], **arg)(enc_2)
+        model = BatchNormalization()(model)
+        model = PReLU()(model)
+        model = AdaptiveDropout(self.drp.prb, self.drp)(model)
+        model = Dense(enc_0._keras_shape[1], **arg)(model)
         model = BatchNormalization()(model)
         model = PReLU()(model)
         model = AdaptiveDropout(self.drp.prb, self.drp)(model)
@@ -466,7 +470,7 @@ class DL_Model :
     # patience refers to the early stopping round
     # max_epochs refers to the maximum amount of epochs
     # batch refers to the batch_size
-    def learn(self, ini_dropout=0.5, patience=7, max_epochs=100, batch=32) :
+    def learn(self, ini_dropout=0.5, patience=5, max_epochs=100, batch=32) :
 
         # Compile the model
         decod, model = self.build(ini_dropout)
@@ -479,9 +483,11 @@ class DL_Model :
 
         # Implements the early stopping    
         arg = {'monitor': monitor, 'mode': 'max'}
-        early = EarlyStopping(min_delta=1e-5, patience=patience, **arg)
+        early = EarlyStopping(min_delta=1e-5, patience=2*patience, **arg)
         check = ModelCheckpoint(self.mod, period=1, save_best_only=True, save_weights_only=True, **arg)
         shuff = DataShuffler(self.inp, 3)
+        arg = {'monitor': monitor, 'mode': 'max', 'factor': 0.1, 'min_lr': 0.0}
+        redlr = ReduceLROnPlateau(monitor=monitor, patience=patience, min_delta=1e-5, **arg)
 
         # Build and compile the model
         model = Model(inputs=self.inputs, outputs=[model, decod])
@@ -492,10 +498,10 @@ class DL_Model :
         # Fit the model
         his = model.fit_generator(self.train_generator('t', batch=batch),
                     steps_per_epoch=len(self.l_t)//batch, verbose=1, 
-                    epochs=max_epochs, callbacks=[self.drp, early, check, shuff],
+                    callbacks=[self.drp, early, check, shuff, redlr],
                     shuffle=True, validation_steps=len(self.l_e)//batch,
                     validation_data=self.train_generator('e', batch=batch), 
-                    class_weight=class_weight(self.l_t))
+                    class_weight=class_weight(self.l_t), epochs=max_epochs)
 
         # Serialize the training history
         with open(self.his, 'wb') as raw: pickle.dump(his.history, raw)
