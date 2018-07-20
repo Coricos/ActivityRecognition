@@ -492,6 +492,7 @@ class DL_Model :
         # Build and compile the model
         mod = Model(inputs=self.inputs, outputs=[model, decod])
         optim = Adadelta(clipnorm=1.0, lr=1e-2)
+        print('# Initial Learning Rate:', K.get_value(optim.lr))
         arg = {'loss': loss, 'optimizer': optim}
         mod.compile(metrics=metrics, loss_weights=loss_weights, **arg)
 
@@ -519,7 +520,8 @@ class DL_Model :
             # Build and compile the model
             mod = Model(inputs=self.inputs, outputs=[model, decod])
             mod.load_weights(self.mod)
-            optim = SGD(clipnorm=1.0, lr=K.get_value(optim), momentum=0.9)
+            print('# Intermediate Learning Rate:', K.get_value(optim.lr))
+            optim = SGD(clipnorm=1.0, lr=K.get_value(optim.lr), momentum=0.9)
             arg = {'loss': loss, 'optimizer': optim}
             mod.compile(metrics=metrics, loss_weights=loss_weights, **arg)
 
