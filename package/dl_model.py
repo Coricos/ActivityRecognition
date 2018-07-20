@@ -456,15 +456,15 @@ class DL_Model :
         model = BatchNormalization()(model)
         model = PReLU()(model)
         model = AdaptiveDropout(self.drp.prb, self.drp)(model)
-        model = Dense(enc_1._keras_shape[1], **arg)(model)
+        model = Dense(enc_1._keras_shape[1], **arg)(Add()([enc_2, model]))
         model = BatchNormalization()(model)
         model = PReLU()(model)
         model = AdaptiveDropout(self.drp.prb, self.drp)(model)
-        model = Dense(enc_0._keras_shape[1], **arg)(model)
+        model = Dense(enc_0._keras_shape[1], **arg)(Add()([enc_1, model]))
         model = BatchNormalization()(model)
         model = PReLU()(model)
         model = AdaptiveDropout(self.drp.prb, self.drp)(model)
-        model = Dense(merge._keras_shape[1], activation='linear', **arg)(model)
+        model = Dense(merge._keras_shape[1], activation='linear', **arg)(Add()([enc_0, model]))
         decod = Subtract(name='decode')([merge, model])
 
         # Defines the output part

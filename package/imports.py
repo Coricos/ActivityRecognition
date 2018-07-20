@@ -47,7 +47,7 @@ from keras.models import Sequential, Model, load_model
 from keras.layers import Convolution2D, MaxPooling2D, merge, Activation, Dropout
 from keras.layers import Conv1D, Input, MaxPooling1D, GlobalAveragePooling1D
 from keras.layers import BatchNormalization, GlobalAveragePooling2D
-from keras.layers import Subtract, GaussianNoise, Flatten, Dense
+from keras.layers import Subtract, GaussianNoise, Flatten, Dense, Add
 from keras.layers import GlobalMaxPooling1D, GaussianDropout, Reshape, PReLU, AveragePooling1D
 from keras.layers.core import Dense, Dropout, Activation
 from keras.optimizers import SGD, Adadelta
